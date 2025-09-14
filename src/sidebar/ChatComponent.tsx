@@ -114,26 +114,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({ onSendMessage }) =
           </button>
         </div>
       </div>
-      {/* 工具区域 */}
-      <div className="yoran-tools-section">
-        <div className="yoran-tools-grid">
-          {[
-            { icon: '📝', text: '新建笔记', action: 'new-note' },
-            { icon: '🔍', text: '搜索', action: 'search' },
-            { icon: '📊', text: '统计', action: 'stats' },
-            { icon: '⚙️', text: '设置', action: 'settings' }
-          ].map((tool) => (
-            <button
-              key={tool.action}
-              className="yoran-tool-button"
-              onClick={() => handleToolAction(tool.action)}
-            >
-              <span className="yoran-tool-icon">{tool.icon}</span>
-              <span className="yoran-tool-text">{tool.text}</span>
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };
