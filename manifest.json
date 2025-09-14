@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "mcp-chat-yoran",
+	"name": "MCP Chat Yoran for kimi2",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "A chat plugin powered by MCP and React",
+	"author": "Yoran",
+	"authorUrl": "https://your-website.com",
+	"fundingUrl": "https://buymeacoffee.com",
 	"isDesktopOnly": false
 }

@@ -11,11 +11,12 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = (process.argv[2] === "production");
 
+
 const context = await esbuild.context({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ["main.ts"],
+	entryPoints: ["src/main.ts"],
 	bundle: true,
 	external: [
 		"obsidian",
@@ -37,8 +38,15 @@ const context = await esbuild.context({
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
-	outfile: "main.js",
-	minify: prod,
+	// 添加 JSX 支持
+	jsx: "automatic",
+	jsxImportSource: "react",
+	loader: {
+		".tsx": "tsx",
+		".ts": "ts",
+		".jsx": "jsx",
+		".js": "js"
+	}
 });
 
 if (prod) {
