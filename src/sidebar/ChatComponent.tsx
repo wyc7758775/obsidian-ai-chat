@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Notice } from 'obsidian';
+import './styles.css';
 
 interface Message {
   id: string;
   content: string;
   type: 'user' | 'assistant';
   timestamp: Date;
+  username?: string;
 }
 
 interface ChatComponentProps {
@@ -32,20 +34,20 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({ onSendMessage }) =
       id: Date.now().toString(),
       content: inputValue,
       type: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      username: '赛凡'
     };
 
     setMessages(prev => [...prev, newMessage]);
     setInputValue('');
     
-    // 调用外部回调
     onSendMessage?.(inputValue);
 
-    // 模拟回复
+    // 模拟 AI 回复
     setTimeout(() => {
       const replyMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: `这是对 "${inputValue}" 的回复`,
+        content: `这是对 "${inputValue}" 的智能回复。我可以帮助你处理各种任务，包括文档分析、内容生成等。`,
         type: 'assistant',
         timestamp: new Date()
       };
@@ -60,57 +62,83 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({ onSendMessage }) =
     }
   };
 
-  const handleToolAction = (action: string) => {
-    switch (action) {
-      case 'new-note':
-        new Notice('创建新笔记功能');
-        break;
-      case 'search':
-        new Notice('搜索功能');
-        break;
-      case 'stats':
-        new Notice('统计功能');
-        break;
-      case 'settings':
-        new Notice('打开设置');
-        break;
-    }
+  const handleClearChat = () => {
+    setMessages([]);
+    new Notice('聊天记录已清空');
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true
+    }).toUpperCase();
   };
 
   return (
-    <div className="yoran-sidebar-content">
-      {/* 聊天区域 */}
-      <div className="yoran-chat-section">
-        <div className="yoran-messages">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`yoran-message yoran-message-${message.type}`}
-            >
-              <div className="yoran-message-content">{message.content}</div>
-              <div className="yoran-message-time">
-                {message.timestamp.toLocaleTimeString()}
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+    <div className="yoran-chat-container">
+      {/* 头部 */}
+      <div className="yoran-chat-header">
+        <div className="yoran-chat-title">
+          <span className="yoran-chat-icon">🤖</span>
+          <span>AI 助手</span>
         </div>
-        
-        <div className="yoran-input-container">
-          <textarea
+        <div className="yoran-chat-actions">
+          <button className="yoran-action-btn" onClick={handleClearChat}>
+            🗑️
+          </button>
+          <button className="yoran-action-btn" onClick={() => new Notice('设置功能')}>
+            ⚙️
+          </button>
+        </div>
+      </div>
+
+      {/* 消息区域 */}
+      <div className="yoran-messages-container">
+        {messages.map((message) => (
+          <div key={message.id} className={`yoran-message-wrapper yoran-message-${message.type}`}>
+            {message.type === 'user' ? (
+              <div className="yoran-user-message">
+                <div className="yoran-user-bubble">
+                  <div className="yoran-user-content">{message.content}</div>
+                  <div className="yoran-user-info">
+                    <span className="yoran-user-avatar">👤</span>
+                    <span className="yoran-username">{message.username}</span>
+                    <span className="yoran-timestamp">{formatTime(message.timestamp)}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="yoran-assistant-message">
+                <div className="yoran-assistant-avatar">🤖</div>
+                <div className="yoran-assistant-content">
+                  <div className="yoran-assistant-text">{message.content}</div>
+                  <div className="yoran-assistant-time">{formatTime(message.timestamp)}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* 输入区域 */}
+      <div className="yoran-input-area">
+        <div className="yoran-input-wrapper">
+          <input
+            type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="输入你的消息..."
-            className="yoran-chat-input"
-            rows={3}
+            placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
+            className="yoran-input-field"
           />
           <button
             onClick={handleSend}
-            className="yoran-send-button"
+            className="yoran-send-btn"
             disabled={!inputValue.trim()}
           >
-            发送
+            ➤
           </button>
         </div>
       </div>
