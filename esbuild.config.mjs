@@ -11,7 +11,6 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = (process.argv[2] === "production");
 
-
 const context = await esbuild.context({
 	banner: {
 		js: banner,
@@ -38,6 +37,8 @@ const context = await esbuild.context({
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
+	outfile: "main.js",
+	minify: prod,
 	// 添加 JSX 支持
 	jsx: "automatic",
 	jsxImportSource: "react",
@@ -51,6 +52,7 @@ const context = await esbuild.context({
 
 if (prod) {
 	await context.rebuild();
+	console.log("🎉congratulation: Build complete!");
 	process.exit(0);
 } else {
 	await context.watch();

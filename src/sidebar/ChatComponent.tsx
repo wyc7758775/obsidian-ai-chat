@@ -110,7 +110,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({ onSendMessage }) =
             className="yoran-send-button"
             disabled={!inputValue.trim()}
           >
-            发送sdf
+            发送
           </button>
         </div>
       </div>
