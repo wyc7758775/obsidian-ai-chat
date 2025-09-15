@@ -60,7 +60,7 @@ export async function handleSteamResponse(
 			messages: [
 				{ role: "user", content: inputValue },
 				{ role: "system", content: settings.systemPrompt },
-				...notePromptsMessages,
+				...(notePromptsMessages as Array<OpenAI.Chat.Completions.ChatCompletionMessageParam>),
 			],
 			model: settings.model,
 			stream: true,
