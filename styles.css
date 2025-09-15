@@ -439,11 +439,6 @@
   }
 }
 
-/* 深色主题适配 */
-.theme-dark .yoran-chat-container {
-  /* Obsidian 会自动处理 CSS 变量，无需额外设置 */
-}
-
 /* 高对比度主题适配 */
 .theme-high-contrast .yoran-message-text {
   border-width: 2px;

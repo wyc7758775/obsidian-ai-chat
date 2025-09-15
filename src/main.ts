@@ -1,25 +1,20 @@
-import {
-	App,
-	Editor,
-	MarkdownView,
-	Plugin,
-	PluginSettingTab,
-	Setting,
-	WorkspaceLeaf,
-} from "obsidian";
+import { Editor, MarkdownView, Plugin, WorkspaceLeaf } from "obsidian";
+import { SettingTab } from "./setting/plugin-setting";
 import {
 	YoranSidebarView,
 	VIEW_TYPE_YORAN_SIDEBAR,
 } from "./sidebar/sidebar-view";
 
-// Remember to rename these classes and interfaces!
-
-interface yoranChatSettings {
-	mySetting: string;
+export interface yoranChatSettings {
+	appKey: string;
+	apiBaseURL: string;
+	model: string;
 }
 
 const DEFAULT_SETTINGS: yoranChatSettings = {
-	mySetting: "default",
+	appKey: "come on",
+	apiBaseURL: "https://ark.cn-beijing.volces.com/api/v3",
+	model: "kimi-k2-250711",
 };
 
 export default class yoranChat extends Plugin {
@@ -31,24 +26,25 @@ export default class yoranChat extends Plugin {
 
 		this.registerView(
 			VIEW_TYPE_YORAN_SIDEBAR,
-			(leaf: WorkspaceLeaf) => (this.view = new YoranSidebarView(leaf))
+			(leaf: WorkspaceLeaf) =>
+				(this.view = new YoranSidebarView(leaf, this.settings))
 		);
 
 		this.app.workspace.onLayoutReady(() => {
 			this.initLeaf();
 		});
 
+		// TODO: 测试 command 替换文章 的效果
 		this.addCommand({
 			id: "sample-editor-command",
 			name: "Sample editor command",
 			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
 				editor.replaceSelection("Sample Editor Command");
 			},
 		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new SettingTab(this.app, this));
 
 		this.registerDomEvent(document, "selectionchange", () => {
 			const selection = window.getSelection();
@@ -90,36 +86,5 @@ export default class yoranChat extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-/**
- * setting tab config
- */
-class SampleSettingTab extends PluginSettingTab {
-	plugin: yoranChat;
-
-	constructor(app: App, plugin: yoranChat) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const { containerEl } = this;
-
-		containerEl.empty();
-
-		new Setting(containerEl)
-			.setName("Setting #1")
-			.setDesc("It's a secret")
-			.addText((text) =>
-				text
-					.setPlaceholder("Enter your secret")
-					.setValue(this.plugin.settings.mySetting)
-					.onChange(async (value) => {
-						this.plugin.settings.mySetting = value;
-						await this.plugin.saveSettings();
-					})
-			);
 	}
 }

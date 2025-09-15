@@ -2,6 +2,7 @@ import { Notice, ItemView, WorkspaceLeaf } from "obsidian";
 import React from "react";
 import { createRoot, Root } from "react-dom/client";
 import { ChatComponent } from "./ChatComponent";
+import { yoranChatSettings } from "../main";
 
 // 定义视图类型常量
 export const VIEW_TYPE_YORAN_SIDEBAR = "yoran-sidebar-view";
@@ -9,9 +10,11 @@ export const VIEW_TYPE_YORAN_SIDEBAR = "yoran-sidebar-view";
 // 创建自定义侧边栏视图
 export class YoranSidebarView extends ItemView {
 	private root: Root | null = null;
+	private settings: yoranChatSettings;
 
-	constructor(leaf: WorkspaceLeaf) {
+	constructor(leaf: WorkspaceLeaf, settings: yoranChatSettings) {
 		super(leaf);
+		this.settings = settings;
 	}
 
 	getViewType() {
@@ -37,6 +40,7 @@ export class YoranSidebarView extends ItemView {
 		this.root.render(
 			React.createElement(ChatComponent, {
 				onSendMessage: this.handleSendMessage.bind(this),
+				settings: this.settings,
 			})
 		);
 	}
