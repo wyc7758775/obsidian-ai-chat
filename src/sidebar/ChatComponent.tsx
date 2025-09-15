@@ -1,12 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Notice } from 'obsidian';
-import './styles.css';
 
 interface Message {
   id: string;
   content: string;
   type: 'user' | 'assistant';
-  timestamp: Date;
   username?: string;
 }
 
@@ -34,8 +31,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({ onSendMessage }) =
       id: Date.now().toString(),
       content: inputValue,
       type: 'user',
-      timestamp: new Date(),
-      username: '赛凡'
     };
 
     setMessages(prev => [...prev, newMessage]);
@@ -48,8 +43,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({ onSendMessage }) =
       const replyMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: `这是对 "${inputValue}" 的智能回复。我可以帮助你处理各种任务，包括文档分析、内容生成等。`,
-        type: 'assistant',
-        timestamp: new Date()
+        type: 'assistant'
       };
       setMessages(prev => [...prev, replyMessage]);
     }, 1000);
@@ -62,37 +56,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({ onSendMessage }) =
     }
   };
 
-  const handleClearChat = () => {
-    setMessages([]);
-    new Notice('聊天记录已清空');
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true
-    }).toUpperCase();
-  };
-
   return (
     <div className="yoran-chat-container">
-      {/* 头部 */}
-      <div className="yoran-chat-header">
-        <div className="yoran-chat-title">
-          <span className="yoran-chat-icon">🤖</span>
-          <span>AI 助手</span>
-        </div>
-        <div className="yoran-chat-actions">
-          <button className="yoran-action-btn" onClick={handleClearChat}>
-            🗑️
-          </button>
-          <button className="yoran-action-btn" onClick={() => new Notice('设置功能')}>
-            ⚙️
-          </button>
-        </div>
-      </div>
-
       {/* 消息区域 */}
       <div className="yoran-messages-container">
         {messages.map((message) => (
@@ -101,24 +66,22 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({ onSendMessage }) =
               <div className="yoran-user-message">
                 <div className="yoran-user-bubble">
                   <div className="yoran-user-content">{message.content}</div>
-                  <div className="yoran-user-info">
-                    <span className="yoran-user-avatar">👤</span>
-                    <span className="yoran-username">{message.username}</span>
-                    <span className="yoran-timestamp">{formatTime(message.timestamp)}</span>
-                  </div>
                 </div>
               </div>
             ) : (
               <div className="yoran-assistant-message">
-                <div className="yoran-assistant-avatar">🤖</div>
-                <div className="yoran-assistant-content">
-                  <div className="yoran-assistant-text">{message.content}</div>
-                  <div className="yoran-assistant-time">{formatTime(message.timestamp)}</div>
-                </div>
+				<div className="yoran-assistant-text">{message.content}</div>
               </div>
             )}
           </div>
         ))}
+		{
+			messages.length === 0 && (
+				<div className="yoran-logo">
+					
+				</div>
+			)
+		}
         <div ref={messagesEndRef} />
       </div>
 
