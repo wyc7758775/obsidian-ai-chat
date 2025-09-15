@@ -65,12 +65,13 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 		setMessages((prev) => [...prev, aiMessage]);
 
 
-		const noteContext = await noteContextService.getNoteContent(noteContextService.getCurrentNote());
+		const currentNote = noteContextService.getCurrentNote();
+		const noteContext = currentNote ? await noteContextService.getNoteContent(currentNote) : undefined;
 		// Call the OpenAI API
 		getOpenai({
 			settings,
 			inputValue,
-			notePrompts: [noteContext?.content ?? ""],
+			notePrompts: [typeof noteContext === 'string' ? noteContext : noteContext?.content ?? ""],
 			callBacks: {
 				onChunk: (chunk: string) => {
 					setMessages((prev) =>
