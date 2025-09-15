@@ -1,6 +1,13 @@
 import OpenAI from "openai";
 import { yoranChatSettings } from "src/main";
 
+/**
+ * @param settings : 配置的数据
+ * @param inputValue : 输入框中的值
+ * @param notePrompts : 当前需要作为上下文的文章集合
+ * @param callBacks
+ * @param cancelToken
+ */
 export interface OpenaiParams {
 	settings: yoranChatSettings;
 	inputValue: string;
