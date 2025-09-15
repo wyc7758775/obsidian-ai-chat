@@ -1,47 +1,70 @@
 import OpenAI from "openai";
 import { yoranChatSettings } from "src/main";
 
-// const TEMPLATE_ENDPOINT_ID = "kimi-k2-250711";
-// const TEMPLATE_API_KEY = "a156c7ff-ab38-4d8f-8d28-1a33957da543";
-// const TEMPLATE_base_url = "https://ark.cn-beijing.volces.com/api/v3";
-
 export interface OpenaiParams {
 	settings: yoranChatSettings;
 	inputValue: string;
-	systemPrompt?: string;
-	onChunk: (chunk: string) => void;
+	callBacks: {
+		onStart?: () => void;
+		onChunk: (chunk: string) => void;
+		onComplete?: () => void;
+		onError?: (error: any) => void;
+	};
+	cancelToken?: { cancelled: boolean };
 }
 export async function getOpenai({
 	settings,
 	inputValue,
-	systemPrompt,
-	onChunk,
+	callBacks,
+	cancelToken,
 }: OpenaiParams) {
 	const openai = new OpenAI({
 		apiKey: settings.appKey,
 		baseURL: settings.apiBaseURL,
 		dangerouslyAllowBrowser: true,
 	});
-	return main(openai, settings, inputValue, systemPrompt ?? "", onChunk);
+	return handleSteamResponse(
+		openai,
+		settings,
+		inputValue,
+		callBacks,
+		cancelToken
+	);
 }
-export async function main(
+export async function handleSteamResponse(
 	openai: OpenAI,
 	settings: yoranChatSettings,
 	inputValue: string,
-	systemPrompt: string,
-	onChunk: (chunk: string) => void
+	callBacks: {
+		onStart?: () => void;
+		onChunk: (chunk: string) => void;
+		onComplete?: () => void;
+		onError?: (error: any) => void;
+	},
+	cancelToken?: { cancelled: boolean }
 ) {
-	const stream = await openai.chat.completions.create({
-		messages: [
-			{ role: "user", content: inputValue },
-			{ role: "system", content: systemPrompt ?? "你全知全能" },
-		],
-		model: settings.model,
-		stream: true,
-	});
-
-	for await (const part of stream) {
-		const content = part.choices[0]?.delta?.content || "";
-		onChunk(content);
+	try {
+		const stream = await openai.chat.completions.create({
+			messages: [
+				{ role: "user", content: inputValue },
+				{ role: "system", content: settings.systemPrompt },
+			],
+			model: settings.model,
+			stream: true,
+		});
+		callBacks.onStart?.();
+		for await (const part of stream) {
+			if (cancelToken?.cancelled) {
+				break;
+			}
+			const content = part.choices[0]?.delta?.content || "";
+			if (content) {
+				callBacks.onChunk(content);
+			}
+		}
+		callBacks.onComplete?.();
+	} catch (error) {
+		console.error("OpenAI API error:", error);
+		callBacks.onError?.(error);
 	}
 }

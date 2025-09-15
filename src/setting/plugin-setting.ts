@@ -55,5 +55,19 @@ export class SettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})
 			);
+
+		// system prompt config
+		new Setting(containerEl)
+			.setName("System Prompt")
+			.setDesc("please type system prompt")
+			.addText((text) =>
+				text
+					.setPlaceholder("System Prompt")
+					.setValue(this.plugin.settings.systemPrompt)
+					.onChange(async (value) => {
+						this.plugin.settings.systemPrompt = value;
+						await this.plugin.saveSettings();
+					})
+			);
 	}
 }

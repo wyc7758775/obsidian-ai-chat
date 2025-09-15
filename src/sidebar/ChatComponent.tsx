@@ -23,7 +23,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 }) => {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [inputValue, setInputValue] = useState("");
+	const [isStreaming, setIsStreaming] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const cancelToken = useRef({ cancelled: false });
 
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,16 +61,31 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 		getOpenai({
 			settings,
 			inputValue,
-			onChunk: (chunk: string) => {
-				setMessages((prev) =>
-					prev.map((msg) =>
-						msg.id === aiMessageId
-							? { ...msg, content: msg.content + chunk }
-							: msg
-					)
-				);
+			callBacks: {
+				onChunk: (chunk: string) => {
+					setMessages((prev) =>
+						prev.map((msg) =>
+							msg.id === aiMessageId
+								? { ...msg, content: msg.content + chunk }
+								: msg
+						)
+					);
+				},
+				onStart: () => {
+					setIsStreaming(true);
+				},
+				onComplete: () => {
+					cancelToken.current.cancelled = false
+					setIsStreaming(false);
+				}
 			},
+			cancelToken: cancelToken.current,
 		});
+	};
+
+	const handleCancelStream = () => {
+		cancelToken.current.cancelled = true;
+		setIsStreaming(false);
 	};
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -122,8 +139,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 										xmlns="http://www.w3.org/2000/svg"
 									>
 										<path
-											fill-rule="evenodd"
-											clip-rule="evenodd"
+											fillRule="evenodd"
+											clipRule="evenodd"
 											d="M32 12a2 2 0 012 2v28.222c0 .982-.836 1.778-1.867 1.778H7.867C6.836 44 6 43.204 6 42.222V13.778C6 12.796 6.836 12 7.867 12H32zm-2 4H10v24h20V16zM40 4a2 2 0 012 2v25a1 1 0 01-1 1h-2a1 1 0 01-1-1V8H19a1 1 0 01-1-1V5a1 1 0 011-1h21z"
 											fill="currentColor"
 										></path>
@@ -148,13 +165,24 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 						placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
 						className="yoran-input-field"
 					/>
-					<button
-						onClick={handleSend}
-						className="yoran-send-btn"
-						disabled={!inputValue.trim()}
-					>
-						➤
-					</button>
+					{
+						isStreaming ? (
+							<button
+								onClick={handleCancelStream}
+								className="yoran-cancel-btn"
+							>
+							||	
+							</button>
+						) : (
+							<button
+								onClick={handleSend}
+								className="yoran-send-btn"
+								disabled={!inputValue.trim()}
+							>
+								➤
+							</button>
+						)
+					}
 				</div>
 			</div>
 		</div>

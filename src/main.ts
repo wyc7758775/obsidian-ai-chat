@@ -9,12 +9,14 @@ export interface yoranChatSettings {
 	appKey: string;
 	apiBaseURL: string;
 	model: string;
+	systemPrompt: string;
 }
 
 const DEFAULT_SETTINGS: yoranChatSettings = {
 	appKey: "come on",
 	apiBaseURL: "https://ark.cn-beijing.volces.com/api/v3",
 	model: "kimi-k2-250711",
+	systemPrompt: "你全知全能",
 };
 
 export default class yoranChat extends Plugin {
