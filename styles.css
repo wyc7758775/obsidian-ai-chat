@@ -132,7 +132,15 @@
   padding:  6px 12px;
   max-width: 100%;
   position: relative;
-  background-color: #c8e6c9;
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+.yoran-user-bubble:hover {
+  background-color: var(--interactive-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .yoran-user-content {
@@ -144,22 +152,25 @@
 /* AI 消息样式 */
 .yoran-assistant-message {
   display: flex;
+  flex-direction: column;
   max-width: 100%;
   padding: 8px;
   align-items: flex-start;
+  width: 100%;
 }
 
 .yoran-assistant-text {
   line-height: 1.4;
   word-wrap: break-word;
   color: var(--text-normal);
+  width: 100%;
 }
-
-.yoran-assistant-time {
-  font-size: 11px;
-  color: var(--text-faint);
-  margin-top: 4px;
-  padding-left: 4px;
+.yoran-copy-btn {
+	cursor: pointer;
+	color: var(--text-faint);
+}
+.yoran-copy-btn:hover {
+	color: var(--accent-strong);
 }
 
 /* 输入区域 */
@@ -478,7 +489,7 @@ code.hljs {
 */
 .hljs {
   color: #24292e;
-  background: #ffffff
+  background-color: var(--background-primary-alt) !important;
 }
 .hljs-doctag,
 .hljs-keyword,

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight"; 
+import rehypeHighlight from "rehype-highlight";
 import { getOpenai } from "../modules/ai-chat/openai";
 import { yoranChatSettings } from "src/main";
 
@@ -60,14 +60,15 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 			settings,
 			inputValue,
 			onChunk: (chunk: string) => {
-			setMessages((prev) =>
-				prev.map((msg) =>
-					msg.id === aiMessageId
-						? { ...msg, content: msg.content + chunk }
-						: msg
-				)
-			);
-		}});
+				setMessages((prev) =>
+					prev.map((msg) =>
+						msg.id === aiMessageId
+							? { ...msg, content: msg.content + chunk }
+							: msg
+					)
+				);
+			},
+		});
 	};
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -81,7 +82,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 		<div className="yoran-chat-container">
 			{/* 消息区域 */}
 			<div className="yoran-messages-container">
-				{messages.map(message => (
+				{messages.map((message) => (
 					<div
 						key={message.id}
 						className={`yoran-message-wrapper yoran-message-${message.type}`}
@@ -103,6 +104,30 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 									>
 										{message.content}
 									</ReactMarkdown>
+								</div>
+								<div
+									className="yoran-copy-btn"
+									onClick={() => {
+										navigator.clipboard.writeText(
+											message.content
+										);
+									}}
+								>
+									<svg
+										className="force-icon force-icon-copy "
+										width="1em"
+										height="1em"
+										viewBox="0 0 48 48"
+										fill="none"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<path
+											fill-rule="evenodd"
+											clip-rule="evenodd"
+											d="M32 12a2 2 0 012 2v28.222c0 .982-.836 1.778-1.867 1.778H7.867C6.836 44 6 43.204 6 42.222V13.778C6 12.796 6.836 12 7.867 12H32zm-2 4H10v24h20V16zM40 4a2 2 0 012 2v25a1 1 0 01-1 1h-2a1 1 0 01-1-1V8H19a1 1 0 01-1-1V5a1 1 0 011-1h21z"
+											fill="currentColor"
+										></path>
+									</svg>
 								</div>
 							</div>
 						)}
