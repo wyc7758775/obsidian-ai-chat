@@ -41,6 +41,7 @@ export class YoranSidebarView extends ItemView {
 			React.createElement(ChatComponent, {
 				onSendMessage: this.handleSendMessage.bind(this),
 				settings: this.settings,
+				app: this.app,
 			})
 		);
 	}

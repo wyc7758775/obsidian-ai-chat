@@ -4,6 +4,7 @@ import { yoranChatSettings } from "src/main";
 export interface OpenaiParams {
 	settings: yoranChatSettings;
 	inputValue: string;
+	notePrompts?: string[];
 	callBacks: {
 		onStart?: () => void;
 		onChunk: (chunk: string) => void;
@@ -16,6 +17,7 @@ export interface OpenaiParams {
 export async function getOpenai({
 	settings,
 	inputValue,
+	notePrompts,
 	callBacks,
 	cancelToken,
 }: OpenaiParams) {
@@ -29,6 +31,7 @@ export async function getOpenai({
 		settings,
 		inputValue,
 		callBacks,
+		notePrompts,
 		cancelToken
 	);
 }
@@ -42,13 +45,22 @@ export async function handleSteamResponse(
 		onComplete?: () => void;
 		onError?: (error: any) => void;
 	},
+	notePrompts?: string[],
 	cancelToken?: { cancelled: boolean }
 ) {
+	const notePromptsMessages = [];
+	for (const message of notePrompts ?? []) {
+		notePromptsMessages.push({
+			role: "system",
+			content: message,
+		});
+	}
 	try {
 		const stream = await openai.chat.completions.create({
 			messages: [
 				{ role: "user", content: inputValue },
 				{ role: "system", content: settings.systemPrompt },
+				...notePromptsMessages,
 			],
 			model: settings.model,
 			stream: true,

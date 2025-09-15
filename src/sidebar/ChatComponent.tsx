@@ -1,9 +1,11 @@
+import { App } from 'obsidian';
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { getOpenai } from "../modules/ai-chat/openai";
 import { yoranChatSettings } from "src/main";
+import { NoteContextService } from "../modules/fs-context/note-context";
 
 interface Message {
 	id: string;
@@ -15,11 +17,13 @@ interface Message {
 interface ChatComponentProps {
 	onSendMessage?: (message: string) => void;
 	settings: yoranChatSettings;
+	app: App;
 }
 
 export const ChatComponent: React.FC<ChatComponentProps> = ({
 	onSendMessage,
 	settings,
+	app,
 }) => {
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [inputValue, setInputValue] = useState("");
@@ -34,6 +38,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 	useEffect(() => {
 		scrollToBottom();
 	}, [messages]);
+
+	const noteContextService = new NoteContextService(app);
+	noteContextService.getAllNotes() 
 
 	const handleSend = async () => {
 		if (!inputValue.trim()) return;
@@ -57,10 +64,13 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 		};
 		setMessages((prev) => [...prev, aiMessage]);
 
+
+		const noteContext = await noteContextService.getNoteContent(noteContextService.getCurrentNote());
 		// Call the OpenAI API
 		getOpenai({
 			settings,
 			inputValue,
+			notePrompts: [noteContext?.content ?? ""],
 			callBacks: {
 				onChunk: (chunk: string) => {
 					setMessages((prev) =>
