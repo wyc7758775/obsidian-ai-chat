@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm"; // 支持表格、任务列表
-import rehypeHighlight from "rehype-highlight"; // 代码高亮
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight"; 
 import { getOpenai } from "../modules/ai-chat/openai";
 import { yoranChatSettings } from "src/main";
 
@@ -54,8 +54,12 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 			type: "assistant",
 		};
 		setMessages((prev) => [...prev, aiMessage]);
-		console.log(32222)
-		getOpenai(settings, (chunk: string) => {
+
+		// Call the OpenAI API
+		getOpenai({
+			settings,
+			inputValue,
+			onChunk: (chunk: string) => {
 			setMessages((prev) =>
 				prev.map((msg) =>
 					msg.id === aiMessageId
@@ -63,11 +67,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 						: msg
 				)
 			);
-		});
-		console.log('messages', messages)
-		setTimeout(() => {
-			console.log('什么玩意儿：', messages)
-		}, 0)
+		}});
 	};
 
 	const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -101,7 +101,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 										remarkPlugins={[remarkGfm]}
 										rehypePlugins={[rehypeHighlight]}
 									>
-										{`回答：${message.content}`}
+										{message.content}
 									</ReactMarkdown>
 								</div>
 							</div>

@@ -11,6 +11,9 @@ importers:
       github.css:
         specifier: link:highlight.js/styles/github.css
         version: link:highlight.js/styles/github.css
+      highlight.js:
+        specifier: ^11.11.1
+        version: 11.11.1
       openai:
         specifier: ^5.20.2
         version: 5.20.2

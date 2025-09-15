@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "github.css": "link:highlight.js/styles/github.css",
+    "highlight.js": "^11.11.1",
     "openai": "^5.20.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
