@@ -78,7 +78,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({ onSendMessage }) =
 		{
 			messages.length === 0 && (
 				<div className="yoran-logo">
-					
+					😊
 				</div>
 			)
 		}

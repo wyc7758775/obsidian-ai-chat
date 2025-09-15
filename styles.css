@@ -452,3 +452,12 @@
 .theme-high-contrast .yoran-input-wrapper {
   border-width: 2px;
 }
+
+/* 占位符 */
+.yoran-logo {
+	font-size: 68px;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
