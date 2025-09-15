@@ -12,6 +12,7 @@ export interface OpenaiParams {
 	};
 	cancelToken?: { cancelled: boolean };
 }
+
 export async function getOpenai({
 	settings,
 	inputValue,
