@@ -146,6 +146,7 @@
 .yoran-user-content {
   word-wrap: break-word;
   line-height: 1.4;
+  user-select: text !important;
 }
 
 
@@ -162,6 +163,7 @@
 .yoran-assistant-text {
   line-height: 1.4;
   word-wrap: break-word;
+  user-select: text !important;
   color: var(--text-normal);
   width: 100%;
 }

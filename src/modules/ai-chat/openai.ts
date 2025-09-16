@@ -5,6 +5,7 @@ import { yoranChatSettings } from "src/main";
  * @param settings : 配置的数据
  * @param inputValue : 输入框中的值
  * @param notePrompts : 当前需要作为上下文的文章集合
+ * @param contextMessages : 对话累加的上下文
  * @param callBacks
  * @param cancelToken
  */
@@ -12,6 +13,7 @@ export interface OpenaiParams {
 	settings: yoranChatSettings;
 	inputValue: string;
 	notePrompts?: string[];
+	contextMessages?: Array<OpenAI.Chat.Completions.ChatCompletionMessageParam>;
 	callBacks: {
 		onStart?: () => void;
 		onChunk: (chunk: string) => void;
@@ -25,6 +27,7 @@ export async function getOpenai({
 	settings,
 	inputValue,
 	notePrompts,
+	contextMessages,
 	callBacks,
 	cancelToken,
 }: OpenaiParams) {
@@ -39,6 +42,7 @@ export async function getOpenai({
 		inputValue,
 		callBacks,
 		notePrompts,
+		contextMessages,
 		cancelToken
 	);
 }
@@ -53,6 +57,8 @@ export async function handleSteamResponse(
 		onError?: (error: any) => void;
 	},
 	notePrompts?: string[],
+	// 对话累加的上下文
+	contextMessages?: Array<OpenAI.Chat.Completions.ChatCompletionMessageParam>,
 	cancelToken?: { cancelled: boolean }
 ) {
 	const notePromptsMessages = [];
@@ -65,8 +71,9 @@ export async function handleSteamResponse(
 	try {
 		const stream = await openai.chat.completions.create({
 			messages: [
-				{ role: "user", content: inputValue },
 				{ role: "system", content: settings.systemPrompt },
+				...(contextMessages ?? []),
+				{ role: "user", content: inputValue },
 				...(notePromptsMessages as Array<OpenAI.Chat.Completions.ChatCompletionMessageParam>),
 			],
 			model: settings.model,

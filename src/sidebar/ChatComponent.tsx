@@ -72,6 +72,10 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 			settings,
 			inputValue,
 			notePrompts: [typeof noteContext === 'string' ? noteContext : noteContext?.content ?? ""],
+			contextMessages: messages.map((msg) => ({
+				role: msg.type === "user" ? "user" : "assistant",
+				content: msg.content,
+			})),
 			callBacks: {
 				onChunk: (chunk: string) => {
 					setMessages((prev) =>
