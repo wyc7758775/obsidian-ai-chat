@@ -31,13 +31,40 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const cancelToken = useRef({ cancelled: false });
 
+	const [isAtBottom, setIsAtBottom] = useState(true);
 	const scrollToBottom = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	};
 
+	const observerRef = useRef<IntersectionObserver | null>(null);
 	useEffect(() => {
-		scrollToBottom();
-	}, [messages]);
+		if (!messagesEndRef.current) return;
+
+		observerRef.current = new IntersectionObserver(
+			(entries) => {
+				const [entry] = entries;
+				// 当底部元素可见时，设置为在底部
+				setIsAtBottom(entry.isIntersecting);
+			},
+			{
+				rootMargin: '0px 0px 10px 0px',
+				threshold: 1.0
+			}
+		);
+
+		observerRef.current.observe(messagesEndRef.current);
+
+		return () => {
+			if (observerRef.current) {
+				observerRef.current.disconnect();
+			}
+		}
+	}, []);
+	useEffect(() => {
+		if (isAtBottom) {
+			scrollToBottom();
+		}
+	}, [messages, isAtBottom]);
 
 	const noteContextService = new NoteContextService(app);
 	noteContextService.getAllNotes() 

@@ -1,4 +1,3 @@
-
 .yoran-input-container {
     display: flex;
     flex-direction: column;
@@ -588,4 +587,9 @@ code.hljs {
 .hljs-tag {
   /* purposely ignored */
   
+}
+
+/* 样式覆盖 */
+.workspace-leaf-content .view-content {
+	padding-bottom: 0 !important;
 }
