@@ -1,5 +1,5 @@
-import { App } from 'obsidian';
-import React, { useState, useRef, useEffect } from "react";
+import { App } from "obsidian";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -28,8 +28,20 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [inputValue, setInputValue] = useState("");
 	const [isStreaming, setIsStreaming] = useState(false);
+	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const cancelToken = useRef({ cancelled: false });
+
+	const noteContextService = new NoteContextService(app);
+	noteContextService.getAllNotes();
+
+	const [selectedNotes, setSelectedNotes] = useState<any[]>([]);
+
+	useEffect(() => {
+		if (noteContextService.getCurrentNote()) {
+			setSelectedNotes([noteContextService.getCurrentNote()]);
+		}
+	}, [noteContextService.getCurrentNote()]);
 
 	const [isAtBottom, setIsAtBottom] = useState(true);
 	const scrollToBottom = () => {
@@ -47,8 +59,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 				setIsAtBottom(entry.isIntersecting);
 			},
 			{
-				rootMargin: '0px 0px 10px 0px',
-				threshold: 1.0
+				rootMargin: "0px 0px 0px 0px",
+				threshold: 1.0,
 			}
 		);
 
@@ -58,7 +70,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 			if (observerRef.current) {
 				observerRef.current.disconnect();
 			}
-		}
+		};
 	}, []);
 	useEffect(() => {
 		if (isAtBottom) {
@@ -66,9 +78,36 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 		}
 	}, [messages, isAtBottom]);
 
-	const noteContextService = new NoteContextService(app);
-	noteContextService.getAllNotes() 
+	// 完整的无限高度自适应函数
+	const adjustTextareaHeight = useCallback(() => {
+		if (!textareaRef.current) return;
 
+		const textarea = textareaRef.current;
+		const minHeight = 20;
+
+		// 重置高度
+		textarea.style.height = "auto";
+
+		// 获取内容高度
+		const contentHeight = textarea.scrollHeight;
+
+		// 设置新高度（不限制最大值）
+		const newHeight = Math.max(minHeight, contentHeight);
+		textarea.style.height = `${newHeight}px`;
+
+		// 确保没有滚动条
+		textarea.style.overflowY = "hidden";
+
+		// 可选：如果高度变化很大，滚动到输入框位置
+		if (contentHeight > 100) {
+			setTimeout(() => {
+				textarea.scrollIntoView({
+					behavior: "smooth",
+					block: "nearest",
+				});
+			}, 0);
+		}
+	}, []);
 	const handleSend = async () => {
 		if (!inputValue.trim()) return;
 
@@ -91,14 +130,19 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 		};
 		setMessages((prev) => [...prev, aiMessage]);
 
+		const noteContext = selectedNotes.length
+			? await noteContextService.getNoteContent(selectedNotes[0])
+			: undefined;
 
-		const currentNote = noteContextService.getCurrentNote();
-		const noteContext = currentNote ? await noteContextService.getNoteContent(currentNote) : undefined;
 		// Call the OpenAI API
 		getOpenai({
 			settings,
 			inputValue,
-			notePrompts: [typeof noteContext === 'string' ? noteContext : noteContext?.content ?? ""],
+			notePrompts: [
+				typeof noteContext === "string"
+					? noteContext
+					: noteContext?.content ?? "",
+			],
 			contextMessages: messages.map((msg) => ({
 				role: msg.type === "user" ? "user" : "assistant",
 				content: msg.content,
@@ -117,9 +161,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 					setIsStreaming(true);
 				},
 				onComplete: () => {
-					cancelToken.current.cancelled = false
+					cancelToken.current.cancelled = false;
 					setIsStreaming(false);
-				}
+				},
 			},
 			cancelToken: cancelToken.current,
 		});
@@ -193,38 +237,63 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 					</div>
 				))}
 				{messages.length === 0 && <div className="yoran-logo">😊</div>}
-				<div ref={messagesEndRef} />
+				<div ref={messagesEndRef} > 我在这里</div>
 			</div>
 
 			{/* 输入区域 */}
 			<div className="yoran-input-area">
+				{selectedNotes.length > 0 && (
+					<div className="yoran-file-wrapper">
+						{selectedNotes.map((note) => (
+							<div className="yoran-file-item" key={note.path}>
+								<span
+									className="yoran-file-close"
+									onClick={() => {
+										setSelectedNotes(
+											selectedNotes.filter(
+												(n) => n.path !== note.path
+											)
+										);
+									}}
+								>
+									x
+								</span>
+								<span>{note.name}</span>
+								<div className="yoran-file-line"></div>
+								<span>{note.path}</span>
+							</div>
+						))}
+					</div>
+				)}
 				<div className="yoran-input-wrapper">
-					<input
-						type="text"
+					<textarea
+						ref={textareaRef}
 						value={inputValue}
-						onChange={(e) => setInputValue(e.target.value)}
+						rows={1}
+						onChange={(e) => {
+							setInputValue(e.target.value);
+							setTimeout(() => adjustTextareaHeight(), 0);
+						}}
 						onKeyPress={handleKeyPress}
 						placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
 						className="yoran-input-field"
-					/>
-					{
-						isStreaming ? (
-							<button
-								onClick={handleCancelStream}
-								className="yoran-cancel-btn"
-							>
-							||	
-							</button>
-						) : (
-							<button
-								onClick={handleSend}
-								className="yoran-send-btn"
-								disabled={!inputValue.trim()}
-							>
-								➤
-							</button>
-						)
-					}
+					></textarea>
+					{isStreaming ? (
+						<button
+							onClick={handleCancelStream}
+							className="yoran-cancel-btn"
+						>
+							||
+						</button>
+					) : (
+						<button
+							onClick={handleSend}
+							className="yoran-send-btn"
+							disabled={!inputValue.trim()}
+						>
+							➤
+						</button>
+					)}
 				</div>
 			</div>
 		</div>
