@@ -39,7 +39,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
 	useEffect(() => {
 		if (noteContextService.getCurrentNote()) {
-			setSelectedNotes([noteContextService.getCurrentNote()]);
+			const context = noteContextService.getCurrentNote();
+			setSelectedNotes([context, context, context, context, context]);
 		}
 	}, [noteContextService.getCurrentNote()]);
 
@@ -237,7 +238,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 					</div>
 				))}
 				{messages.length === 0 && <div className="yoran-logo">😊</div>}
-				<div ref={messagesEndRef} > 我在这里</div>
+				<div ref={messagesEndRef} ></div>
 			</div>
 
 			{/* 输入区域 */}
