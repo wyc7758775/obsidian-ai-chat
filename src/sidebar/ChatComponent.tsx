@@ -40,7 +40,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 	useEffect(() => {
 		if (noteContextService.getCurrentNote()) {
 			const context = noteContextService.getCurrentNote();
-			setSelectedNotes([context, context, context, context, context]);
+			setSelectedNotes([context]);
 		}
 	}, [noteContextService.getCurrentNote()]);
 
@@ -182,6 +182,147 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 		}
 	};
 
+	const [filePositionY, setFilePositionY] = useState(0);
+	const [filePositionX, setFilePositionX] = useState(0);
+  const [showFileSelector, setShowFileSelector] = useState(false);
+
+	// ✅ 更精确的光标位置获取方法（使用 Range API）
+	const getCursorPositionAdvanced = useCallback((textarea: HTMLTextAreaElement, cursorIndex: number) => {
+		// 获取 textarea 的边界矩形
+		const textareaRect = textarea.getBoundingClientRect();
+		
+		// 创建一个临时的可编辑 div
+		const mirror = document.createElement('div');
+		const style = window.getComputedStyle(textarea);
+		
+		// 复制所有相关样式
+		[
+			'fontFamily', 'fontSize', 'fontWeight', 'fontStyle',
+			'letterSpacing', 'textTransform', 'wordSpacing',
+			'textIndent', 'whiteSpace', 'lineHeight',
+			'padding', 'border', 'boxSizing', 'width'
+		].forEach(prop => {
+			mirror.style[prop] = style[prop];
+		});
+		
+		mirror.style.position = 'absolute';
+		mirror.style.visibility = 'hidden';
+		mirror.style.height = 'auto';
+		mirror.style.minHeight = 'auto';
+		mirror.style.overflow = 'hidden';
+		mirror.style.wordWrap = 'break-word';
+		mirror.style.whiteSpace = 'pre-wrap';
+		
+		document.body.appendChild(mirror);
+		
+		// 分割文本：光标前和光标后
+		const textBeforeCursor = textarea.value.substring(0, cursorIndex);
+		const textAfterCursor = textarea.value.substring(cursorIndex);
+		
+		// 创建光标标记
+		const cursorSpan = document.createElement('span');
+		cursorSpan.style.position = 'relative';
+		cursorSpan.innerHTML = '|';
+		
+		// 设置内容
+		mirror.textContent = textBeforeCursor;
+		mirror.appendChild(cursorSpan);
+		
+		if (textAfterCursor) {
+			const afterSpan = document.createElement('span');
+			afterSpan.textContent = textAfterCursor;
+			mirror.appendChild(afterSpan);
+		}
+		
+		// 获取光标位置
+		const cursorRect = cursorSpan.getBoundingClientRect();
+		
+		// 计算相对于页面的绝对位置
+		const absoluteX = cursorRect.left;
+		const absoluteY = cursorRect.top;
+		
+		// 计算相对于 textarea 的位置
+		const relativeX = absoluteX - textareaRect.left;
+		const relativeY = absoluteY - textareaRect.top;
+		
+		// 清理
+		document.body.removeChild(mirror);
+		
+		return {
+			absoluteX,
+			absoluteY,
+			relativeX,
+			relativeY,
+			textareaRect
+		};
+	}, []);
+
+	// ✅ 监听输入框变化，精确获取光标位置
+	const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+		const value = e.target.value;
+		const currentPosition = e.target.selectionStart;
+		
+		// 使用精确的光标位置获取方法
+		const cursorPos = getCursorPositionAdvanced(e.target, currentPosition);
+		
+		// 更新弹窗位置
+		setFilePositionX(cursorPos.absoluteX);
+		setFilePositionY(cursorPos.absoluteY + 20); // 在光标下方 20px
+		
+		console.log('精确光标位置:', {
+			absoluteX: cursorPos.absoluteX,
+			absoluteY: cursorPos.absoluteY,
+			relativeX: cursorPos.relativeX,
+			relativeY: cursorPos.relativeY
+		});
+
+		// 检查是否输入了@符号
+		if ((value[currentPosition - 1] === "@" && value[currentPosition - 2] === " ") || value.trim() === '@') {
+			console.log('触发文件选择器');
+			setShowFileSelector(true);
+		}
+	}, [getCursorPositionAdvanced]);
+
+	// ✅ 文件选择器组件（带动态定位）
+	const FileSelector = useCallback(() => {
+		if (!showFileSelector) return null;
+
+		return (
+			<div 
+				className="yoran-file-selector"
+				style={{
+					left: `${filePositionX}px`,
+					top: `${filePositionY}px`,
+					zIndex: 9999
+				}}
+			>
+				{/* 文件选择器内容 */}
+				<div className="yoran-file-search">
+					<input
+						type="text"
+						placeholder="搜索笔记..."
+						className="yoran-search-input"
+						autoFocus
+					/>
+					<button 
+						onClick={() => setShowFileSelector(false)}
+						className="yoran-close-btn"
+					>
+						×
+					</button>
+				</div>
+				<div className="yoran-file-list">
+					<div className="yoran-file-option">
+						<span>示例笔记 1</span>
+					</div>
+					<div className="yoran-file-option">
+						<span>示例笔记 2</span>
+					</div>
+				</div>
+			</div>
+		);
+	}, [showFileSelector, filePositionX, filePositionY]);
+
 	return (
 		<div className="yoran-chat-container">
 			{/* 消息区域 */}
@@ -238,9 +379,10 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 					</div>
 				))}
 				{messages.length === 0 && <div className="yoran-logo">😊</div>}
-				<div ref={messagesEndRef} ></div>
+				<div ref={messagesEndRef}></div>
 			</div>
 
+			<FileSelector />
 			{/* 输入区域 */}
 			<div className="yoran-input-area">
 				{selectedNotes.length > 0 && (
@@ -274,11 +416,12 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 						onChange={(e) => {
 							setInputValue(e.target.value);
 							setTimeout(() => adjustTextareaHeight(), 0);
+							handleInputChange(e);
 						}}
 						onKeyPress={handleKeyPress}
-						placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
+						placeholder="输入消息... (Enter 发送, Shift+Enter 换行, @ 选择笔记)"
 						className="yoran-input-field"
-					></textarea>
+					/>
 					{isStreaming ? (
 						<button
 							onClick={handleCancelStream}
