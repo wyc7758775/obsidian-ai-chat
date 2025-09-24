@@ -189,6 +189,35 @@
 	align-items: center;
 	padding: 8px 12px;
 }
+/* 可编辑div的样式 */
+.yoran-input-div {
+  outline: none;
+  border: none;
+  resize: none;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  transition: border-color 0.2s ease;
+}
+
+.yoran-input-div:focus {
+  border-color: var(--interactive-accent);
+}
+
+.yoran-input-div:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.yoran-input-div:focus:empty::before {
+  opacity: 0.6;
+}
 
 .yoran-input-field {
 	flex: 1;
@@ -239,23 +268,35 @@
 	scrollbar-width: none; /* Firefox */
 }
 .yoran-file-item {
+	display: flex;
+	align-items: center;
+	justify-content: start;
+	position: relative;
+	max-width: 250px;
+	margin-right: 12px;
 	padding: 8px;
 	border-radius: 12px;
 	background-color: var(--background-secondary);
 	background-color: var(--background-modifier-border);
+}
+.yoran-file-item-logo {
+	font-size: 36px;
+	padding-right: 8px;
+}
+.yoran-file-item-content {
 	display: flex;
-	min-width: 250px;
-	margin-right: 12px;
 	flex-direction: column;
-	white-space: nowrap;
+}
+.yoran-file-path {
+	max-width: 200px;
 	overflow: hidden;
+	white-space: nowrap;
 	text-overflow: ellipsis;
-	position: relative;
 }
 .yoran-file-close {
 	display: none;
 }
-.yoran-file-item:hover {
+.yoran-file-item-content:hover {
 	.yoran-file-close {
 		display: inline;
 		position: absolute;
@@ -266,8 +307,8 @@
 		height: 24px;
 		line-height: 24px;
 		text-align: center;
-		top: -4px;
-		right: -4px;
+		top: -6px;
+		right: -6px;
 		background-color: var(--background-modifier-border);
 		color: var(--text-faint);
 		cursor: pointer;
@@ -538,11 +579,14 @@
 
 /* 占位符 */
 .yoran-logo {
-	font-size: 68px;
 	height: 100%;
 	display: flex;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+}
+.yoran-logo-title {
+	font-size: 102px;
 }
 
 /* 代码高亮 */
