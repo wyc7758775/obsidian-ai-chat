@@ -1,6 +1,6 @@
 import { RefObject } from "react";
 
-export const InputButton = ({
+export const ChatInput= ({
   textareaRef,
   handleInputChange,
   handleKeyPress,

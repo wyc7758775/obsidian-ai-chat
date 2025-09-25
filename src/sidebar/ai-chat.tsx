@@ -5,9 +5,9 @@ import { sendChatMessage } from "../modules/ai-chat/openai";
 import { yoranChatSettings } from "src/main";
 import { NoteContextService, NoteContext } from "../modules/fs-context/note-context";
 import { ChatMessage } from "./chat-message";
-import { FileSelector } from "./file-selector";
-import { InputSelectedFiles } from "./component/input-selected-files";
-import { InputButton } from "./component/input-button";
+import { NoteSelector } from "./note-selector";
+import { SelectedFiles } from "./component/selected-files";
+import { ChatInput } from "./component/chat-input";
 
 export interface Message {
   id: string;
@@ -394,7 +394,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
         // 设置新的光标位置（在插入的笔记标题后面）
         setTimeout(() => {
-          setDivCursorPosition(atIndex + note.title.length + 2);
+          setDivCursorPosition(atIndex + Number(note.title?.length) + 2);
         }, 0);
       }
     }
@@ -435,29 +435,29 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           opacity: showFileSelector ? 1 : 0,
         }}
       >
-       {FileSelector({
-          searchResults,
-          noteContextService,
-          onSelectAllFiles,
-          onSelectNote,
-        }) }
+        <NoteSelector 
+          searchResults={searchResults}
+          noteContextService={noteContextService}
+          onSelectAllFiles={onSelectAllFiles}
+          onSelectNote={onSelectNote}
+        />
       </div>
       {/* 输入区域 */}
       <div className="yoran-input-area">
         {selectedNotes.length > 0 && (
-          <InputSelectedFiles
+          <SelectedFiles 
             nodes={selectedNotes}
             onDeleteNote={onDeleteNote}
           />
         )}
-        {<InputButton 
-          textareaRef={textareaRef}
-          handleInputChange={handleInputChange}
-          handleKeyPress={handleKeyPress}
-          handleSend={handleSend}
-          handleCancelStream={handleCancelStream}
-          inputValue={inputValue}
-          isStreaming={isStreaming}
+        {<ChatInput  
+            textareaRef={textareaRef}
+            handleInputChange={handleInputChange}
+            handleKeyPress={handleKeyPress}
+            handleSend={handleSend}
+            handleCancelStream={handleCancelStream}
+            inputValue={inputValue}
+            isStreaming={isStreaming}
         />}
       </div>
     </div>

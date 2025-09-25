@@ -11,7 +11,7 @@ export interface FileSelectorProps {
   onSelectNote: (note: NoteContext  ) => void;
 }
 
-export const FileSelector: React.FC<FileSelectorProps> = ({
+export const NoteSelector: React.FC<FileSelectorProps> = ({
   searchResults,
   noteContextService,
   onSelectAllFiles,

@@ -1,5 +1,5 @@
 import { NoteContext } from "../../modules/fs-context/note-context";
-export const InputSelectedFiles = ({
+export const SelectedFiles = ({
   nodes,
   onDeleteNote
 }: {
