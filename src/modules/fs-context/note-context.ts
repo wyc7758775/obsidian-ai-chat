@@ -1,12 +1,14 @@
 import { App, TFile, Vault } from "obsidian";
 
 export interface NoteContext {
-  file: TFile;
-  title: string;
-  content: string;
-  path: string;
-  tags: string[];
-  links: string[];
+  file?: TFile;
+  title?: string;
+  icon?: string;
+  name?: string;
+  content?: string;
+  path?: string;
+  tags?: string[];
+  links?: string[];
 }
 
 export class NoteContextService {
@@ -93,8 +95,8 @@ export class NoteContextService {
   }
 
   // 获取当前打开的笔记
-  getOpenNotes = (): Array<{ title: string; file: File; icon: string }> => {
-    const openFiles: Array<{ title: string; file: File; icon: string }> = [];
+  getOpenNotes = (): NoteContext[] => {
+    const openFiles: NoteContext[] = [];
 
     // 获取所有打开的叶子节点
     const leaves = this.app.workspace.getLeavesOfType("markdown");

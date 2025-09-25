@@ -1,9 +1,13 @@
+
 import { App } from "obsidian";
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { getOpenai } from "../modules/ai-chat/openai";
+import { sendChatMessage } from "../modules/ai-chat/openai";
 import { yoranChatSettings } from "src/main";
-import { NoteContextService } from "../modules/fs-context/note-context";
+import { NoteContextService, NoteContext } from "../modules/fs-context/note-context";
 import { ChatMessage } from "./chat-message";
+import { FileSelector } from "./file-selector";
+import { InputSelectedFiles } from "./component/input-selected-files";
+import { InputButton } from "./component/input-button";
 
 export interface Message {
   id: string;
@@ -33,13 +37,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const noteContextService = new NoteContextService(app);
 
   const [selectedNotes, setSelectedNotes] = useState<any[]>([]);
-
-  // useEffect(() => {
-  //   if (noteContextService.getCurrentNote() && selectedNotes.length === 0) {
-  //     const context = noteContextService.getCurrentNote();
-  //     setSelectedNotes([context]);
-  //   }
-  // }, [noteContextService.getCurrentNote(), selectedNotes.length]);
 
   const adjustTextareaHeight = useCallback(() => {
     if (!textareaRef.current) return;
@@ -111,7 +108,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       );
     }
 
-    getOpenai({
+    sendChatMessage({
       settings,
       inputValue,
       notePrompts,
@@ -191,12 +188,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
       // 合并相邻的文本节点
       textareaRef.current.normalize();
-      console.log({
-        rect,
-        divRect,
-        relativeX: rect.left - divRect.left,
-        relativeY: rect.top - divRect.top,
-      });
 
       return {
         x: rect.left,
@@ -336,7 +327,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           // 关键字为空时，显示当前打开的笔记
           const openNotes = noteContextService.getOpenNotes();
           setSearchResults(openNotes);
-          console.log({openNotes})
         } else {
           // 有关键字时，进行搜索
           noteContextService
@@ -347,7 +337,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
                 file: file,
                 icon: "📄",
               }));
-              console.log({searchNotes})
               setSearchResults(searchNotes);
             })
             .catch((error) => {
@@ -377,11 +366,42 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   }, [showFileSelector, getFileSelectorHeight, getDivCursorScreenPosition]);
 
-  // 使用 opacity 控制文件选择器的显示与隐藏 是为了渲染的的周期
-  const FileSelector = useCallback(() => {
-    const notes = searchResults.length > 0 ? searchResults : noteContextService.getOpenNotes();
 
-    const handleSelectAllFiles = () => {
+  const onSelectNote = (note: NoteContext) => {
+    setSelectedNotes((prev) => {
+      const exists = prev.some((p) => p.path === note.file?.path);
+      if (exists) return prev;
+      return [...prev, note.file];
+    });
+    setShowFileSelector(false);
+
+    // 清除输入框中的 @ 符号和搜索关键字，替换为选中的笔记标题
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const value = textarea.textContent || "";
+      const cursorPos = getDivCursorPosition();
+
+      // 找到@符号的位置
+      const atIndex = value.lastIndexOf("@", cursorPos - 1);
+      if (atIndex !== -1) {
+        // 替换从@符号到光标位置的内容为笔记标题
+        const newValue =
+          value.slice(0, atIndex) +
+          `@${note.title} ` +
+          value.slice(cursorPos);
+        textarea.textContent = newValue;
+        setInputValue(newValue);
+
+        // 设置新的光标位置（在插入的笔记标题后面）
+        setTimeout(() => {
+          setDivCursorPosition(atIndex + note.title.length + 2);
+        }, 0);
+      }
+    }
+
+    setSearchResults([]);
+  };
+  const onSelectAllFiles  = (notes: NoteContext[]) => {
       // 选择所有打开的文件
       setSelectedNotes(notes);
       setShowFileSelector(false);
@@ -397,44 +417,15 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           setDivCursorPosition(cursorPos - 1);
         }, 0);
       }
-    };
+  }
+  const onDeleteNote = (note: NoteContext) => {
+    setSelectedNotes(selectedNotes.filter((n) => n.path !== note.path));
 
-    const handleSelectNote = (note: any) => {
-      setSelectedNotes((prev) => {
-        const exists = prev.some((p) => p.path === note.file.path);
-        if (exists) return prev;
-        return [...prev, note.file];
-      });
-      setShowFileSelector(false);
-
-      // 清除输入框中的 @ 符号和搜索关键字，替换为选中的笔记标题
-      const textarea = textareaRef.current;
-      if (textarea) {
-        const value = textarea.textContent || "";
-        const cursorPos = getDivCursorPosition();
-
-        // 找到@符号的位置
-        const atIndex = value.lastIndexOf("@", cursorPos - 1);
-        if (atIndex !== -1) {
-          // 替换从@符号到光标位置的内容为笔记标题
-          const newValue =
-            value.slice(0, atIndex) +
-            `@${note.title} ` +
-            value.slice(cursorPos);
-          textarea.textContent = newValue;
-          setInputValue(newValue);
-
-          // 设置新的光标位置（在插入的笔记标题后面）
-          setTimeout(() => {
-            setDivCursorPosition(atIndex + note.title.length + 2);
-          }, 0);
-        }
-      }
-
-      setSearchResults([]);
-    };
-
-    return (
+  }
+  return (
+    <div className="yoran-chat-container">
+      {/* 消息区域 */}
+      {ChatMessage({messages}) }
       <div
         ref={fileSelectorRef}
         className="yoran-file-selector"
@@ -444,134 +435,30 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           opacity: showFileSelector ? 1 : 0,
         }}
       >
-        {/* 固定选项：当前所有活动文件 */}
-        <div className="yoran-mention-all" onClick={handleSelectAllFiles}>
-          <div className="yoran-mention-all-icon">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M16 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6C4 4.89543 4.89543 4 6 4H8M16 4V2M16 4V6M8 4V2M8 4V6M8 10H16M8 14H13"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <span className="yoran-mention-all-text">当前所有活动文件</span>
-        </div>
-
-        {/* 分组标题 */}
-        {notes.length > 0 && (
-          <div className="yoran-file-group-title">打开的笔记</div>
-        )}
-
-        {/* 文件列表 */}
-        <div className="yoran-file-list">
-          {notes.length > 0 ? (
-            notes.map((note, index) => (
-              <div
-                key={index}
-                className="yoran-file-option"
-                onClick={() => handleSelectNote(note)}
-              >
-                <div className="yoran-file-avatar">
-                  <span className="yoran-file-icon">{note.icon}</span>
-                </div>
-                <span className="yoran-file-title">{note.title}</span>
-              </div>
-            ))
-          ) : (
-            <div className="yoran-file-option yoran-file-empty">
-              <span>没有打开的笔记</span>
-            </div>
-          )}
-        </div>
+       {FileSelector({
+          searchResults,
+          noteContextService,
+          onSelectAllFiles,
+          onSelectNote,
+        }) }
       </div>
-    );
-  }, [showFileSelector, filePositionX, filePositionY, searchResults]);
-
-  return (
-    <div className="yoran-chat-container">
-      {/* 消息区域 */}
-      {ChatMessage({messages}) }
-      <FileSelector />
       {/* 输入区域 */}
       <div className="yoran-input-area">
         {selectedNotes.length > 0 && (
-          <div className="yoran-file-wrapper">
-            {selectedNotes.map((note, index) => (
-              <div className="yoran-file-item" key={`${note.path}-${index}`}>
-                <div className="yoran-file-item-logo">📄</div>
-                <div className="yoran-file-item-content">
-                  <span
-                    className="yoran-file-close"
-                    onClick={() => {
-                      setSelectedNotes(
-                        selectedNotes.filter((n) => n.path !== note.path)
-                      );
-                    }}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M12 4L4 12M4 4L12 12"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                  <div>{note.name}</div>
-                  <div className="yoran-file-line"></div>
-                  <div className="yoran-file-path">{note.path}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="yoran-input-wrapper">
-          <div
-            ref={textareaRef}
-            contentEditable
-            suppressContentEditableWarning={true}
-            onInput={handleInputChange}
-            onKeyDown={handleKeyPress}
-            data-placeholder="输入消息... (Enter 发送, Shift+Enter 换行, @ 选择笔记)"
-            className="yoran-input-field yoran-input-div"
-            style={{
-              minHeight: "20px",
-              maxHeight: "none",
-              overflowY: "hidden",
-              whiteSpace: "pre-wrap",
-              wordWrap: "break-word",
-            }}
+          <InputSelectedFiles
+            nodes={selectedNotes}
+            onDeleteNote={onDeleteNote}
           />
-          {isStreaming ? (
-            <button onClick={handleCancelStream} className="yoran-cancel-btn">
-              ||
-            </button>
-          ) : (
-            <button
-              onClick={handleSend}
-              className="yoran-send-btn"
-              disabled={!inputValue.trim()}
-            >
-              ➤
-            </button>
-          )}
-        </div>
+        )}
+        {<InputButton 
+          textareaRef={textareaRef}
+          handleInputChange={handleInputChange}
+          handleKeyPress={handleKeyPress}
+          handleSend={handleSend}
+          handleCancelStream={handleCancelStream}
+          inputValue={inputValue}
+          isStreaming={isStreaming}
+        />}
       </div>
     </div>
   );

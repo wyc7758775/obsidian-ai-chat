@@ -15,7 +15,7 @@ export interface yoranChatSettings {
 const DEFAULT_SETTINGS: yoranChatSettings = {
   appKey: "come on",
   apiBaseURL: "https://ark.cn-beijing.volces.com/api/v3",
-  model: "kimi-k2-250711",
+  model: "kimi-k2-250905", // kimi-k2-250905
   systemPrompt: "你全知全能",
 };
 
