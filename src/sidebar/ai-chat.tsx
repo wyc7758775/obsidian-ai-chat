@@ -36,7 +36,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
   const noteContextService = new NoteContextService(app);
 
-  const [selectedNotes, setSelectedNotes] = useState<any[]>([]);
+  const [selectedNotes, setSelectedNotes] = useState<NoteContext[]>([]);
 
   const adjustTextareaHeight = useCallback(() => {
     if (!textareaRef.current) return;
@@ -137,6 +137,10 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       cancelToken: cancelToken.current,
     });
   };
+
+  const blurCallBack = useCallback(() => {
+    setShowFileSelector(false);
+  }, []);
 
   const handleCancelStream = () => {
     cancelToken.current.cancelled = true;
@@ -318,10 +322,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         const searchKeyword = value.slice(atIndex + 1, currentPosition);
 
         setShowFileSelector(true);
-        setFilePositionY(
-          (cursorPos.absoluteY || 0) - getFileSelectorHeight() - 60
-        );
-
         // 根据搜索关键字异步搜索笔记
         if (searchKeyword.trim() === "") {
           // 关键字为空时，显示当前打开的笔记
@@ -373,7 +373,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       if (exists) return prev;
       return [...prev, note.file];
     });
-    setShowFileSelector(false);
 
     // 清除输入框中的 @ 符号和搜索关键字，替换为选中的笔记标题
     const textarea = textareaRef.current;
@@ -398,13 +397,24 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         }, 0);
       }
     }
-
-    setSearchResults([]);
   };
+
   const onSelectAllFiles  = (notes: NoteContext[]) => {
-      // 选择所有打开的文件
-      setSelectedNotes(notes);
-      setShowFileSelector(false);
+      setSelectedNotes((prev) => {
+        const existingPaths = new Set(prev.map((p) => p.path));
+        const merged = [...prev];
+        for (const note of notes) {
+          const file = note?.file ?? note; // 兼容 NoteContext 或已是文件对象
+          const path = file?.path;
+          if (path && !existingPaths.has(path)) {
+            merged.push(file);
+            existingPaths.add(path);
+          }
+        }
+        return merged;
+      });
+
+
       // 清除输入框中的 @ 符号
       const textarea = textareaRef.current;
       if (textarea) {
@@ -433,6 +443,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           left: `${filePositionX}px`,
           top: `${filePositionY}px`,
           opacity: showFileSelector ? 1 : 0,
+          zIndex: showFileSelector ? 1000 : -1,
         }}
       >
         <NoteSelector 
@@ -455,6 +466,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             handleInputChange={handleInputChange}
             handleKeyPress={handleKeyPress}
             handleSend={handleSend}
+            blurCallBack={blurCallBack}
             handleCancelStream={handleCancelStream}
             inputValue={inputValue}
             isStreaming={isStreaming}

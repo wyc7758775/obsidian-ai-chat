@@ -23,14 +23,14 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
     onSelectAllFiles(notes);
   }, [notes, onSelectAllFiles]);
 
+  // 从 onclick 改为 onMouseDown 是为了处理 blur 事件处理: 事件触发顺序是 mousedown → blur（失焦） → click
   const handleSelectNote = useCallback((note: NoteContext) => {
     onSelectNote(note);
   }, [onSelectNote]);
 
   return (
     <>
-      {/* 固定选项：当前所有活动文件 */}
-      <div className="yoran-mention-all" onClick={handleSelectAllFiles}>
+      <div className="yoran-mention-all" onMouseDown={handleSelectAllFiles}>
         <div className="yoran-mention-all-icon">
           <svg
             width="16"
@@ -63,7 +63,7 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
             <div
               key={index}
               className="yoran-file-option"
-              onClick={() => handleSelectNote(note)}
+              onMouseDown={() => handleSelectNote(note)}
             >
               <div className="yoran-file-avatar">
                 <span className="yoran-file-icon">{note.icon}</span>

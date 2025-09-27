@@ -6,6 +6,7 @@ export const ChatInput= ({
   handleKeyPress,
   handleSend,
   handleCancelStream,
+  blurCallBack,
   inputValue,
   isStreaming,
 }: {
@@ -14,6 +15,7 @@ export const ChatInput= ({
   handleKeyPress: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   handleSend: () => void;
   handleCancelStream: () => void;
+  blurCallBack?: () => void;
   inputValue: string;
   isStreaming: boolean;
 }) => {
@@ -26,6 +28,7 @@ export const ChatInput= ({
             suppressContentEditableWarning={true}
             onInput={handleInputChange}
             onKeyDown={handleKeyPress}
+            onBlur={blurCallBack}
             data-placeholder="输入消息... (Enter 发送, Shift+Enter 换行, @ 选择笔记)"
             className="yoran-input-field yoran-input-div"
             style={{

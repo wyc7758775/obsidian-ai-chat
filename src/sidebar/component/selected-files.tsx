@@ -10,7 +10,7 @@ export const SelectedFiles = ({
     <div className="yoran-file-wrapper">
       {nodes.map((note, index) => (
         <div className="yoran-file-item" key={`${note.path}-${index}`}>
-          <div className="yoran-file-item-logo">📄</div>
+          <div className="yoran-file-item-logo">📒</div>
           <div className="yoran-file-item-content">
             <span
               className="yoran-file-close"
@@ -34,7 +34,7 @@ export const SelectedFiles = ({
                 />
               </svg>
             </span>
-            <div>{note.name}</div>
+            <div className="yoran-file-path">{note.name}</div>
             <div className="yoran-file-line"></div>
             <div className="yoran-file-path">{note.path}</div>
           </div>
