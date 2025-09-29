@@ -8,6 +8,7 @@ import { ChatMessage } from "./chat-message";
 import { NoteSelector } from "./note-selector";
 import { SelectedFiles } from "./component/selected-files";
 import { ChatInput } from "./component/chat-input";
+import { PositionedPopover } from "./component/positioned-popover";
 
 export interface Message {
   id: string;
@@ -436,15 +437,13 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     <div className="yoran-chat-container">
       {/* 消息区域 */}
       {ChatMessage({messages}) }
-      <div
+      <PositionedPopover
         ref={fileSelectorRef}
         className="yoran-file-selector"
-        style={{
-          left: `${filePositionX}px`,
-          top: `${filePositionY}px`,
-          opacity: showFileSelector ? 1 : 0,
-          zIndex: showFileSelector ? 1000 : -1,
-        }}
+        visible={showFileSelector}
+        x={filePositionX}
+        y={filePositionY}
+        zIndex={1000}
       >
         <NoteSelector 
           searchResults={searchResults}
@@ -452,7 +451,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           onSelectAllFiles={onSelectAllFiles}
           onSelectNote={onSelectNote}
         />
-      </div>
+      </PositionedPopover>
       {/* 输入区域 */}
       <div className="yoran-input-area">
         {selectedNotes.length > 0 && (
