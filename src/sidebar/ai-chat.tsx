@@ -1,9 +1,11 @@
-
 import { App } from "obsidian";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { sendChatMessage } from "../modules/ai-chat/openai";
 import { yoranChatSettings } from "src/main";
-import { NoteContextService, NoteContext } from "../modules/fs-context/note-context";
+import {
+  NoteContextService,
+  NoteContext,
+} from "../modules/fs-context/note-context";
 import { ChatMessage } from "./chat-message";
 import { NoteSelector } from "./note-selector";
 import { SelectedFiles } from "./component/selected-files";
@@ -155,11 +157,12 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   };
 
-  const [filePositionX, setFilePositionX] = useState(0);
-  const [filePositionY, setFilePositionY] = useState(0);
+  const [filePosition, setFilePosition] = useState({ x: 0, y: 0 });
   const [showFileSelector, setShowFileSelector] = useState(false);
   // 关键字
   const [searchResults, setSearchResults] = useState<any[]>([]); // 搜索结果
+
+  //
 
   // ✅ 文件选择器的 ref，用于获取实际高度
   const fileSelectorRef = useRef<HTMLDivElement>(null);
@@ -306,48 +309,47 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLDivElement>) => {
       const value = e.target.innerText; // e.target.value;
+
       setInputValue(value);
       adjustTextareaHeight();
+      setShowFileSelector(false);
 
       const currentPosition = getDivCursorPosition();
-      const cursorPos = getDivCursorScreenPosition();
-      setFilePositionX(cursorPos.relativeX || 0);
-      setShowFileSelector(false);
 
       const atResult = checkAtSymbolBefore(value, currentPosition);
 
-      // 检查光标前一个字符是否为 "@"
-      if (atResult.found) {
-        // 提取@后面的搜索关键字
-        const atIndex = value.lastIndexOf("@", currentPosition - 1);
-        const searchKeyword = value.slice(atIndex + 1, currentPosition);
-
-        setShowFileSelector(true);
-        // 根据搜索关键字异步搜索笔记
-        if (searchKeyword.trim() === "") {
-          // 关键字为空时，显示当前打开的笔记
-          const openNotes = noteContextService.getOpenNotes();
-          setSearchResults(openNotes);
-        } else {
-          // 有关键字时，进行搜索
-          noteContextService
-            .searchNotes(searchKeyword)
-            .then((files) => {
-              const searchNotes = files.map((file) => ({
-                title: file.basename,
-                file: file,
-                icon: "📄",
-              }));
-              setSearchResults(searchNotes);
-            })
-            .catch((error) => {
-              console.error("搜索笔记失败:", error);
-              setSearchResults([]);
-            });
-        }
-      } else {
+      if (!atResult.found) {
         setSearchResults([]);
+        return;
       }
+
+      // 提取@后面的搜索关键字
+      const atIndex = value.lastIndexOf("@", currentPosition - 1);
+      const searchKeyword = value.slice(atIndex + 1, currentPosition);
+
+      setShowFileSelector(true);
+      // 根据搜索关键字异步搜索笔记
+      if (searchKeyword.trim() !== "") {
+        noteContextService
+          .searchNotes(searchKeyword)
+          .then((files) => {
+            const searchNotes = files.map((file) => ({
+              title: file.basename,
+              file: file,
+              icon: "📄",
+            }));
+            setSearchResults(searchNotes);
+          })
+          .catch((error) => {
+            console.error("搜索笔记失败:", error);
+            setSearchResults([]);
+          });
+        return
+      }
+
+      // 关键字为空时，显示当前打开的笔记
+      const openNotes = noteContextService.getOpenNotes();
+      setSearchResults(openNotes);
     },
     [getDivCursorPosition]
   );
@@ -359,14 +361,18 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         const selectorHeight = getFileSelectorHeight();
         const cursorPos = getDivCursorScreenPosition();
 
-        if (typeof cursorPos.relativeY === 'number' && cursorPos.relativeY > 0) {
-          setFilePositionX(cursorPos.relativeX || 0);
-          setFilePositionY(cursorPos.absoluteY - selectorHeight - 60);
+        if (
+          typeof cursorPos.relativeY === "number" &&
+          cursorPos.relativeY > 0
+        ) {
+          setFilePosition({
+            x: cursorPos.relativeX || 0,
+            y: cursorPos.absoluteY - selectorHeight - 60,
+          });
         }
       });
     }
   }, [showFileSelector, getFileSelectorHeight, getDivCursorScreenPosition]);
-
 
   const onSelectNote = (note: NoteContext) => {
     setSelectedNotes((prev) => {
@@ -386,9 +392,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       if (atIndex !== -1) {
         // 替换从@符号到光标位置的内容为笔记标题
         const newValue =
-          value.slice(0, atIndex) +
-          `@${note.title} ` +
-          value.slice(cursorPos);
+          value.slice(0, atIndex) + `@${note.title} ` + value.slice(cursorPos);
         textarea.textContent = newValue;
         setInputValue(newValue);
 
@@ -400,52 +404,50 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   };
 
-  const onSelectAllFiles  = (notes: NoteContext[]) => {
-      setSelectedNotes((prev) => {
-        const existingPaths = new Set(prev.map((p) => p.path));
-        const merged = [...prev];
-        for (const note of notes) {
-          const file = note?.file ?? note; // 兼容 NoteContext 或已是文件对象
-          const path = file?.path;
-          if (path && !existingPaths.has(path)) {
-            merged.push(file);
-            existingPaths.add(path);
-          }
+  const onSelectAllFiles = (notes: NoteContext[]) => {
+    setSelectedNotes((prev) => {
+      const existingPaths = new Set(prev.map((p) => p.path));
+      const merged = [...prev];
+      for (const note of notes) {
+        const file = note?.file ?? note; // 兼容 NoteContext 或已是文件对象
+        const path = file?.path;
+        if (path && !existingPaths.has(path)) {
+          merged.push(file);
+          existingPaths.add(path);
         }
-        return merged;
-      });
-
-
-      // 清除输入框中的 @ 符号
-      const textarea = textareaRef.current;
-      if (textarea) {
-        const value = textarea.textContent || "";
-        const cursorPos = getDivCursorPosition();
-        const newValue = value.slice(0, cursorPos - 1) + value.slice(cursorPos);
-        setInputValue(newValue);
-        // 设置新的光标位置
-        setTimeout(() => {
-          setDivCursorPosition(cursorPos - 1);
-        }, 0);
       }
-  }
+      return merged;
+    });
+
+    // 清除输入框中的 @ 符号
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const value = textarea.textContent || "";
+      const cursorPos = getDivCursorPosition();
+      const newValue = value.slice(0, cursorPos - 1) + value.slice(cursorPos);
+      setInputValue(newValue);
+      // 设置新的光标位置
+      setTimeout(() => {
+        setDivCursorPosition(cursorPos - 1);
+      }, 0);
+    }
+  };
   const onDeleteNote = (note: NoteContext) => {
     setSelectedNotes(selectedNotes.filter((n) => n.path !== note.path));
-
-  }
+  };
   return (
     <div className="yoran-chat-container">
       {/* 消息区域 */}
-      {ChatMessage({messages}) }
+      {ChatMessage({ messages })}
       <PositionedPopover
         ref={fileSelectorRef}
         className="yoran-file-selector"
         visible={showFileSelector}
-        x={filePositionX}
-        y={filePositionY}
+        x={filePosition.x}
+        y={filePosition.y}
         zIndex={1000}
       >
-        <NoteSelector 
+        <NoteSelector
           searchResults={searchResults}
           noteContextService={noteContextService}
           onSelectAllFiles={onSelectAllFiles}
@@ -455,12 +457,10 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       {/* 输入区域 */}
       <div className="yoran-input-area">
         {selectedNotes.length > 0 && (
-          <SelectedFiles 
-            nodes={selectedNotes}
-            onDeleteNote={onDeleteNote}
-          />
+          <SelectedFiles nodes={selectedNotes} onDeleteNote={onDeleteNote} />
         )}
-        {<ChatInput  
+        {
+          <ChatInput
             textareaRef={textareaRef}
             handleInputChange={handleInputChange}
             handleKeyPress={handleKeyPress}
@@ -469,7 +469,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             handleCancelStream={handleCancelStream}
             inputValue={inputValue}
             isStreaming={isStreaming}
-        />}
+          />
+        }
       </div>
     </div>
   );
