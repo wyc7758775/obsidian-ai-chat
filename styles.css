@@ -195,6 +195,7 @@
 	gap: 8px;
 	align-items: center;
 	padding: 8px 12px;
+	position: relative;
 }
 /* 可编辑div的样式 */
 .yoran-input-div {
