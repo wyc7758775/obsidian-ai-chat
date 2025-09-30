@@ -372,7 +372,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         }
       });
     }
-  }, [showFileSelector, getFileSelectorHeight, getDivCursorScreenPosition]);
+  }, [showFileSelector, getFileSelectorHeight, getDivCursorScreenPosition, searchResults]);
 
   const onSelectNote = (note: NoteContext) => {
     setSelectedNotes((prev) => {
