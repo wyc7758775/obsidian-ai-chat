@@ -45,7 +45,7 @@ export const ChatInput = ({
           style={{
             position: "absolute",
             top: "20px",
-            left: "8px",
+            left: "14px",
             color: "var(--text-muted)",
             pointerEvents: "none",
             userSelect: "none",
