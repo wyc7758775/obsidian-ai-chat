@@ -124,6 +124,12 @@
 .yoran-message-assistant {
 	justify-content: flex-start;
 }
+.yoran-message-actions {
+	display: grid;
+	grid-auto-flow: column;
+	gap: 8px;
+	align-items: center;
+}
 
 /* 用户消息样式 */
 .yoran-user-message {
@@ -172,11 +178,11 @@
 	color: var(--text-normal);
 	width: 100%;
 }
-.yoran-copy-btn {
+.yoran-action-btn {
 	cursor: pointer;
 	color: var(--text-faint);
 }
-.yoran-copy-btn:hover {
+.yoran-action-btn:hover {
 	color: var(--accent-strong);
 }
 

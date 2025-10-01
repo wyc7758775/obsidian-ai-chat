@@ -1,29 +1,17 @@
-import { App } from "obsidian";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { sendChatMessage } from "../modules/ai-chat/openai";
-import { yoranChatSettings } from "src/main";
 import {
   NoteContextService,
   NoteContext,
 } from "../modules/fs-context/note-context";
-import { ChatMessage } from "./chat-message";
-import { NoteSelector } from "./note-selector";
+import { ChatMessage } from "./component/message-list";
+import { NoteSelector } from "./component/note-selector";
 import { SelectedFiles } from "./component/selected-files";
 import { ChatInput } from "./component/chat-input";
 import { PositionedPopover } from "./component/positioned-popover";
+import { useCaretPosition } from "./hooks/use-caret-position";
+import { Message, ChatComponentProps } from "./type";
 
-export interface Message {
-  id: string;
-  content: string;
-  type: "user" | "assistant";
-  username?: string;
-}
-
-interface ChatComponentProps {
-  onSendMessage?: (message: string) => void;
-  settings: yoranChatSettings;
-  app: App;
-}
 
 const PADDING = 12
 export const ChatComponent: React.FC<ChatComponentProps> = ({
@@ -163,8 +151,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   // 关键字
   const [searchResults, setSearchResults] = useState<any[]>([]); // 搜索结果
 
-  //
-
   // ✅ 文件选择器的 ref，用于获取实际高度
   const fileSelectorRef = useRef<HTMLDivElement>(null);
 
@@ -175,43 +161,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     return 200;
   }, []);
 
-  // 获取可编辑div中光标的屏幕位置
-  const getDivCursorScreenPosition = useCallback(() => {
-    if (!textareaRef.current) return { x: 0, y: 0 };
-
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return { x: 0, y: 0 };
-
-    const range = selection.getRangeAt(0);
-
-    // 创建一个临时的span元素来获取光标位置
-    const span = document.createElement("span");
-    span.appendChild(document.createTextNode("\u200b")); // 零宽度空格
-
-    try {
-      range.insertNode(span);
-      const rect = span.getBoundingClientRect();
-      const divRect = textareaRef.current.getBoundingClientRect();
-
-      // 移除临时元素
-      span.parentNode?.removeChild(span);
-
-      // 合并相邻的文本节点
-      textareaRef.current.normalize();
-
-      return {
-        x: rect.left,
-        y: rect.top,
-        absoluteX: rect.left || 0,
-        absoluteY: rect.top || 0,
-        relativeX: rect.left - divRect.left,
-        relativeY: rect.top - divRect.top,
-      };
-    } catch (error) {
-      console.error("获取光标位置失败:", error);
-      return { x: 0, y: 0, absoluteX: 0, absoluteY: 0 };
-    }
-  }, []);
+  const getDivCursorScreenPosition = useCaretPosition(textareaRef);
 
   // 获取 div 的光标位置
   const getDivCursorPosition = useCallback(() => {
@@ -359,7 +309,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   // ✅ 当文件选择器显示时，重新计算位置以使用准确的高度
   useEffect(() => {
-    if (!showFileSelector) return;
     if (!chatContainerRef.current || !fileSelectorRef.current || !textareaRef.current) return;
 
     requestAnimationFrame(() => {

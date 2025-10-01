@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import { Message } from "./ai-chat";
+import { Message } from "../type";
 
 interface ChatMessageProps {
   messages: Message[]
@@ -46,6 +46,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ messages }) => {
     };
   }, []);
 
+  const createFile = () => {
+    console.log('create files')
+  }
+
   return (
     <div className="yoran-messages-container">
       {messages.map((message) => (
@@ -69,27 +73,55 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ messages }) => {
                   {message.content}
                 </ReactMarkdown>
               </div>
-              <div
-                className="yoran-copy-btn"
-                onClick={() => {
-                  navigator.clipboard.writeText(message.content);
-                }}
-              >
-                <svg
-                  className="force-icon force-icon-copy "
-                  width="1em"
-                  height="1em"
-                  viewBox="0 0 48 48"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+              <div className="yoran-message-actions">
+                <div
+                  className="yoran-action-btn"
+                  title="复制"
+                  aria-label="复制"    
+                  onClick={() => {
+                    navigator.clipboard.writeText(message.content);
+                  }}
                 >
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M32 12a2 2 0 012 2v28.222c0 .982-.836 1.778-1.867 1.778H7.867C6.836 44 6 43.204 6 42.222V13.778C6 12.796 6.836 12 7.867 12H32zm-2 4H10v24h20V16zM40 4a2 2 0 012 2v25a1 1 0 01-1 1h-2a1 1 0 01-1-1V8H19a1 1 0 01-1-1V5a1 1 0 011-1h21z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
+                  <svg
+                    className="force-icon force-icon-copy "
+                    width="1em"
+                    height="1em"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M32 12a2 2 0 012 2v28.222c0 .982-.836 1.778-1.867 1.778H7.867C6.836 44 6 43.204 6 42.222V13.778C6 12.796 6.836 12 7.867 12H32zm-2 4H10v24h20V16zM40 4a2 2 0 012 2v25a1 1 0 01-1 1h-2a1 1 0 01-1-1V8H19a1 1 0 01-1-1V5a1 1 0 011-1h21z"
+                      fill="currentColor"
+                    ></path>
+                  </svg>
+                </div>
+                <div
+                  className="yoran-action-btn"
+                  title=" 生成文件 "
+                  aria-label="生成"    
+                  onClick={createFile}
+                >
+                  <svg
+                    className="force-icon force-icon-copy "
+                    width="1em"
+                    height="1em"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM6 20V4h7v5h5v11H6z"
+                      fill="currentColor"
+                    />
+                    <path
+                      d="M9 12h6v2H9zm0 4h6v2H9z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
           )}
