@@ -1,14 +1,17 @@
 import React, { useRef, useEffect, useState } from "react";
+import { App } from "obsidian";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { Message } from "../type";
+import { NoteContextService } from "../../modules/fs-context/note-context";
 
 interface ChatMessageProps {
-  messages: Message[]
+  messages: Message[],
+  app: App,
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ messages }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ messages, app }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
@@ -46,13 +49,19 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ messages }) => {
     };
   }, []);
 
-  const createFile = () => {
-    console.log('create files')
+
+  const noteContextService = new NoteContextService(app);
+  // 创建新笔记
+  const createFile = (content: string, index: number) => {
+    noteContextService.createNote({
+      title: messages[index -1]?.content ?? '',
+      content,
+    });
   }
 
   return (
     <div className="yoran-messages-container">
-      {messages.map((message) => (
+      {messages.map((message, index) => (
         <div
           key={message.id}
           className={`yoran-message-wrapper yoran-message-${message.type}`}
@@ -76,7 +85,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ messages }) => {
               <div className="yoran-message-actions">
                 <div
                   className="yoran-action-btn"
-                  title="复制"
                   aria-label="复制"    
                   onClick={() => {
                     navigator.clipboard.writeText(message.content);
@@ -100,9 +108,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ messages }) => {
                 </div>
                 <div
                   className="yoran-action-btn"
-                  title=" 生成文件 "
                   aria-label="生成"    
-                  onClick={createFile}
+                  onClick={() => createFile(message.content, index)}
                 >
                   <svg
                     className="force-icon force-icon-copy "

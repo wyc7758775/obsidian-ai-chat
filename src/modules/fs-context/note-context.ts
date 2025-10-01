@@ -1,4 +1,4 @@
-import { App, TFile, Vault } from "obsidian";
+import { App, TFile, Vault, Notice } from "obsidian";
 
 export interface NoteContext {
   file?: TFile;
@@ -233,5 +233,62 @@ export class NoteContextService {
   async getRecentlyCreatedNotes(limit = 10): Promise<TFile[]> {
     const allNotes = await this.getAllNotes();
     return allNotes.sort((a, b) => b.stat.ctime - a.stat.ctime).slice(0, limit);
+  }
+
+  // this.app.vault 在 obsidian 的 ts 类型中没有定义，实际在运行时是存在的
+  private getVaultConfig<T>(key: string): T | undefined {
+    const vaultAny = this.app.vault as unknown as {
+      getConfig?: (k: string) => T;
+    };
+    try {
+      return typeof vaultAny.getConfig === "function"
+        ? vaultAny.getConfig(key)
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  getNewNoteTargetFolder(): string {
+    const location = this.getVaultConfig<string>("newFileLocation");
+
+    if (location === "folder") {
+      const folder = this.getVaultConfig<string>("newFileFolderPath");
+      return folder ?? "";
+    }
+
+    if (location === "current") {
+      const active = this.app.workspace.getActiveFile();
+      if (active) {
+        const lastSlash = active.path.lastIndexOf("/");
+        if (lastSlash >= 0) {
+          return active.path.substring(0, lastSlash);
+        }
+      }
+      // 没有活动文件时回退到根目录
+      return "";
+    }
+
+    // root 或未知值：使用 Vault 根目录
+    return "";
+  }
+
+  // 创建新笔记
+  async createNote(context: NoteContext): Promise<TFile> {
+    const { title = "新笔记", content = "", path } = context;
+    const fileName = `${title}.md`;
+
+    // 动态遵循用户“新建笔记默认位置”的设置
+    const targetFolder = path ?? this.getNewNoteTargetFolder();
+    const fullPath = targetFolder ? `${targetFolder}/${fileName}` : fileName;
+    console.log({ targetFolder, fullPath });
+
+    try {
+      return await this.vault.create(fullPath, content);
+    } catch (err: unknown) {
+      new Notice(
+        `创建笔记失败: ${err instanceof Error ? err.message : String(err)}`
+      );
+      throw err;
+    }
   }
 }

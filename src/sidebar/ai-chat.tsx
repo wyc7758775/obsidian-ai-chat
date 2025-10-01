@@ -94,7 +94,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
     const notePrompts = [];
     for (let i = 0; i < selectedNotes.length; i++) {
-      const context = await noteContextService.getNoteContent(selectedNotes[i]);
+      const context = await noteContextService.getNoteContent(selectedNotes[i] as any);
       notePrompts.push(
         typeof context === "string" ? context : context?.content ?? ""
       );
@@ -340,8 +340,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   }, [showFileSelector, getFileSelectorHeight, getDivCursorScreenPosition, searchResults]);
 
   const onSelectNote = (note: NoteContext) => {
-    setSelectedNotes((prev) => {
-      const exists = prev.some((p) => p.path === note.file?.path);
+    setSelectedNotes((prev: any) => {
+      const exists = prev.some((p: any) => p.path === note.file?.path);
       if (exists) return prev;
       return [...prev, note.file];
     });
@@ -403,7 +403,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   return (
     <div className="yoran-chat-container" ref={chatContainerRef}>
       {/* 消息区域 */}
-      {ChatMessage({ messages })}
+      {ChatMessage({ messages, app })}
       <PositionedPopover
         ref={fileSelectorRef}
         className="yoran-file-selector"
