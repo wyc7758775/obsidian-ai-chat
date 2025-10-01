@@ -25,6 +25,7 @@ interface ChatComponentProps {
   app: App;
 }
 
+const PADDING = 12
 export const ChatComponent: React.FC<ChatComponentProps> = ({
   onSendMessage,
   settings,
@@ -166,6 +167,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
   // ✅ 文件选择器的 ref，用于获取实际高度
   const fileSelectorRef = useRef<HTMLDivElement>(null);
+
   const getFileSelectorHeight = useCallback(() => {
     if (fileSelectorRef.current) {
       return fileSelectorRef.current.clientHeight;
@@ -354,24 +356,38 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     [getDivCursorPosition]
   );
 
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   // ✅ 当文件选择器显示时，重新计算位置以使用准确的高度
   useEffect(() => {
-    if (showFileSelector && fileSelectorRef.current && textareaRef.current) {
-      requestAnimationFrame(() => {
-        const selectorHeight = getFileSelectorHeight();
-        const cursorPos = getDivCursorScreenPosition();
+    if (!showFileSelector) return;
+    if (!chatContainerRef.current || !fileSelectorRef.current || !textareaRef.current) return;
 
-        if (
-          typeof cursorPos.relativeY === "number" &&
-          cursorPos.relativeY > 0
-        ) {
-          setFilePosition({
-            x: cursorPos.relativeX || 0,
-            y: cursorPos.absoluteY - selectorHeight - 60,
-          });
+    requestAnimationFrame(() => {
+      const selectorHeight = getFileSelectorHeight();
+      const cursorPos = getDivCursorScreenPosition();
+      if (
+        typeof cursorPos.relativeY === "number" &&
+        cursorPos.relativeY > 0
+      ) {
+        const popoverWidth = fileSelectorRef.current?.offsetWidth ?? 250;
+        const containerRect = chatContainerRef.current?.getBoundingClientRect() ?? { width: 0 };
+        const containerRectWidthPadding = containerRect.width + PADDING;
+
+        let targetX = cursorPos.relativeX ?? 0;
+
+        // 防止右侧溢出：x + 弹窗宽度 ≤ 容器宽度
+        if (targetX + popoverWidth > containerRectWidthPadding) {
+          targetX = containerRectWidthPadding - popoverWidth;
         }
-      });
-    }
+        // 防止左侧溢出：x ≥ 0
+        if (targetX < 0) targetX = 0;
+
+        setFilePosition({
+          x: targetX,
+          y: cursorPos.absoluteY - selectorHeight - 60,
+        });
+      }
+    });
   }, [showFileSelector, getFileSelectorHeight, getDivCursorScreenPosition, searchResults]);
 
   const onSelectNote = (note: NoteContext) => {
@@ -436,7 +452,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     setSelectedNotes(selectedNotes.filter((n) => n.path !== note.path));
   };
   return (
-    <div className="yoran-chat-container">
+    <div className="yoran-chat-container" ref={chatContainerRef}>
       {/* 消息区域 */}
       {ChatMessage({ messages })}
       <PositionedPopover

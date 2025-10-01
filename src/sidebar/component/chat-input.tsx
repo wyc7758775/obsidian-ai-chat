@@ -22,18 +22,12 @@ export const ChatInput = ({
 }) => {
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   useEffect(() => {
-    // 检查输入框是否真的为空
     const isEmpty =
       !inputValue.trim() &&
       (!textareaRef.current?.textContent?.trim() ||
         textareaRef.current?.textContent?.trim() === "");
 
     setShowPlaceholder(isEmpty);
-    console.log("输入框状态：", {
-      inputValue: `"${inputValue}"`,
-      textContent: `"${textareaRef.current?.textContent || ""}"`,
-      isEmpty,
-    });
   }, [inputValue, textareaRef]);
 
   return (
