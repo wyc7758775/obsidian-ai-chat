@@ -98,7 +98,6 @@
 	background: var(--bg-primary);
 	color: var(--text-normal);
 	font-family: var(--font-interface);
-	padding-top: 16px;
 }
 
 /* 消息容器 */
@@ -721,7 +720,8 @@ code.hljs {
 }
 
 /* 样式覆盖 */
-.workspace-leaf-content .view-content {
+/* data-type="yoran-sidebar-view" */
+.workspace-leaf-content[data-type="yoran-sidebar-view"] .view-content {
 	padding-bottom: 0 !important;
 	background-color: var(--bg-primary);
 }

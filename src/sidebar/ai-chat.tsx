@@ -11,6 +11,7 @@ import { ChatInput } from "./component/chat-input";
 import { PositionedPopover } from "./component/positioned-popover";
 import { useCaretPosition } from "./hooks/use-caret-position";
 import { Message, ChatComponentProps } from "./type";
+import { useHistory } from "./component/use-history";
 
 
 const PADDING = 12
@@ -400,8 +401,11 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const onDeleteNote = (note: NoteContext) => {
     setSelectedNotes(selectedNotes.filter((n) => n.path !== note.path));
   };
+  const { historyRender } = useHistory();
   return (
     <div className="yoran-chat-container" ref={chatContainerRef}>
+      {/* 信息历史 */}
+      {historyRender({ app })}
       {/* 消息区域 */}
       {ChatMessage({ messages, app })}
       <PositionedPopover
