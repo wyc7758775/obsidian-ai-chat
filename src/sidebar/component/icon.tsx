@@ -86,3 +86,62 @@ export const CloseIcon = () => (
     />
   </svg>
 );
+
+export const FoldIcon = ({ onClick }: { onClick?: () => void }) => (
+  <IconWrap label="收起" onClick={onClick}>
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M12 8L8 4L4 8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  </IconWrap>
+);
+
+export const ExpandIcon = ({ onClick }: { onClick?: () => void }) => (
+  <IconWrap label="展开" onClick={onClick}>
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M4 8L8 12L12 8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  </IconWrap>
+);
+export const AddIcon = ({ onClick }: { onClick?: () => void }) => (
+  <IconWrap label="新增" onClick={onClick}>
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M8 4V12M12 8H4"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  </IconWrap>
+);

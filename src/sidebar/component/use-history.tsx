@@ -1,4 +1,6 @@
 import { App } from "obsidian";
+import { AddIcon, ExpandIcon, FoldIcon } from "./icon";
+import { useState } from "react";
 
 export type ChatMessageProps = {
   app: App;
@@ -6,25 +8,59 @@ export type ChatMessageProps = {
 export const useHistory = () => {
   const historyRender:  React.FC<ChatMessageProps> = ({ app }) => {
 
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const handleExpand = () => {
+      setIsExpanded(true);
+    }
+
+    const handleFold = () => {
+      setIsExpanded(false);
+    }
+    const handleAdd = () => {
+      console.log('新增对话')
+    }
+
+    // 历史对话列表数据
+    const historyList = [
+      { sub: '项目规划与需求分析 赛肯讲讲经篮筐' },
+      { sub: '前端组件设计讨论' },
+      { sub: '数据库表结构优化' },
+      { sub: '用户权限与认证方案' },
+      { sub: '性能瓶颈排查记录' }
+    ];
+
     return (
       <div className="yoran-history">
         {/*  收起容器 */}
-        <div className="yoran-history__fold">
-          {/* 新增对话 */}
-          {/* 历史对话 目录 */}
-          {/* 展开按钮 */}
-          <div className="yoran-history__fold-btn">
+        {!isExpanded && (
+          <div className="yoran-history__fold">
+            <div className="yoran-history__fold-add">
+              <AddIcon onClick={handleAdd} />
+            </div>
+            <div className="yoran-history__fold-list">
+              {historyList.map((item, index) => (
+                <div key={index} className="yoran-history__fold-item">
+                  {item.sub}
+                </div>
+              ))}
+            </div>
+            <div className="yoran-history__fold-expand">
+              <ExpandIcon onClick={handleExpand} />
+            </div>
           </div>
-        </div>
+        )}
         {/* 展开容器 */}
-        <div className="yoran-history__expand">
-          {/* 新增对话 */}
-          {/* 历史对话 目录 */}
-        </div>
+        {isExpanded && (
+          <div className="yoran-history__expand">
+            {/* 历史对话 目录 */}
+            <FoldIcon onClick={handleFold} />
+          </div>
+        )}
       </div>
     )
   }
   return {
     historyRender
-  }
-};
+  };  
+}
