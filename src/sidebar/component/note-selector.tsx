@@ -1,6 +1,6 @@
-
 import React, { useCallback } from "react";
 import { NoteContextService, NoteContext  } from "../../modules/fs-context/note-context";
+import { BookIcon  } from './icon'
 
 export interface FileSelectorProps {
   // 数据
@@ -32,21 +32,7 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
     <>
       <div className="yoran-mention-all" onMouseDown={handleSelectAllFiles}>
         <div className="yoran-mention-all-icon">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M16 4H18C19.1046 4 20 4.89543 20 6V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V6C4 4.89543 4.89543 4 6 4H8M16 4V2M16 4V6M8 4V2M8 4V6M8 10H16M8 14H13"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <BookIcon  />
         </div>
         <span className="yoran-mention-all-text">当前所有活动文件</span>
       </div>

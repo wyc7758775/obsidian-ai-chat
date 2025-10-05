@@ -861,3 +861,7 @@ code.hljs {
 .yoran-file-list::-webkit-scrollbar-thumb:hover {
 	background: var(--scrollbar-thumb-bg-hover);
 }
+/* history */
+.yoran-history {
+	position: relative;
+}

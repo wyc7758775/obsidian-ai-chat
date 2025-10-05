@@ -12,6 +12,9 @@ export const useHistory = () => {
         <div className="yoran-history__fold">
           {/* 新增对话 */}
           {/* 历史对话 目录 */}
+          {/* 展开按钮 */}
+          <div className="yoran-history__fold-btn">
+          </div>
         </div>
         {/* 展开容器 */}
         <div className="yoran-history__expand">
