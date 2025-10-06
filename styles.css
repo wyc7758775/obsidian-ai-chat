@@ -899,7 +899,6 @@ code.hljs {
   justify-content: center;
   gap: 8px;                        /* 新增：图标与文字间距 */
   min-width: max-content;          /* 子项不被压缩，撑开父级 */
-  max-width: 280px;                /* 防止过长撑破布局 */
   padding: 8px 12px;               /* 胶囊内边距 */
   border-radius: 12px;             /* 更圆润 */
 	background-color: var(--bg-primary);
@@ -945,3 +944,22 @@ code.hljs {
 }
 .yoran-history__fold-add:active,
 .yoran-history__fold-expand:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+
+.yoran-history__expand-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 8px 12px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	max-height: 20rem;
+	scrollbar-width: none;
+}
+.yoran-history__expand-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.yoran-history__fold-action {
+	padding: 8px 12px;
+	cursor: pointer;
+}
