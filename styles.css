@@ -180,6 +180,9 @@
 .yoran-action-btn {
 	cursor: pointer;
 	color: var(--text-faint);
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 .yoran-action-btn:hover {
 	color: var(--accent-strong);
@@ -864,6 +867,9 @@ code.hljs {
 /* history */
 .yoran-history {
 	position: relative;
+	border-radius: 24px;
+	background-color: var(--bg-primary-second);
+	border: 1px solid var(--background-primary-alt);
 }
 .yoran-history__fold {
   display: flex;
@@ -896,9 +902,7 @@ code.hljs {
   max-width: 280px;                /* 防止过长撑破布局 */
   padding: 8px 12px;               /* 胶囊内边距 */
   border-radius: 12px;             /* 更圆润 */
-  background: var(--background-primary);
-  border: 1px solid var(--background-modifier-border);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+	background-color: var(--bg-primary);
   color: var(--text-normal);
   cursor: pointer;
   transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
@@ -922,14 +926,14 @@ code.hljs {
 /* 左右控制按钮统一为圆形按钮 */
 .yoran-history__fold-add,
 .yoran-history__fold-expand {
-  min-width: max-content;
+  flex-shrink: 0;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 50%;                /* 改为圆形 */
+  border-radius: 50%;
   background: var(--background-primary);
   color: var(--text-normal);
   transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;

@@ -1,5 +1,5 @@
 import { App } from "obsidian";
-import { AddIcon, ExpandIcon, FoldIcon } from "./icon";
+import { AddIcon, ExpandIcon, FoldIcon, HistoryIcon } from "./icon";
 import { useState } from "react";
 
 export type ChatMessageProps = {
@@ -41,7 +41,12 @@ export const useHistory = () => {
             <div className="yoran-history__fold-list">
               {historyList.map((item, index) => (
                 <div key={index} className="yoran-history__fold-item">
-                  {item.sub}
+                  <div className="yoran-history__fold-icon">
+                    <HistoryIcon />
+                  </div>
+                  <div className="yoran-history__fold-text">
+                    {item.sub}
+                  </div>
                 </div>
               ))}
             </div>
