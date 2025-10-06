@@ -1,9 +1,9 @@
-import { Editor, MarkdownView, Plugin, WorkspaceLeaf } from "obsidian";
+import { Editor, MarkdownView, Plugin, View, WorkspaceLeaf } from "obsidian";
 import { SettingTab } from "./setting/plugin-setting";
-import {
-  YoranSidebarView,
-  VIEW_TYPE_YORAN_SIDEBAR,
-} from "./sidebar/sidebar-view";
+import { YoranSidebarView } from "./sidebar/sidebar-view";
+
+// 定义视图类型常量
+export const VIEW_TYPE_YORAN_SIDEBAR = "yoran-sidebar-view";
 
 export interface yoranChatSettings {
   appKey: string;
@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS: yoranChatSettings = {
 
 export default class yoranChat extends Plugin {
   settings: yoranChatSettings;
-  private view: any;
+  private view: View;
 
   async onload() {
     await this.loadSettings();
@@ -36,6 +36,9 @@ export default class yoranChat extends Plugin {
       this.initLeaf();
     });
 
+    // This adds a settings tab so the user can configure various aspects of the plugin
+    this.addSettingTab(new SettingTab(this.app, this));
+
     // TODO: 测试 command 替换文章 的效果
     this.addCommand({
       id: "sample-editor-command",
@@ -44,9 +47,6 @@ export default class yoranChat extends Plugin {
         editor.replaceSelection("Sample Editor Command");
       },
     });
-
-    // This adds a settings tab so the user can configure various aspects of the plugin
-    this.addSettingTab(new SettingTab(this.app, this));
 
     // TODO: 监听选中文本变化 出现 AI相关功能
     this.registerDomEvent(document, "selectionchange", () => {

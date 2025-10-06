@@ -60,7 +60,7 @@ export class SettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("System Prompt")
       .setDesc("please type system prompt")
-      .addText((text) =>
+      .addTextArea((text) =>
         text
           .setPlaceholder("System Prompt")
           .setValue(this.plugin.settings.systemPrompt)

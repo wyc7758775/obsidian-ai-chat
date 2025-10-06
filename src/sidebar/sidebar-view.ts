@@ -2,10 +2,7 @@ import { Notice, ItemView, WorkspaceLeaf } from "obsidian";
 import React from "react";
 import { createRoot, Root } from "react-dom/client";
 import { ChatComponent } from "./ai-chat";
-import { yoranChatSettings } from "../main";
-
-// 定义视图类型常量
-export const VIEW_TYPE_YORAN_SIDEBAR = "yoran-sidebar-view";
+import { yoranChatSettings, VIEW_TYPE_YORAN_SIDEBAR } from "../main";
 
 // 创建自定义侧边栏视图
 export class YoranSidebarView extends ItemView {
