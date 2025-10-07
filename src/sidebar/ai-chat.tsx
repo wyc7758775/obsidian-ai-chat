@@ -71,6 +71,15 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   }, []);
 
+  const { historyRender, currentId } = useHistory();
+  useEffect(() => {
+    // messages有变化的就更新当前历史记录的 messages
+    if (!currentId) return
+
+    // console.log(22222222222)
+
+  }, [messages, currentId])
+
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
@@ -401,7 +410,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const onDeleteNote = (note: NoteContext) => {
     setSelectedNotes(selectedNotes.filter((n) => n.path !== note.path));
   };
-  const { historyRender } = useHistory();
   return (
     <div className="yoran-chat-container" ref={chatContainerRef}>
       {/* 信息历史 */}
