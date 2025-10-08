@@ -17,5 +17,6 @@ export interface ChatComponentProps {
 export interface HistoryItem {
   id: string;
   messages: Message[];
-  noteSelected: TFile[];
+  noteSelected?: TFile[];
+  createdAt?: number;
 }

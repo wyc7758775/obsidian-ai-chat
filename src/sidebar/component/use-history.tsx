@@ -1,7 +1,8 @@
 import { App } from "obsidian";
-import { AddIcon, ExpandIcon, FoldIcon, HistoryIcon } from "./icon";
-import { useState } from "react";
+import { AddIcon, ExpandIcon, FoldIcon, HistoryIcon, CloseIcon } from "./icon";
+import { useState, useEffect } from "react";
 import { HistoryItem } from "../type";
+import { useContext } from "../hooks/use-context";
 
 export type ChatMessageProps = {
   app: App;
@@ -12,8 +13,17 @@ export const useHistory = () => {
   );
   const [currentId, setCurrentId] = useState<string>("");
 
+  const {
+    addEmptyItem,
+    fetchHistoryList,
+    deleteEmptyItems,
+    getHistoryItemById,
+    deleteHistoryItem,
+  } = useContext();
+
   const historyRender: React.FC<ChatMessageProps> = ({ app }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
 
     const handleExpand = () => {
       setIsExpanded(true);
@@ -22,85 +32,72 @@ export const useHistory = () => {
     const handleFold = () => {
       setIsExpanded(false);
     };
-    const handleAdd = () => {
-      console.log("新增对话");
+    const handleAdd = async () => {
+      const item = await addEmptyItem();
+      (async () => {
+        try {
+          const historyItem = (await getHistoryItemById(item.id)) ?? {
+            id: item.id,
+            messages: [],
+          };
+          setHistoryList((prev) => [historyItem, ...prev]);
+          setCurrentId(item.id);
+        } catch (e) {
+          console.error("IndexedDB load failed:", e);
+        }
+      })();
     };
 
-    // 历史对话列表数据
-    const historyList: any = [
-      {
-        id: "1",
-        messages: [
-          {
-            id: "1",
-            content: "项目规划与需求分析 赛肯讲讲经篮筐",
-            type: "user",
-          },
-        ],
-      },
-      {
-        id: "2",
-        messages: [{ id: "2", content: "前端组件设计讨论", type: "user" }],
-      },
-      {
-        id: "3",
-        messages: [{ id: "3", content: "数据库表结构优化", type: "user" }],
-      },
-      {
-        id: "4",
-        messages: [{ id: "4", content: "用户权限与认证方案", type: "user" }],
-      },
-      {
-        id: "5",
-        messages: [{ id: "5", content: "性能瓶颈排查记录", type: "user" }],
-      },
-      {
-        id: "6",
-        messages: [
-          {
-            id: "6",
-            content: "项目规划与需求分析 赛肯讲讲经篮筐",
-            type: "user",
-          },
-        ],
-      },
-      {
-        id: "7",
-        messages: [{ id: "7", content: "前端组件设计讨论", type: "user" }],
-      },
-      {
-        id: "8",
-        messages: [{ id: "8", content: "数据库表结构优化", type: "user" }],
-      },
-      {
-        id: "9",
-        messages: [{ id: "9", content: "用户权限与认证方案", type: "user" }],
-      },
-      {
-        id: "10",
-        messages: [{ id: "10", content: "性能瓶颈排查记录", type: "user" }],
-      },
-    ];
+    useEffect(() => {
+      (async () => {
+        try {
+          const items = await fetchHistoryList();
+          setHistoryList(items);
+          setCurrentId(items[0]?.id || "");
+        } catch (e) {
+          console.error("IndexedDB load failed:", e);
+        }
+      })();
+    }, [fetchHistoryList]);
 
     const handleUpdateHistoryItem = (item: HistoryItem) => {
       setCurrentId(item.id);
       setHistoryItems(item);
     };
 
-    const historyItemRender = (item: HistoryItem, index: number) => (
-      <div
-        className="yoran-history__fold-item"
-        key={index}
-        onClick={() => handleUpdateHistoryItem(item)}
-      >
-        <div className="yoran-history__fold-icon">
-          <HistoryIcon />
+    // TODO: 新建对话和其他元素切换之后，message 会出现问题
+    const historyItemRender = (item: HistoryItem, index: number) => {
+      const isActive = item.id === currentId;
+      return (
+        <div
+          className={`yoran-history__fold-item ${
+            isActive ? " yoran-history__fold-item--active" : ""
+          }`}
+          key={index}
+          onClick={() => handleUpdateHistoryItem(item)}
+        >
+          <div className="yoran-history__fold-icon">
+            <HistoryIcon />
+          </div>
+          <div className="yoran-history__fold-text">
+            {item.messages?.[0]?.content ?? "新增对话"}
+          </div>
+          <div
+            className="yoran-history__fold-delete"
+            onClick={() => deleteHistoryItem(item.id)}
+          >
+            <CloseIcon />
+          </div>
         </div>
-        <div className="yoran-history__fold-text">
-          {item.messages[0].content}
-        </div>
-      </div>
-    );
+      );
+    };
+
+    // 组件销毁时，删除空的历史记录
+    useEffect(() => {
+      return () => {
+        deleteEmptyItems();
+      };
+    }, []);
 
     return (
       <div className="yoran-history">
@@ -111,7 +108,9 @@ export const useHistory = () => {
               <AddIcon onClick={handleAdd} />
             </div>
             <div className="yoran-history__fold-list">
-              {historyList.map((item: HistoryItem, index: number) => historyItemRender(item, index))}
+              {historyList.map((item: HistoryItem, index: number) =>
+                historyItemRender(item, index)
+              )}
             </div>
             <div className="yoran-history__fold-expand">
               <ExpandIcon onClick={handleExpand} />
@@ -122,7 +121,9 @@ export const useHistory = () => {
         {isExpanded && (
           <div className="yoran-history__expand">
             <div className="yoran-history__expand-list">
-              {historyList.map((item: HistoryItem, index: number) => historyItemRender(item, index))}
+              {historyList.map((item: HistoryItem, index: number) =>
+                historyItemRender(item, index)
+              )}
             </div>
             <div className="yoran-history__fold-action">
               <FoldIcon onClick={handleFold} />

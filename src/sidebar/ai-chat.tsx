@@ -12,6 +12,7 @@ import { PositionedPopover } from "./component/positioned-popover";
 import { useCaretPosition } from "./hooks/use-caret-position";
 import { Message, ChatComponentProps } from "./type";
 import { useHistory } from "./component/use-history";
+import { useContext } from "./hooks/use-context";
 
 
 const PADDING = 12
@@ -72,13 +73,32 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   }, []);
 
   const { historyRender, currentId } = useHistory();
+  const { upsertHistoryItem, getHistoryItemById } = useContext();
+
   useEffect(() => {
-    // messages有变化的就更新当前历史记录的 messages
     if (!currentId) return
+    ;(async () => {
+      try {
+        const item = await getHistoryItemById(currentId) ?? { id: currentId, messages: [] };
+        setMessages(item.messages);
+      } catch (e) {
+        console.error("IndexedDB load failed:", e);
+      }
+    })();
+  }, [currentId, getHistoryItemById])
 
-    // console.log(22222222222)
+  useEffect(() => {
+    if (!currentId) return
+    if (messages.length === 0) return; // 防止空会话回写
 
-  }, [messages, currentId])
+    (async () => {
+      try {
+        await upsertHistoryItem({ id: currentId, messages });
+      } catch (e) {
+        console.error("IndexedDB save failed:", e);
+      }
+    })();
+  }, [messages, currentId, upsertHistoryItem])
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -416,6 +436,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       {historyRender({ app })}
       {/* 消息区域 */}
       {ChatMessage({ messages, app })}
+      {/* 文件选择器 */}
       <PositionedPopover
         ref={fileSelectorRef}
         className="yoran-file-selector"

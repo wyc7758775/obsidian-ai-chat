@@ -1,10 +1,14 @@
 .theme-light {
 	--bg-primary: rgb(247, 247, 247);
 	--bg-primary-second: #ffffff;
+	--btn-color: rgb(230, 230, 230);
+	--btn-color-active: var(--bg-primary); 
 }
 .theme-dark {
 	--bg-primary: #2e3440;
 	--bg-primary-second: #3b4252;
+	--btn-color: #4c566a;
+	--btn-color-active: var(--bg-primary); 
 }
 .yoran-input-container {
 	display: flex;
@@ -108,6 +112,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
+	padding-top: 12px;
 }
 
 /* 消息包装器 */
@@ -906,10 +911,19 @@ code.hljs {
   cursor: pointer;
   transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
 }
+.yoran-history__fold-delete {
+	color: var(--btn-color);
+}
+.yoran-history__fold-delete:hover {
+	color: var(--btn-color-active);
+}
 .yoran-history__fold-item:hover {
   background-color: var(--background-modifier-hover);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   transform: translateY(-1px);
+	.yoran-file-close {
+		display: inline;
+	}
 }
 .yoran-history__fold-item:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10); }
 .yoran-history__fold-item:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
@@ -921,6 +935,12 @@ code.hljs {
   white-space: nowrap; 
   text-overflow: ellipsis; 
 }
+/* 新增：活跃/选中状态样式 */
+.yoran-history__fold-item--active {
+	border-bottom: 2px solid var(--interactive-accent);
+  transform: translateY(-1px);
+}
+
 
 /* 左右控制按钮统一为圆形按钮 */
 .yoran-history__fold-add,
