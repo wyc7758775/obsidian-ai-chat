@@ -89,7 +89,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
   useEffect(() => {
     if (!currentId) return
-    if (messages.length === 0) return; // 防止空会话回写
 
     (async () => {
       try {
@@ -98,7 +97,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         console.error("IndexedDB save failed:", e);
       }
     })();
-  }, [messages, currentId, upsertHistoryItem])
+  }, [messages, currentId])
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;

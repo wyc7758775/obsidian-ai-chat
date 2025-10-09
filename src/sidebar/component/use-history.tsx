@@ -65,7 +65,6 @@ export const useHistory = () => {
       setHistoryItems(item);
     };
 
-    // TODO: 新建对话和其他元素切换之后，message 会出现问题
     const historyItemRender = (item: HistoryItem, index: number) => {
       const isActive = item.id === currentId;
       return (
