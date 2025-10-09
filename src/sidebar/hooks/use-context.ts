@@ -20,6 +20,9 @@ export const useContext = () => {
 
   const upsertHistoryItem = useCallback(
     async (item: HistoryItem) => {
+      // 跳过空消息的写入，防止删除后被回写
+      if (!item.messages || item.messages.length === 0) return;
+
       const db = await openDB();
       const tx = db.transaction(STORE_NAME, "readwrite");
       const store = tx.objectStore(STORE_NAME);
@@ -31,14 +34,9 @@ export const useContext = () => {
       });
 
       await new Promise<void>((resolve, reject) => {
-        tx.oncomplete = () => {
-          db.close();
-          resolve();
-        };
-        tx.onerror = () => {
-          db.close();
-          reject(tx.error);
-        };
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = () => { db.close(); reject(tx.error); };
+        tx.onabort = () => { db.close(); reject(tx.error); };
       });
     },
     [openDB]
@@ -115,7 +113,12 @@ export const useContext = () => {
         req.onerror = () => reject(req.error);
       });
 
-      db.close();
+      // 等待事务真正提交后再关闭连接，避免读到未提交的旧值
+      await new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = () => { db.close(); reject(tx.error); };
+        tx.onabort = () => { db.close(); reject(tx.error); };
+      });
     },
     [openDB]
   );

@@ -76,8 +76,12 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const { upsertHistoryItem, getHistoryItemById } = useContext();
 
   useEffect(() => {
-    if (!currentId) return
-    ;(async () => {
+    if (!currentId) {
+      setMessages([]);
+      return
+    }
+
+    (async () => {
       try {
         const item = await getHistoryItemById(currentId) ?? { id: currentId, messages: [] };
         setMessages(item.messages);

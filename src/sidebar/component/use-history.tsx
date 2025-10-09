@@ -32,6 +32,7 @@ export const useHistory = () => {
     const handleFold = () => {
       setIsExpanded(false);
     };
+
     const handleAdd = async () => {
       const item = await addEmptyItem();
       (async () => {
@@ -58,7 +59,25 @@ export const useHistory = () => {
           console.error("IndexedDB load failed:", e);
         }
       })();
-    }, [fetchHistoryList]);
+    }, [fetchHistoryList ]);
+
+    const handleDelete = async (id: string) => {
+      await deleteHistoryItem(id);
+      const items = await fetchHistoryList();
+      setHistoryList(items);
+      if (id === currentId) {
+        setCurrentId("");
+        // 如果删除的是当前项且列表只剩这一条，则自动新建一条
+        if (id === currentId && historyList.length === 1) {
+          await handleAdd();
+        } else if (id === currentId) {
+          // 否则把当前项指向下一条
+          setCurrentId(items[0]?.id || "");
+        }
+      } else {
+        setCurrentId(items[0]?.id || "");
+      }
+    };
 
     const handleUpdateHistoryItem = (item: HistoryItem) => {
       setCurrentId(item.id);
@@ -79,11 +98,11 @@ export const useHistory = () => {
             <HistoryIcon />
           </div>
           <div className="yoran-history__fold-text">
-            {item.messages?.[0]?.content ?? "新增对话"}
+            {item.messages?.[0]?.content ?? "新增AI对话"}
           </div>
           <div
             className="yoran-history__fold-delete"
-            onClick={() => deleteHistoryItem(item.id)}
+            onClick={() => handleDelete(item.id)}
           >
             <CloseIcon />
           </div>
