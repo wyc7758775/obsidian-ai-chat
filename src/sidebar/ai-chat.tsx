@@ -88,8 +88,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   }, [currentId, getHistoryItemById])
 
   useEffect(() => {
-    if (!currentId) return
-
+    if (!currentId) return;
     (async () => {
       try {
         await upsertHistoryItem({ id: currentId, messages });
@@ -97,7 +96,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         console.error("IndexedDB save failed:", e);
       }
     })();
-  }, [messages, currentId])
+  }, [messages])
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
