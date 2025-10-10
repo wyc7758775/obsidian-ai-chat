@@ -34,9 +34,18 @@ export const useContext = () => {
       });
 
       await new Promise<void>((resolve, reject) => {
-        tx.oncomplete = () => { db.close(); resolve(); };
-        tx.onerror = () => { db.close(); reject(tx.error); };
-        tx.onabort = () => { db.close(); reject(tx.error); };
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => {
+          db.close();
+          reject(tx.error);
+        };
+        tx.onabort = () => {
+          db.close();
+          reject(tx.error);
+        };
       });
     },
     [openDB]
@@ -84,6 +93,7 @@ export const useContext = () => {
     const item: HistoryItem = {
       id: crypto.randomUUID(),
       messages: [],
+      noteSelected: [],
       createdAt: Date.now(),
     };
     const db = await openDB();
@@ -115,9 +125,18 @@ export const useContext = () => {
 
       // 等待事务真正提交后再关闭连接，避免读到未提交的旧值
       await new Promise<void>((resolve, reject) => {
-        tx.oncomplete = () => { db.close(); resolve(); };
-        tx.onerror = () => { db.close(); reject(tx.error); };
-        tx.onabort = () => { db.close(); reject(tx.error); };
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => {
+          db.close();
+          reject(tx.error);
+        };
+        tx.onabort = () => {
+          db.close();
+          reject(tx.error);
+        };
       });
     },
     [openDB]

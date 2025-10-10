@@ -1,5 +1,6 @@
-import { App, TFile } from "obsidian";
+import { App } from "obsidian";
 import { yoranChatSettings } from "src/main";
+import { NoteContext } from "src/modules/fs-context/note-context";
 
 export interface Message {
   id: string;
@@ -17,6 +18,6 @@ export interface ChatComponentProps {
 export interface HistoryItem {
   id: string;
   messages: Message[];
-  noteSelected?: TFile[];
+  noteSelected?: NoteContext[];
   createdAt?: number;
 }

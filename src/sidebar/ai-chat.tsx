@@ -85,22 +85,36 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       try {
         const item = await getHistoryItemById(currentId) ?? { id: currentId, messages: [] };
         setMessages(item.messages);
+        setSelectedNotes(item.noteSelected || []);
       } catch (e) {
         console.error("IndexedDB load failed:", e);
       }
     })();
   }, [currentId, getHistoryItemById])
 
+  // ChatComponent 组件内的保存 useEffect
   useEffect(() => {
     if (!currentId) return;
+  
+    // 将 selectedNotes 序列化为可写入 IndexedDB 的轻量对象
+    const noteSelectedSerializable = (selectedNotes || [])
+      .map((n: any) => {
+        const path = n?.path ?? n?.file?.path;
+        const name = n?.name ?? n?.title ?? n?.file?.basename;
+        const icon = n?.icon ?? "📄";
+        if (!path) return null;
+        return { path, name, title: name, icon };
+      })
+      .filter(Boolean) as { path: string; name?: string; title?: string; icon?: string }[];
+  
     (async () => {
       try {
-        await upsertHistoryItem({ id: currentId, messages });
+        await upsertHistoryItem({ id: currentId, messages, noteSelected: noteSelectedSerializable });
       } catch (e) {
         console.error("IndexedDB save failed:", e);
       }
     })();
-  }, [messages])
+  }, [messages, selectedNotes])
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
