@@ -23,5 +23,5 @@
   "include": [
     "**/*.ts",
     "**/*.tsx"
-, "src/modules/ai-chat/openai.js"  ]
+, "src/modules/ai-chat/openai.js", "build/postBuildPlugin.mjs"  ]
 }
