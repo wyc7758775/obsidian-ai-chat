@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import styles from './css/ai-chat.module.css'
 import { sendChatMessage } from "../modules/ai-chat/openai";
 import {
   NoteContextService,
@@ -447,7 +448,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     setSelectedNotes(selectedNotes.filter((n) => n.path !== note.path));
   };
   return (
-    <div className="yoran-chat-container" ref={chatContainerRef}>
+    <div className={styles.container} ref={chatContainerRef}>
       {/* 信息历史 */}
       {historyRender({ app })}
       {/* 消息区域 */}
