@@ -1,0 +1,196 @@
+/* 消息容器 */
+.messagesContainer {
+	flex: 1;
+	overflow-y: auto;
+	padding: var(--chat-padding);
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding-top: 12px;
+}
+/* 滚动条 */
+.messagesContainer::-webkit-scrollbar {
+	width: 4px;
+}
+.messagesContainer::-webkit-scrollbar-track {
+	background: transparent;
+}
+.messagesContainer::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb-bg);
+	border-radius: 2px;
+}
+.messagesContainer::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-thumb-bg-hover);
+}
+/* 响应式设计 */
+@media (max-width: 400px) {
+	.messagesContainer {
+		padding: 12px;
+	}
+}
+
+/* 消息包装器 */
+.messageWrapper {
+	display: flex;
+	width: 100%;
+	animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* 用户消息样式 */
+.userMessage {
+	display: flex;
+	justify-content: flex-end;
+	max-width: 80%;
+	margin-left: auto;
+}
+.userBubble {
+	border-radius: 8px;
+	padding: 6px 12px;
+	max-width: 100%;
+	position: relative;
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	transition: all 0.2s ease;
+}
+.userBubble:hover {
+	background-color: var(--interactive-accent-hover);
+	transform: translateY(-1px);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.userContent {
+	word-wrap: break-word;
+	line-height: 1.4;
+	user-select: text !important;
+}
+
+.assistantMessage {
+	display: flex;
+	flex-direction: column;
+	max-width: 100%;
+	padding: 8px;
+	align-items: flex-start;
+	width: 100%;
+}
+
+.assistantText {
+  line-height: 1.4;
+  word-wrap: break-word;
+  user-select: text !important;
+  color: var(--text-normal);
+  width: 100%;
+}
+
+/* 代码块（块级）样式：主题自适应背景 + 边框 +圆角 */
+.assistantText pre {
+  background-color: var(--bg-primary-second);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  overflow: auto;
+}
+/* highlight.js 通常将 .hljs 加在 code 上，这里让背景由 pre 承担 */
+.assistantText pre code.hljs {
+  background: transparent;
+}
+
+/* 行内代码样式：提升可读性 */
+.assistantText code:not(pre code) {
+  background-color: var(--bg-primary-second);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+/* Markdown 表格样式与防止撑开父级 */
+.assistantText table {
+  display: block;            /* 让表格在块级容器中可滚动 */
+  width: max-content;        /* 内容宽度优先，避免撑满父容器 */
+  max-width: 100%;
+  overflow-x: auto;          /* 横向滚动而不是溢出 */
+  border-collapse: collapse;
+  margin: 8px 0;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+}
+.assistantText thead th {
+  background-color: var(--bg-primary-second);
+}
+.assistantText th,
+.assistantText td {
+  padding: 8px 12px;
+  border: 1px solid var(--background-modifier-border);
+  text-align: left;
+  vertical-align: top;
+}
+.assistantText tbody tr:nth-child(odd) {
+  background-color: var(--background-primary);
+}
+
+.messageActions {
+	display: grid;
+	grid-auto-flow: column;
+	gap: 8px;
+	align-items: center;
+}
+
+/* 占位符 */
+.logo {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+.logoTitle {
+	font-size: 102px;
+}
+
+/* 复制按钮容器与样式（适配主题，悬浮显示） */
+.assistantText .blockWithCopy {
+  position: relative;
+}
+.assistantText .copyBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+  z-index: 2;
+}
+.assistantText .blockWithCopy:hover .copyBtn {
+  opacity: 1;
+}
+.assistantText .copyBtn:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+/* 复制图标尺寸与颜色适配主题 */
+.assistantText .copyBtn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}

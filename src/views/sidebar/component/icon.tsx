@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import styles from "../css/icon.module.css";
 
 export const IconWrap = ({
   label,
@@ -11,7 +12,7 @@ export const IconWrap = ({
   children: ReactNode;
   onClick?: () => void;
 }) => (
-  <div style={{ color }} className="yoran-action-btn" aria-label={label} onClick={onClick}>
+  <div style={{ color }} className={styles.actionBtn} aria-label={label} onClick={onClick}>
     {children}
   </div>
 );
@@ -19,7 +20,6 @@ export const IconWrap = ({
 export const CopyIcon = ({ onClick }: { onClick?: () => void }) => (
   <IconWrap label="复制" onClick={onClick}>
     <svg
-      className="force-icon force-icon-copy "
       width="1em"
       height="1em"
       viewBox="0 0 48 48"
@@ -38,7 +38,6 @@ export const CopyIcon = ({ onClick }: { onClick?: () => void }) => (
 export const GenerateIcon = ({ onClick }: { onClick?: () => void }) => (
   <IconWrap label="生成" onClick={onClick}>
     <svg
-      className="force-icon force-icon-copy "
       width="1em"
       height="1em"
       viewBox="0 0 24 24"

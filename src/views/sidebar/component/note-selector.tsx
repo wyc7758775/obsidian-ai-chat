@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
-import { NoteContextService, NoteContext  } from "../../modules/fs-context/note-context";
+import { NoteContextService, NoteContext  } from "../../../core/fs-context/note-context";
 import { BookIcon  } from './icon'
+import styles from "../css/note-selector.module.css";
 
 export interface FileSelectorProps {
   // 数据
@@ -30,35 +31,35 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
 
   return (
     <>
-      <div className="yoran-mention-all" onMouseDown={handleSelectAllFiles}>
-        <div className="yoran-mention-all-icon">
+      <div className={styles.mentionAll} onMouseDown={handleSelectAllFiles}>
+        <div className={styles.mentionAllIcon}>
           <BookIcon  />
         </div>
-        <span className="yoran-mention-all-text">当前所有活动文件</span>
+        <span className={styles.mentionAllText}>当前所有活动文件</span>
       </div>
 
       {/* 分组标题 */}
       {notes.length > 0 && (
-        <div className="yoran-file-group-title">打开的笔记</div>
+        <div className={styles.fileGroupTitle}>打开的笔记</div>
       )}
 
       {/* 文件列表 */}
-      <div className="yoran-file-list">
+      <div className={styles.fileList}>
         {notes.length > 0 ? (
           notes.map((note, index) => (
             <div
               key={index}
-              className="yoran-file-option"
+              className={styles.fileOption}
               onMouseDown={() => handleSelectNote(note)}
             >
-              <div className="yoran-file-avatar">
-                <span className="yoran-file-icon">{note.icon}</span>
+              <div className={styles.fileAvatar}>
+                <span className={styles.fileIcon}>{note.icon}</span>
               </div>
-              <span className="yoran-file-title">{note.title}</span>
+              <span className={styles.fileTitle}>{note.title}</span>
             </div>
           ))
         ) : (
-          <div className="yoran-file-option yoran-file-empty">
+          <div className={`${styles.fileOption} ${styles.fileEmpty}`}>
             <span>没有打开的笔记</span>
           </div>
         )}

@@ -1,0 +1,119 @@
+.inputWrapper {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	padding: 8px 12px;
+	position: relative;
+}
+
+.inputWrapper,
+.inputWrapper:focus
+ {
+	outline: none !important;
+	box-shadow: none !important;
+	border-color: var(--border-color) !important;
+}
+.inputWrapper:focus-within {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 1px var(--interactive-accent-hover);
+}
+.inputPlaceholder {
+  position: absolute;
+  top: 20px;
+  left: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+  user-select: none;
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+  z-index: 1;
+}
+
+/* 可编辑div的样式 */
+.inputDiv {
+  outline: none;
+  border: none;
+  resize: none;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  transition: border-color 0.2s ease;
+}
+
+.inputDiv:focus {
+  border-color: var(--interactive-accent);
+}
+
+.inputDiv:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.inputDiv:focus:empty::before {
+  opacity: 0.6;
+}
+
+.inputField {
+	flex: 1;
+	border: none !important;
+	background: transparent !important;
+	color: var(--text-normal);
+	font-size: var(--font-size-base);
+	line-height: 1.4;
+	outline: none;
+	resize: none;
+	overflow-y: hidden;
+	transition: height 0.1s ease;
+	padding: 12px 0;
+  min-height: 20px;
+  max-height: none;
+  overflow-y: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.inputField:focus {
+	outline: none !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.inputField:focus-visible {
+	outline: none !important;
+}
+
+.inputField::placeholder {
+	color: var(--text-faint);
+}
+
+
+.sendBtn {
+	width: 28px;
+	height: 28px;
+	border: none;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-radius: 50%;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	transition: all 0.2s ease;
+}
+
+.sendBtn:hover:not(:disabled) {
+	background: var(--interactive-accent-hover);
+	transform: scale(1.05);
+}
+
+.sendBtn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	background: var(--background-modifier-border);
+}

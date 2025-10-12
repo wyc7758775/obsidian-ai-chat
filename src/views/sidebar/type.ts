@@ -1,6 +1,6 @@
 import { App } from "obsidian";
 import { yoranChatSettings } from "src/main";
-import { NoteContext } from "src/modules/fs-context/note-context";
+import { NoteContext } from "src/core/fs-context/note-context";
 
 export interface Message {
   id: string;

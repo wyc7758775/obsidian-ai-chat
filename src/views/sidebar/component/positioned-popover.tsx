@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import styles from "../css/positioned-popover.module.css";
 
 export interface PositionedPopoverProps {
   /** 是否显示弹窗 */
@@ -37,7 +38,7 @@ export const PositionedPopover = forwardRef<HTMLDivElement, PositionedPopoverPro
     return (
       <div
         ref={ref}
-        className={className}
+        className={[styles.popover, className].filter(Boolean).join(" ")}
         style={defaultStyle}
       >
         {children}

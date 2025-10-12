@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import styles from './css/ai-chat.module.css'
-import { sendChatMessage } from "../modules/ai-chat/openai";
+import { sendChatMessage } from "../../core/ai/openai";
 import {
   NoteContextService,
   NoteContext,
-} from "../modules/fs-context/note-context";
+} from "../../core/fs-context/note-context";
 import { ChatMessage } from "./component/message-list";
 import { NoteSelector } from "./component/note-selector";
 import { SelectedFiles } from "./component/selected-files";
@@ -456,7 +456,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       {/* 文件选择器 */}
       <PositionedPopover
         ref={fileSelectorRef}
-        className="yoran-file-selector"
+        className={styles.fileSelector}
         visible={showFileSelector}
         x={filePosition.x}
         y={filePosition.y}
@@ -470,7 +470,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         />
       </PositionedPopover>
       {/* 输入区域 */}
-      <div className="yoran-input-area">
+      <div className={styles.inputArea}>
         {selectedNotes.length > 0 && (
           <SelectedFiles nodes={selectedNotes} onDeleteNote={onDeleteNote} />
         )}

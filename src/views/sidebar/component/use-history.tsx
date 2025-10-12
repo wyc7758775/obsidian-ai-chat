@@ -1,5 +1,6 @@
 import { App } from "obsidian";
 import { AddIcon, ExpandIcon, FoldIcon, HistoryIcon, CloseIcon } from "./icon";
+import styles from "../css/use-history.module.css";
 import { useState, useEffect } from "react";
 import { HistoryItem } from "../type";
 import { useContext } from "../hooks/use-context";
@@ -88,20 +89,20 @@ export const useHistory = () => {
       const isActive = item.id === currentId;
       return (
         <div
-          className={`yoran-history__fold-item ${
-            isActive ? " yoran-history__fold-item--active" : ""
+          className={`${styles.historyFoldItem} ${
+            isActive ? styles.historyFoldItemActive : ""
           }`}
           key={index}
           onClick={() => handleUpdateHistoryItem(item)}
         >
-          <div className="yoran-history__fold-icon">
+          <div className={styles.historyFoldIcon}>
             <HistoryIcon />
           </div>
-          <div className="yoran-history__fold-text">
+          <div className={styles.historyFoldText}>
             {item.messages?.[0]?.content ?? "新增AI对话"}
           </div>
           <div
-            className="yoran-history__fold-delete"
+            className={styles.historyFoldDelete}
             onClick={() => handleDelete(item.id)}
           >
             <CloseIcon />
@@ -118,32 +119,32 @@ export const useHistory = () => {
     }, []);
 
     return (
-      <div className="yoran-history">
+      <div className={styles.history}>
         {/*  收起容器 */}
         {!isExpanded && (
-          <div className="yoran-history__fold">
-            <div className="yoran-history__fold-add">
+          <div className={styles.historyFold}>
+            <div className={styles.historyFoldAdd}>
               <AddIcon onClick={handleAdd} />
             </div>
-            <div className="yoran-history__fold-list">
+            <div className={styles.historyFoldList}>
               {historyList.map((item: HistoryItem, index: number) =>
                 historyItemRender(item, index)
               )}
             </div>
-            <div className="yoran-history__fold-expand">
+            <div className={styles.historyFoldExpand}>
               <ExpandIcon onClick={handleExpand} />
             </div>
           </div>
         )}
         {/* 展开容器 */}
         {isExpanded && (
-          <div className="yoran-history__expand">
-            <div className="yoran-history__expand-list">
+          <div className={styles.historyExpand}>
+            <div className={styles.historyExpandList}>
               {historyList.map((item: HistoryItem, index: number) =>
                 historyItemRender(item, index)
               )}
             </div>
-            <div className="yoran-history__fold-action">
+            <div className={styles.historyFoldAction}>
               <FoldIcon onClick={handleFold} />
             </div>
           </div>

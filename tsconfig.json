@@ -1,4 +1,7 @@
 {
+  "exclude": [
+    "build"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
     "inlineSourceMap": true,
@@ -22,6 +25,9 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
-, "src/modules/ai-chat/openai.js", "build/postBuildPlugin.mjs"  ]
+    "**/*.tsx",
+    "**/*.d.ts",
+    "src/core/ai/openai.js",
+    "build/postBuildPlugin.mjs"
+  ]
 }

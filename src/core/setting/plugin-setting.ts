@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import yoranChat from "../main";
+import yoranChat from "../../main";
 
 export class SettingTab extends PluginSettingTab {
   plugin: yoranChat;

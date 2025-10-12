@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useState } from "react";
 import { App } from "obsidian";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
 import { Message } from "../type";
-import { NoteContextService } from "../../modules/fs-context/note-context";
+import { NoteContextService } from "../../../core/fs-context/note-context";
 import { CopyIcon, GenerateIcon } from "./icon";
+import styles from "../css/message-list.module.css";
+import { useMarkdownRenderer } from "./use-markdown-renderer";
 
 interface ChatMessageProps {
   messages: Message[];
@@ -15,6 +15,7 @@ interface ChatMessageProps {
 export const ChatMessage: React.FC<ChatMessageProps> = ({ messages, app }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const buildMarkdownProps = useMarkdownRenderer();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -60,29 +61,35 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ messages, app }) => {
   };
 
   return (
-    <div className="yoran-messages-container">
+    <div className={styles.messagesContainer}>
       {messages.map((message, index) => (
         <div
           key={message.id}
-          className={`yoran-message-wrapper yoran-message-${message.type}`}
+          className={`${styles.messageWrapper} yoran-message-${message.type}`}
         >
           {message.type === "user" ? (
-            <div className="yoran-user-message">
-              <div className="yoran-user-bubble">
-                <div className="yoran-user-content">{message.content}</div>
+            <div className={styles.userMessage}>
+              <div className={styles.userBubble}>
+                <div className={styles.userContent}>{message.content}</div>
               </div>
             </div>
           ) : (
-            <div className="yoran-assistant-message">
-              <div className="yoran-assistant-text">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  rehypePlugins={[rehypeHighlight]}
-                >
-                  {message.content}
-                </ReactMarkdown>
+            <div className={styles.assistantMessage}>
+              <div className={styles.assistantText}>
+                {(() => {
+                  const { remarkPlugins, rehypePlugins, components } = buildMarkdownProps(message.content);
+                  return (
+                    <ReactMarkdown
+                      remarkPlugins={remarkPlugins as any}
+                      rehypePlugins={rehypePlugins as any}
+                      components={components as any}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  );
+                })()}
               </div>
-              <div className="yoran-message-actions">
+              <div className={styles.messageActions}>
                 <CopyIcon
                   onClick={() =>navigator.clipboard.writeText(message.content)}
                 />
@@ -95,9 +102,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ messages, app }) => {
         </div>
       ))}
       {messages.length === 0 && (
-        <div className="yoran-logo">
-          <span className="yoran-logo-title">😊</span>
-          <span className="yoran-logo-sub">请相信美好的事情即将到来。</span>
+        <div className={styles.logo}>
+          <span className={styles.logoTitle}>😊</span>
+          <span>请相信美好的事情即将到来。</span>
         </div>
       )}
       <div ref={messagesEndRef}></div>

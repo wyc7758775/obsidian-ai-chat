@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { outdir } from "./esbuild.config.mjs";
+import { outdir } from "../esbuild.config.mjs";
 
 // 构建完成后自动执行：合并 CSS、清理冗余、复制静态文件
 export const postBuildPlugin = {

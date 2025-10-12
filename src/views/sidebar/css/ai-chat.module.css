@@ -1,0 +1,28 @@
+.container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	background: var(--bg-primary);
+	color: var(--text-normal);
+	font-family: var(--font-interface);
+}
+.fileSelector {
+	position: absolute;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+	z-index: 99999;
+	min-width: 280px;
+	max-width: 320px;
+	overflow: hidden;
+	backdrop-filter: blur(10px);
+}
+.inputArea {
+	padding: 4px;
+	background-color: var(--bg-primary-second);
+	border: 1px solid var(--background-primary-alt);
+	margin-bottom: 8px;
+	border-radius: 24px;
+	overflow: hidden;
+}

@@ -1,4 +1,5 @@
 import { RefObject, useEffect, useState } from "react";
+import styles from "../css/chat-input.module.css";
 
 const PLACEHOLDER = "输入消息... (Enter 发送, Shift+Enter 换行, @ 选择笔记)";
 export const ChatInput = ({
@@ -31,23 +32,10 @@ export const ChatInput = ({
   }, [inputValue, textareaRef]);
 
   return (
-    <div className="yoran-input-wrapper">
+    <div className={styles.inputWrapper}>
       {/* 占位符层 */}
       {showPlaceholder && (
-        <div
-          className="yoran-input-placeholder"
-          style={{
-            position: "absolute",
-            top: "20px",
-            left: "14px",
-            color: "var(--text-muted)",
-            pointerEvents: "none",
-            userSelect: "none",
-            fontSize: "var(--font-size-base)",
-            lineHeight: "1.4",
-            zIndex: 1,
-          }}
-        >
+        <div className={styles.inputPlaceholder}>
           {PLACEHOLDER}
         </div>
       )}
@@ -59,23 +47,16 @@ export const ChatInput = ({
         onInput={handleInputChange}
         onKeyDown={handleKeyPress}
         onBlur={blurCallBack}
-        className="yoran-input-field yoran-input-div"
-        style={{
-          minHeight: "20px",
-          maxHeight: "none",
-          overflowY: "hidden",
-          whiteSpace: "pre-wrap",
-          wordWrap: "break-word",
-        }}
+        className={styles.inputDiv + " " + styles.inputField}
       />
       {isStreaming ? (
-        <button onClick={handleCancelStream} className="yoran-cancel-btn">
+        <button onClick={handleCancelStream}>
           ||
         </button>
       ) : (
         <button
           onClick={handleSend}
-          className="yoran-send-btn"
+          className={styles.sendBtn}
           disabled={!inputValue.trim()}
         >
           ➤
