@@ -18,6 +18,6 @@ export interface ChatComponentProps {
 export interface HistoryItem {
   id: string;
   messages: Message[];
-  noteSelected?: NoteContext[];
+  noteSelected?: NoteContext[] | Array<{ serialized: string; filePath?: string }>;
   createdAt?: number;
 }

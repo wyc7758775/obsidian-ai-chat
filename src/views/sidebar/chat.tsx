@@ -1,22 +1,22 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import styles from './css/ai-chat.module.css'
+import styles from "./css/ai-chat.module.css";
 import { sendChatMessage } from "../../core/ai/openai";
 import {
   NoteContextService,
   NoteContext,
 } from "../../core/fs-context/note-context";
-import { ChatMessage } from "./component/message-list";
+import { ChatMessage } from "./component/message-list/message-list";
 import { NoteSelector } from "./component/note-selector";
 import { SelectedFiles } from "./component/selected-files";
 import { ChatInput } from "./component/chat-input";
 import { PositionedPopover } from "./component/positioned-popover";
 import { useCaretPosition } from "./hooks/use-caret-position";
+import { useSerializeJS, parseSerializeJS } from "./hooks/use-serialize-js";
 import { Message, ChatComponentProps } from "./type";
 import { useHistory } from "./component/use-history";
 import { useContext } from "./hooks/use-context";
 
-
-const PADDING = 12
+const PADDING = 12;
 export const ChatComponent: React.FC<ChatComponentProps> = ({
   onSendMessage,
   settings,
@@ -25,6 +25,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const textareaRef = useRef<HTMLDivElement>(null);
   const cancelToken = useRef({ cancelled: false });
@@ -75,47 +76,52 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
   const { historyRender, currentId } = useHistory();
   const { upsertHistoryItem, getHistoryItemById } = useContext();
+  const serializeJS = useSerializeJS();
 
   useEffect(() => {
     if (!currentId) {
       setMessages([]);
-      return
+      return;
     }
 
     (async () => {
       try {
-        const item = await getHistoryItemById(currentId) ?? { id: currentId, messages: [] };
+        const item = (await getHistoryItemById(currentId)) ?? {
+          id: currentId,
+          messages: [],
+        };
         setMessages(item.messages);
-        setSelectedNotes(item.noteSelected || []);
+        // 读取历史时将字符串快照解析回对象，并补齐必要字段
+        setSelectedNotes(parseSerializeJS(item.noteSelected as any) || []);
       } catch (e) {
         console.error("IndexedDB load failed:", e);
       }
     })();
-  }, [currentId, getHistoryItemById])
+  }, [currentId, getHistoryItemById]);
 
   // ChatComponent 组件内的保存 useEffect
   useEffect(() => {
     if (!currentId) return;
-  
-    // 将 selectedNotes 序列化为可写入 IndexedDB 的轻量对象
-    const noteSelectedSerializable = (selectedNotes || [])
-      .map((n: any) => {
-        const path = n?.path ?? n?.file?.path;
-        const name = n?.name ?? n?.title ?? n?.file?.basename;
-        const icon = n?.icon ?? "📄";
-        if (!path) return null;
-        return { path, name, title: name, icon };
-      })
-      .filter(Boolean) as { path: string; name?: string; title?: string; icon?: string }[];
-  
+
+    // 改用第三方库 serialize-javascript：先快照，再字符串化，并记录 filePath
+    const noteSelectedSerializable = (selectedNotes || []).map((n: any) => {
+      const serializedStr = serializeJS(n, { maxDepth: 2 });
+      const filePath = n?.file?.path ?? n?.path ?? undefined;
+      return { serialized: serializedStr, filePath };
+    });
+
     (async () => {
       try {
-        await upsertHistoryItem({ id: currentId, messages, noteSelected: noteSelectedSerializable });
+        await upsertHistoryItem({
+          id: currentId,
+          messages,
+          noteSelected: noteSelectedSerializable,
+        });
       } catch (e) {
         console.error("IndexedDB save failed:", e);
       }
     })();
-  }, [messages, selectedNotes])
+  }, [currentId, messages, selectedNotes, upsertHistoryItem, serializeJS]);
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -141,12 +147,15 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
     const notePrompts = [];
     for (let i = 0; i < selectedNotes.length; i++) {
-      const context = await noteContextService.getNoteContent(selectedNotes[i] as any);
+      const context = await noteContextService.getNoteContent(
+        selectedNotes[i] as any
+      );
       notePrompts.push(
         typeof context === "string" ? context : context?.content ?? ""
       );
     }
 
+    setIsLoading(true);
     sendChatMessage({
       settings,
       inputValue,
@@ -167,6 +176,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         },
         onStart: () => {
           setIsStreaming(true);
+          setIsLoading(false);
         },
         onComplete: () => {
           cancelToken.current.cancelled = false;
@@ -343,7 +353,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             console.error("搜索笔记失败:", error);
             setSearchResults([]);
           });
-        return
+        return;
       }
 
       // 关键字为空时，显示当前打开的笔记
@@ -356,17 +366,20 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   // ✅ 当文件选择器显示时，重新计算位置以使用准确的高度
   useEffect(() => {
-    if (!chatContainerRef.current || !fileSelectorRef.current || !textareaRef.current) return;
+    if (
+      !chatContainerRef.current ||
+      !fileSelectorRef.current ||
+      !textareaRef.current
+    )
+      return;
 
     requestAnimationFrame(() => {
       const selectorHeight = getFileSelectorHeight();
       const cursorPos = getDivCursorScreenPosition();
-      if (
-        typeof cursorPos.relativeY === "number" &&
-        cursorPos.relativeY > 0
-      ) {
+      if (typeof cursorPos.relativeY === "number" && cursorPos.relativeY > 0) {
         const popoverWidth = fileSelectorRef.current?.offsetWidth ?? 250;
-        const containerRect = chatContainerRef.current?.getBoundingClientRect() ?? { width: 0 };
+        const containerRect =
+          chatContainerRef.current?.getBoundingClientRect() ?? { width: 0 };
         const containerRectWidthPadding = containerRect.width + PADDING;
 
         let targetX = cursorPos.relativeX ?? 0;
@@ -384,7 +397,12 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         });
       }
     });
-  }, [showFileSelector, getFileSelectorHeight, getDivCursorScreenPosition, searchResults]);
+  }, [
+    showFileSelector,
+    getFileSelectorHeight,
+    getDivCursorScreenPosition,
+    searchResults,
+  ]);
 
   const onSelectNote = (note: NoteContext) => {
     setSelectedNotes((prev: any) => {
@@ -452,7 +470,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       {/* 信息历史 */}
       {historyRender({ app })}
       {/* 消息区域 */}
-      {ChatMessage({ messages, app })}
+      {ChatMessage({ messages, app, isLoading })}
       {/* 文件选择器 */}
       <PositionedPopover
         ref={fileSelectorRef}
