@@ -3,6 +3,13 @@ import { yoranChatSettings } from "src/main";
 
 type ChatMessage = OpenAI.Chat.Completions.ChatCompletionMessageParam;
 
+type CallBacks = {
+  onStart?: () => void;
+  onResponseStart?: () => void;
+  onChunk: (chunk: string) => void;
+  onComplete?: () => void;
+  onError?: (error: Error) => void;
+};
 /**
  * @param settings : 配置的数据
  * @param inputValue : 输入框中的值
@@ -16,12 +23,7 @@ export interface OpenaiParams {
   inputValue: string;
   notePrompts?: string[];
   contextMessages?: Array<ChatMessage>;
-  callBacks: {
-    onStart?: () => void;
-    onChunk: (chunk: string) => void;
-    onComplete?: () => void;
-    onError?: (error: Error) => void;
-  };
+  callBacks: CallBacks;
   cancelToken?: { cancelled: boolean };
 }
 
@@ -153,12 +155,7 @@ export const handleStreamResponse = async (
   openai: OpenAI,
   settings: yoranChatSettings,
   messages: ChatMessage[],
-  callBacks: {
-    onStart?: () => void;
-    onChunk: (chunk: string) => void;
-    onComplete?: () => void;
-    onError?: (error: Error) => void;
-  },
+  callBacks: CallBacks,
   cancelToken?: { cancelled: boolean }
 ) => {
   try {
@@ -171,6 +168,7 @@ export const handleStreamResponse = async (
       temperature: 0.7,
       max_tokens: 4000,
     });
+    callBacks.onResponseStart?.();
 
     for await (const part of stream) {
       if (cancelToken?.cancelled) {

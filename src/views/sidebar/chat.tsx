@@ -174,8 +174,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             )
           );
         },
-        onStart: () => {
-          setIsStreaming(true);
+        onResponseStart: () => {
           setIsLoading(false);
         },
         onComplete: () => {

@@ -91,6 +91,28 @@
   width: 100%;
 }
 
+/* 流式加载指示器（简洁三点跳动） */
+.typing {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin: 4px 6px;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: dotBlink 1s ease-in-out infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBlink {
+  0% { opacity: 0.25; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-2px); }
+  100% { opacity: 0.25; transform: translateY(0); }
+}
+
 /* 代码块（块级）样式：主题自适应背景 + 边框 +圆角 */
 .assistantText pre {
   background-color: var(--bg-primary-second);
