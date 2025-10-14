@@ -69,22 +69,23 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               })()}
             </div>
             {isLoading &&
-              index === messages.length - 1 &&
-              message.type === "assistant" && (
-                <div className={styles.typing} aria-label="AI生成中">
-                  <span className={styles.dot}></span>
-                  <span className={styles.dot}></span>
-                  <span className={styles.dot}></span>
-                </div>
-              )}
-            <div className={styles.messageActions}>
-              <CopyIcon
-                onClick={() => navigator.clipboard.writeText(message.content)}
-              />
-              <GenerateIcon
-                onClick={() => createFile(message.content, index)}
-              />
-            </div>
+            index === messages.length - 1 &&
+            message.type === "assistant" ? (
+              <div className={styles.typing} aria-label="AI生成中">
+                <span className={styles.dot}></span>
+                <span className={styles.dot}></span>
+                <span className={styles.dot}></span>
+              </div>
+            ) : (
+              <div className={styles.messageActions}>
+                <CopyIcon
+                  onClick={() => navigator.clipboard.writeText(message.content)}
+                />
+                <GenerateIcon
+                  onClick={() => createFile(message.content, index)}
+                />
+              </div>
+            )}
           </div>
         );
       }
