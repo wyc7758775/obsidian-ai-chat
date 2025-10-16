@@ -26,7 +26,7 @@ jobs:
         run: pnpm build:prod
 
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-releases@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: build/dist
