@@ -1,0 +1,65 @@
+name: Release Obsidian Plugin
+
+on:
+  push:
+    tags:
+      - "*"   # Tag should match manifest version, e.g. 1.0.1 (no leading v)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "pnpm"
+
+      - name: Enable corepack (pnpm)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (production)
+        run: pnpm build:pro
+
+      - name: List build outputs
+        run: |
+          ls -la build/dist || true
+
+      - name: Verify build artifacts exist
+        run: |
+          test -f build/dist/main.js || (echo "main.js missing" && exit 1)
+          test -f build/dist/manifest.json || (echo "manifest.json missing" && exit 1)
+          # styles.css is optional but expected in this project
+          test -f build/dist/styles.css || (echo "styles.css missing" && exit 1)
+
+      - name: Validate tag matches manifest version
+        run: |
+          VERSION=$(jq -r .version build/dist/manifest.json)
+          TAG="${GITHUB_REF_NAME}"
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "Tag ($TAG) does not match manifest version ($VERSION)."
+            exit 1
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            build/dist/manifest.json
+            build/dist/main.js
+            build/dist/styles.css
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false

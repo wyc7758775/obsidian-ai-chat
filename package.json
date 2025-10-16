@@ -4,9 +4,10 @@
   "description": "A chat plugin powered by MCP and React",
   "main": "main.js",
   "scripts": {
-    "build": "node esbuild.config.mjs production",
-    "build:prod": "node esbuild.config.mjs production",
-    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs",
+    "build:prod": "node esbuild.config.mjs prod",
+    "build:pro": "node esbuild.config.mjs prod",
+    "dev": "node esbuild.config.mjs watch",
     "version": "node version-bump.mjs && git add manifest.json versions.json"
   },
   "keywords": [],
