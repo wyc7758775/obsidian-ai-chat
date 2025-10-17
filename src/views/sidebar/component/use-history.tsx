@@ -10,7 +10,7 @@ export type ChatMessageProps = {
 };
 export const useHistory = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem>(
-    {} as HistoryItem
+    {} as HistoryItem,
   );
   const [currentId, setCurrentId] = useState<string>("");
 
@@ -60,23 +60,34 @@ export const useHistory = () => {
           console.error("IndexedDB load failed:", e);
         }
       })();
-    }, [fetchHistoryList ]);
+    }, [fetchHistoryList]);
 
     const handleDelete = async (id: string) => {
-      await deleteHistoryItem(id);
-      const items = await fetchHistoryList();
-      setHistoryList(items);
-      if (id === currentId) {
-        setCurrentId("");
-        // 如果删除的是当前项且列表只剩这一条，则自动新建一条
-        if (id === currentId && historyList.length === 1) {
-          await handleAdd();
-        } else if (id === currentId) {
-          // 否则把当前项指向下一条
-          setCurrentId(items[0]?.id || "");
+      // 如果删除前只有一条记录，先创建一条新记录
+      if (historyList.length === 1) {
+        const newItem = await addEmptyItem();
+        try {
+          const historyItem = (await getHistoryItemById(newItem.id)) ?? {
+            id: newItem.id,
+            messages: [],
+          };
+          setHistoryList([historyItem]);
+          setCurrentId(newItem.id);
+          // 创建新记录后再删除原记录
+          await deleteHistoryItem(id);
+        } catch (e) {
+          console.error("创建新历史记录失败:", e);
         }
       } else {
-        setCurrentId(items[0]?.id || "");
+        // 如果有多条记录，正常删除
+        await deleteHistoryItem(id);
+        const items = await fetchHistoryList();
+        setHistoryList(items);
+
+        if (id === currentId) {
+          // 如果删除的是当前项，切换到第一条
+          setCurrentId(items[0]?.id || "");
+        }
       }
     };
 
@@ -128,7 +139,7 @@ export const useHistory = () => {
             </div>
             <div className={styles.historyFoldList}>
               {historyList.map((item: HistoryItem, index: number) =>
-                historyItemRender(item, index)
+                historyItemRender(item, index),
               )}
             </div>
             <div className={styles.historyFoldExpand}>
@@ -141,7 +152,7 @@ export const useHistory = () => {
           <div className={styles.historyExpand}>
             <div className={styles.historyExpandList}>
               {historyList.map((item: HistoryItem, index: number) =>
-                historyItemRender(item, index)
+                historyItemRender(item, index),
               )}
             </div>
             <div className={styles.historyFoldAction}>

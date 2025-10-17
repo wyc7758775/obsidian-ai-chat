@@ -30,7 +30,7 @@ export default class yoranChat extends Plugin {
     this.registerView(
       VIEW_TYPE_YORAN_SIDEBAR,
       (leaf: WorkspaceLeaf) =>
-        (this.view = new YoranSidebarView(leaf, this.settings))
+        (this.view = new YoranSidebarView(leaf, this.settings)),
     );
 
     this.app.workspace.onLayoutReady(() => {
