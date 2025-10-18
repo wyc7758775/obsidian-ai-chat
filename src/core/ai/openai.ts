@@ -35,7 +35,7 @@ const buildMessages = (
   settings: yoranChatSettings,
   inputValue: string,
   notePrompts?: string[],
-  contextMessages?: Array<ChatMessage>
+  contextMessages?: Array<ChatMessage>,
 ): ChatMessage[] => {
   const messages: ChatMessage[] = [];
 
@@ -156,7 +156,7 @@ export const handleStreamResponse = async (
   settings: yoranChatSettings,
   messages: ChatMessage[],
   callBacks: CallBacks,
-  cancelToken?: { cancelled: boolean }
+  cancelToken?: { cancelled: boolean },
 ) => {
   try {
     callBacks.onStart?.();
@@ -242,7 +242,7 @@ export const sendChatMessage = async ({
     settings,
     inputValue,
     notePrompts,
-    contextMessages
+    contextMessages,
   );
 
   return handleStreamResponse(
@@ -250,6 +250,6 @@ export const sendChatMessage = async ({
     settings,
     messages,
     callBacks,
-    cancelToken
+    cancelToken,
   );
 };

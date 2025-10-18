@@ -1,6 +1,9 @@
 import React, { useCallback } from "react";
-import { NoteContextService, NoteContext  } from "../../../core/fs-context/note-context";
-import { BookIcon  } from './icon'
+import {
+  NoteContextService,
+  NoteContext,
+} from "../../../core/fs-context/note-context";
+import { BookIcon } from "./icon";
 import styles from "../css/note-selector.module.css";
 
 export interface FileSelectorProps {
@@ -9,7 +12,7 @@ export interface FileSelectorProps {
   noteContextService: NoteContextService;
   // 回调函数
   onSelectAllFiles: (notes: NoteContext[]) => void;
-  onSelectNote: (note: NoteContext  ) => void;
+  onSelectNote: (note: NoteContext) => void;
 }
 
 export const NoteSelector: React.FC<FileSelectorProps> = ({
@@ -18,22 +21,27 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
   onSelectAllFiles,
   onSelectNote,
 }) => {
-  const notes = (searchResults.length > 0 ? searchResults : noteContextService.getOpenNotes()) as NoteContext[];
+  const notes = (
+    searchResults.length > 0 ? searchResults : noteContextService.getOpenNotes()
+  ) as NoteContext[];
 
   const handleSelectAllFiles = useCallback(() => {
     onSelectAllFiles(notes);
   }, [notes, onSelectAllFiles]);
 
   // 从 onclick 改为 onMouseDown 是为了处理 blur 事件处理: 事件触发顺序是 mousedown → blur（失焦） → click
-  const handleSelectNote = useCallback((note: NoteContext) => {
-    onSelectNote(note);
-  }, [onSelectNote]);
+  const handleSelectNote = useCallback(
+    (note: NoteContext) => {
+      onSelectNote(note);
+    },
+    [onSelectNote]
+  );
 
   return (
     <>
       <div className={styles.mentionAll} onMouseDown={handleSelectAllFiles}>
         <div className={styles.mentionAllIcon}>
-          <BookIcon  />
+          <BookIcon />
         </div>
         <span className={styles.mentionAllText}>当前所有活动文件</span>
       </div>

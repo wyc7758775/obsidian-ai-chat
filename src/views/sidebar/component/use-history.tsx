@@ -10,14 +10,13 @@ export type ChatMessageProps = {
 };
 export const useHistory = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem>(
-    {} as HistoryItem,
+    {} as HistoryItem
   );
   const [currentId, setCurrentId] = useState<string>("");
 
   const {
     addEmptyItem,
     fetchHistoryList,
-    deleteEmptyItems,
     getHistoryItemById,
     deleteHistoryItem,
   } = useContext();
@@ -122,13 +121,6 @@ export const useHistory = () => {
       );
     };
 
-    // 组件销毁时，删除空的历史记录
-    useEffect(() => {
-      return () => {
-        deleteEmptyItems();
-      };
-    }, []);
-
     return (
       <div className={styles.history}>
         {/*  收起容器 */}
@@ -139,7 +131,7 @@ export const useHistory = () => {
             </div>
             <div className={styles.historyFoldList}>
               {historyList.map((item: HistoryItem, index: number) =>
-                historyItemRender(item, index),
+                historyItemRender(item, index)
               )}
             </div>
             <div className={styles.historyFoldExpand}>
@@ -152,7 +144,7 @@ export const useHistory = () => {
           <div className={styles.historyExpand}>
             <div className={styles.historyExpandList}>
               {historyList.map((item: HistoryItem, index: number) =>
-                historyItemRender(item, index),
+                historyItemRender(item, index)
               )}
             </div>
             <div className={styles.historyFoldAction}>

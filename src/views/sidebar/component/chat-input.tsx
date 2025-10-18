@@ -1,7 +1,7 @@
 import { RefObject, useEffect, useState } from "react";
 import styles from "../css/chat-input.module.css";
 
-const PLACEHOLDER = "输入消息... (Enter 发送, Shift+Enter 换行, @ 选择笔记)";
+const PLACEHOLDER = " 询问一个问题... (按下@ 选择笔记)";
 export const ChatInput = ({
   textareaRef,
   handleInputChange,
@@ -35,9 +35,7 @@ export const ChatInput = ({
     <div className={styles.inputWrapper}>
       {/* 占位符层 */}
       {showPlaceholder && (
-        <div className={styles.inputPlaceholder}>
-          {PLACEHOLDER}
-        </div>
+        <div className={styles.inputPlaceholder}>{PLACEHOLDER}</div>
       )}
 
       <div
@@ -50,9 +48,7 @@ export const ChatInput = ({
         className={styles.inputDiv + " " + styles.inputField}
       />
       {isStreaming ? (
-        <button onClick={handleCancelStream}>
-          ||
-        </button>
+        <button onClick={handleCancelStream}>||</button>
       ) : (
         <button
           onClick={handleSend}

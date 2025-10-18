@@ -142,22 +142,11 @@ export const useContext = () => {
     [openDB]
   );
 
-  // 如果 某个对象中的  messages 的数组为空，那么就删除这个数据，并且导出这个方法
-  const deleteEmptyItems = useCallback(async () => {
-    const items = await fetchHistoryList();
-    for (const item of items) {
-      if (item.messages.length === 0) {
-        await deleteHistoryItem(item.id);
-      }
-    }
-  }, [fetchHistoryList, deleteHistoryItem]);
-
   return {
     upsertHistoryItem,
     fetchHistoryList,
     getHistoryItemById,
     addEmptyItem,
     deleteHistoryItem,
-    deleteEmptyItems,
   };
 };
