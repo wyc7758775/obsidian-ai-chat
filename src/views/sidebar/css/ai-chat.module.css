@@ -24,5 +24,39 @@
 	border: 1px solid var(--background-primary-alt);
 	margin-bottom: 8px;
 	border-radius: 24px;
-	overflow: hidden;
+	position: relative;
+}
+
+/* 回到底部箭头按钮 */
+.scrollToBottomBtnContainer {
+	width: 100%;
+	position: absolute;
+  z-index: 1000;
+	top: -30px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.scrollToBottomBtn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+}
+.scrollToBottomBtn:hover {
+  transform: translateY(-1px) scale(1.06);
+  background: var(--background-modifier-active);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+}
+.scrollToBottomBtn:active {
+  transform: translateY(0) scale(0.98);
 }

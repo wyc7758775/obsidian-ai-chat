@@ -5,7 +5,10 @@ import {
   NoteContextService,
   NoteContext,
 } from "../../core/fs-context/note-context";
-import { ChatMessage } from "./component/message-list/message-list";
+import {
+  ChatMessage,
+  ChatMessageHandle,
+} from "./component/message-list/message-list";
 import { NoteSelector } from "./component/note-selector";
 import { SelectedFiles } from "./component/selected-files";
 import { ChatInput } from "./component/chat-input";
@@ -26,9 +29,11 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const [inputValue, setInputValue] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   const textareaRef = useRef<HTMLDivElement>(null);
   const cancelToken = useRef({ cancelled: false });
+  const messageListRef = useRef<ChatMessageHandle>(null);
 
   const noteContextService = new NoteContextService(app);
 
@@ -464,12 +469,23 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const onDeleteNote = (note: NoteContext) => {
     setSelectedNotes(selectedNotes.filter((n) => n.path !== note.path));
   };
+
+  const handleScrollToBottom = () => {
+    messageListRef.current?.scrollToBottom?.();
+  };
+
   return (
     <div className={styles.container} ref={chatContainerRef}>
       {/* 信息历史 */}
       {historyRender({ app })}
       {/* 消息区域 */}
-      {ChatMessage({ messages, app, isLoading })}
+      <ChatMessage
+        ref={messageListRef}
+        messages={messages}
+        app={app}
+        isLoading={isLoading}
+        onNearBottomChange={(near) => setShowScrollBtn(!near)}
+      />
       {/* 文件选择器 */}
       <PositionedPopover
         ref={fileSelectorRef}
@@ -488,6 +504,18 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       </PositionedPopover>
       {/* 输入区域 */}
       <div className={styles.inputArea}>
+        {showScrollBtn && (
+          <div className={styles.scrollToBottomBtnContainer}>
+            <button
+              className={styles.scrollToBottomBtn}
+              onClick={handleScrollToBottom}
+              aria-label="滚动到底部"
+              title="滚动到底部"
+            >
+              ↓
+            </button>
+          </div>
+        )}
         {selectedNotes.length > 0 && (
           <SelectedFiles nodes={selectedNotes} onDeleteNote={onDeleteNote} />
         )}

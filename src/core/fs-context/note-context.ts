@@ -20,17 +20,35 @@ export class NoteContextService {
     this.vault = app.vault;
   }
 
+  // 允许通过 TFile、轻量 NoteContext 或 path 字符串解析为 TFile
+  private resolveToFile(input?: TFile | NoteContext | string): TFile | null {
+    if (!input) return null;
+    if (typeof input === "string") {
+      const abs = this.vault.getAbstractFileByPath(input);
+      return abs && abs instanceof TFile ? abs : null;
+    }
+    const obj: any = input;
+    // 如果看起来就是 TFile（有 stat/path），直接返回
+    if (obj?.stat && obj?.path) return obj as TFile;
+    const path = obj?.path ?? obj?.file?.path;
+    if (!path) return null;
+    const abs = this.vault.getAbstractFileByPath(path);
+    return abs && abs instanceof TFile ? abs : null;
+  }
+
   // 获取所有笔记列表
   async getAllNotes(): Promise<TFile[]> {
     return this.vault.getMarkdownFiles();
   }
 
   // 根据路径获取笔记内容
-  async getNoteContent(file?: TFile): Promise<NoteContext | null | string> {
-    if (!file) {
-      return "";
-    }
+  async getNoteContent(
+    fileOrCtx?: TFile | NoteContext | string
+  ): Promise<NoteContext | null | string> {
+    if (!fileOrCtx) return "";
     try {
+      const file = this.resolveToFile(fileOrCtx);
+      if (!file) return "";
       const content = await this.vault.read(file);
       const cache = this.app.metadataCache.getFileCache(file);
 
