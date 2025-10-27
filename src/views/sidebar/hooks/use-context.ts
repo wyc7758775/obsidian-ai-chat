@@ -20,9 +20,6 @@ export const useContext = () => {
 
   const upsertHistoryItem = useCallback(
     async (item: HistoryItem) => {
-      // 跳过空消息的写入，防止删除后被回写
-      if (!item.messages || item.messages.length === 0) return;
-
       const db = await openDB();
       const tx = db.transaction(STORE_NAME, "readwrite");
       const store = tx.objectStore(STORE_NAME);

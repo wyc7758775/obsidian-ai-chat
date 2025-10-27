@@ -1,9 +1,10 @@
 import { App } from "obsidian";
-import { AddIcon, ExpandIcon, FoldIcon, HistoryIcon, CloseIcon, EditIcon, SaveIcon, CancelIcon } from "./icon";
+import { AddIcon, ExpandIcon, FoldIcon, HistoryIcon, CloseIcon, EditIcon } from "./icon";
 import styles from "../css/use-history.module.css";
 import { useState, useEffect } from "react";
 import { HistoryItem } from "../type";
 import { useContext } from "../hooks/use-context";
+import { EditHistoryModal } from "./edit-history-modal";
 
 export type ChatMessageProps = {
   app: App;
@@ -25,7 +26,8 @@ export const useHistory = () => {
   const historyRender: React.FC<ChatMessageProps> = ({ app }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
-    const [editingId, setEditingId] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<HistoryItem | null>(null);
     const [editTitle, setEditTitle] = useState<string>("");
     const [editSystemMessage, setEditSystemMessage] = useState<string>("");
 
@@ -102,17 +104,19 @@ export const useHistory = () => {
     // 开始编辑
     const handleStartEdit = (item: HistoryItem, e?: React.MouseEvent) => {
       e?.stopPropagation(); // 防止触发选择历史记录
-      setEditingId(item.id);
+      setEditingItem(item);
       setEditTitle(item.title || item.messages?.[0]?.content || "新增AI对话");
       setEditSystemMessage(item.systemMessage || "");
+      setIsModalOpen(true);
     };
 
     // 保存编辑
-    const handleSaveEdit = async (item: HistoryItem, e?: React.MouseEvent) => {
-      e?.stopPropagation();
+    const handleSaveEdit = async () => {
+      if (!editingItem) return;
+      
       try {
         const updatedItem: HistoryItem = {
-          ...item,
+          ...editingItem,
           title: editTitle,
           systemMessage: editSystemMessage,
         };
@@ -121,11 +125,13 @@ export const useHistory = () => {
         // 更新本地状态
         setHistoryList(prev => 
           prev.map(historyItem => 
-            historyItem.id === item.id ? updatedItem : historyItem
+            historyItem.id === editingItem.id ? updatedItem : historyItem
           )
         );
         
-        setEditingId(null);
+        // 关闭弹窗并重置状态
+        setIsModalOpen(false);
+        setEditingItem(null);
         setEditTitle("");
         setEditSystemMessage("");
       } catch (e) {
@@ -134,54 +140,15 @@ export const useHistory = () => {
     };
 
     // 取消编辑
-    const handleCancelEdit = (e?: React.MouseEvent) => {
-      e?.stopPropagation();
-      setEditingId(null);
+    const handleCancelEdit = () => {
+      setIsModalOpen(false);
+      setEditingItem(null);
       setEditTitle("");
       setEditSystemMessage("");
     };
 
     const historyItemRender = (item: HistoryItem, index: number) => {
       const isActive = item.id === currentId;
-      const isEditing = editingId === item.id;
-      
-      if (isEditing) {
-        return (
-          <div
-            className={`${styles.historyFoldItem} ${
-              isActive ? styles.historyFoldItemActive : ""
-            }`}
-            key={index}
-          >
-            <div className={styles.historyEditForm}>
-              <div className={styles.historyEditField}>
-                <label>标题:</label>
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  placeholder="历史记录标题"
-                  className={styles.historyEditInput}
-                />
-              </div>
-              <div className={styles.historyEditField}>
-                <label>AI系统信息:</label>
-                <textarea
-                  value={editSystemMessage}
-                  onChange={(e) => setEditSystemMessage(e.target.value)}
-                  placeholder="AI系统提示信息"
-                  className={styles.historyEditTextarea}
-                  rows={3}
-                />
-              </div>
-              <div className={styles.historyEditActions}>
-                 <SaveIcon onClick={() => handleSaveEdit(item)} />
-                 <CancelIcon onClick={() => handleCancelEdit()} />
-               </div>
-            </div>
-          </div>
-        );
-      }
 
       return (
         <div
@@ -206,37 +173,51 @@ export const useHistory = () => {
     };
 
     return (
-      <div className={styles.history}>
-        {/*  收起容器 */}
-        {!isExpanded && (
-          <div className={styles.historyFold}>
-            <div className={styles.historyFoldAdd}>
-              <AddIcon onClick={handleAdd} />
+      <>
+        <div className={styles.history}>
+          {/*  收起容器 */}
+          {!isExpanded && (
+            <div className={styles.historyFold}>
+              <div className={styles.historyFoldAdd}>
+                <AddIcon onClick={handleAdd} />
+              </div>
+              <div className={styles.historyFoldList}>
+                {historyList.map((item: HistoryItem, index: number) =>
+                  historyItemRender(item, index)
+                )}
+              </div>
+              <div className={styles.historyFoldExpand}>
+                <ExpandIcon onClick={handleExpand} />
+              </div>
             </div>
-            <div className={styles.historyFoldList}>
-              {historyList.map((item: HistoryItem, index: number) =>
-                historyItemRender(item, index)
-              )}
+          )}
+          {/* 展开容器 */}
+          {isExpanded && (
+            <div className={styles.historyExpand}>
+              <div className={styles.historyExpandList}>
+                {historyList.map((item: HistoryItem, index: number) =>
+                  historyItemRender(item, index)
+                )}
+              </div>
+              <div className={styles.historyFoldAction}>
+                <FoldIcon onClick={handleFold} />
+              </div>
             </div>
-            <div className={styles.historyFoldExpand}>
-              <ExpandIcon onClick={handleExpand} />
-            </div>
-          </div>
-        )}
-        {/* 展开容器 */}
-        {isExpanded && (
-          <div className={styles.historyExpand}>
-            <div className={styles.historyExpandList}>
-              {historyList.map((item: HistoryItem, index: number) =>
-                historyItemRender(item, index)
-              )}
-            </div>
-            <div className={styles.historyFoldAction}>
-              <FoldIcon onClick={handleFold} />
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+        
+        {/* 编辑历史记录弹窗 */}
+        <EditHistoryModal
+          isOpen={isModalOpen}
+          historyItem={editingItem}
+          editTitle={editTitle}
+          editSystemMessage={editSystemMessage}
+          onTitleChange={setEditTitle}
+          onSystemMessageChange={setEditSystemMessage}
+          onSave={handleSaveEdit}
+          onCancel={handleCancelEdit}
+        />
+      </>
     );
   };
   return {
