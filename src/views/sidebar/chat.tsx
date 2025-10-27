@@ -485,6 +485,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         app={app}
         isLoading={isLoading}
         onNearBottomChange={(near) => setShowScrollBtn(!near)}
+        currentId={currentId} // 传递currentId用于滚动位置管理
       />
       {/* 文件选择器 */}
       <PositionedPopover

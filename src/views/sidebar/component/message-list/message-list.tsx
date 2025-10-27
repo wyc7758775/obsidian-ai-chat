@@ -13,11 +13,15 @@ import styles from "../../css/message-list.module.css";
 import { useMarkdownRenderer } from "../use-markdown-renderer";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
 
+// 滚动位置缓存，用于保存每个历史记录的滚动位置
+const scrollPositionCache = new Map<string, number>();
+
 export interface ChatMessageProps {
   messages: Message[];
   app: App;
   isLoading: boolean;
   onNearBottomChange?: (near: boolean) => void;
+  currentId?: string; // 当前历史记录ID，用于滚动位置管理
 }
 
 export type ChatMessageHandle = {
@@ -26,7 +30,7 @@ export type ChatMessageHandle = {
 };
 
 export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
-  ({ messages, app, isLoading, onNearBottomChange }, ref) => {
+  ({ messages, app, isLoading, onNearBottomChange, currentId }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const {
       endRef: messagesEndRef,
@@ -47,6 +51,33 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
         content,
       });
     };
+
+    // 保存当前滚动位置到缓存
+    useEffect(() => {
+      const el = containerRef.current;
+      if (!el || !currentId) return;
+
+      const saveScrollPosition = () => {
+        scrollPositionCache.set(currentId, el.scrollTop);
+      };
+
+      el.addEventListener('scroll', saveScrollPosition, { passive: true });
+      return () => el.removeEventListener('scroll', saveScrollPosition);
+    }, [currentId]);
+
+    // 恢复滚动位置
+    useEffect(() => {
+      const el = containerRef.current;
+      if (!el || !currentId) return;
+
+      const savedPosition = scrollPositionCache.get(currentId);
+      if (savedPosition !== undefined) {
+        // 使用 requestAnimationFrame 确保 DOM 已更新
+        requestAnimationFrame(() => {
+          el.scrollTop = savedPosition;
+        });
+      }
+    }, [currentId, messages]);
 
     // 监听滚动并向父组件报告是否接近底部（或不可滚动）
     useEffect(() => {
