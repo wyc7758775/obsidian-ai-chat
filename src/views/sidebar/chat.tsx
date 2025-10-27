@@ -160,6 +160,20 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       );
     }
 
+    // 获取当前历史记录的系统消息
+    const getCurrentSystemMessage = async () => {
+      if (!currentId) return undefined;
+      try {
+        const currentItem = await getHistoryItemById(currentId);
+        return currentItem?.systemMessage;
+      } catch (e) {
+        console.error("Failed to get system message:", e);
+        return undefined;
+      }
+    };
+
+    const systemMessage = await getCurrentSystemMessage();
+
     setIsLoading(true);
     sendChatMessage({
       settings,
@@ -169,6 +183,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         role: msg.type === "user" ? "user" : "assistant",
         content: msg.content,
       })),
+      systemMessage, // 传递当前历史记录的系统消息
       callBacks: {
         onChunk: (chunk: string) => {
           setMessages((prev) =>

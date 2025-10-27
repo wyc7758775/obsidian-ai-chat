@@ -109,3 +109,58 @@
 .historyFoldIcon {}
 .historyFoldText {}
 .historyExpand {}
+
+/* 编辑功能样式 */
+.historyFoldActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.historyEditForm {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--background-primary);
+  border-radius: 8px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.historyEditField {
+  margin-bottom: 12px;
+}
+
+.historyEditField label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.historyEditInput,
+.historyEditTextarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.historyEditInput:focus,
+.historyEditTextarea:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+.historyEditActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}

@@ -1,5 +1,5 @@
 import { App } from "obsidian";
-import { AddIcon, ExpandIcon, FoldIcon, HistoryIcon, CloseIcon } from "./icon";
+import { AddIcon, ExpandIcon, FoldIcon, HistoryIcon, CloseIcon, EditIcon, SaveIcon, CancelIcon } from "./icon";
 import styles from "../css/use-history.module.css";
 import { useState, useEffect } from "react";
 import { HistoryItem } from "../type";
@@ -19,11 +19,15 @@ export const useHistory = () => {
     fetchHistoryList,
     getHistoryItemById,
     deleteHistoryItem,
+    upsertHistoryItem,
   } = useContext();
 
   const historyRender: React.FC<ChatMessageProps> = ({ app }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editTitle, setEditTitle] = useState<string>("");
+    const [editSystemMessage, setEditSystemMessage] = useState<string>("");
 
     const handleExpand = () => {
       setIsExpanded(true);
@@ -95,8 +99,90 @@ export const useHistory = () => {
       setHistoryItems(item);
     };
 
+    // 开始编辑
+    const handleStartEdit = (item: HistoryItem, e?: React.MouseEvent) => {
+      e?.stopPropagation(); // 防止触发选择历史记录
+      setEditingId(item.id);
+      setEditTitle(item.title || item.messages?.[0]?.content || "新增AI对话");
+      setEditSystemMessage(item.systemMessage || "");
+    };
+
+    // 保存编辑
+    const handleSaveEdit = async (item: HistoryItem, e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      try {
+        const updatedItem: HistoryItem = {
+          ...item,
+          title: editTitle,
+          systemMessage: editSystemMessage,
+        };
+        await upsertHistoryItem(updatedItem);
+        
+        // 更新本地状态
+        setHistoryList(prev => 
+          prev.map(historyItem => 
+            historyItem.id === item.id ? updatedItem : historyItem
+          )
+        );
+        
+        setEditingId(null);
+        setEditTitle("");
+        setEditSystemMessage("");
+      } catch (e) {
+        console.error("保存编辑失败:", e);
+      }
+    };
+
+    // 取消编辑
+    const handleCancelEdit = (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      setEditingId(null);
+      setEditTitle("");
+      setEditSystemMessage("");
+    };
+
     const historyItemRender = (item: HistoryItem, index: number) => {
       const isActive = item.id === currentId;
+      const isEditing = editingId === item.id;
+      
+      if (isEditing) {
+        return (
+          <div
+            className={`${styles.historyFoldItem} ${
+              isActive ? styles.historyFoldItemActive : ""
+            }`}
+            key={index}
+          >
+            <div className={styles.historyEditForm}>
+              <div className={styles.historyEditField}>
+                <label>标题:</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="历史记录标题"
+                  className={styles.historyEditInput}
+                />
+              </div>
+              <div className={styles.historyEditField}>
+                <label>AI系统信息:</label>
+                <textarea
+                  value={editSystemMessage}
+                  onChange={(e) => setEditSystemMessage(e.target.value)}
+                  placeholder="AI系统提示信息"
+                  className={styles.historyEditTextarea}
+                  rows={3}
+                />
+              </div>
+              <div className={styles.historyEditActions}>
+                 <SaveIcon onClick={() => handleSaveEdit(item)} />
+                 <CancelIcon onClick={() => handleCancelEdit()} />
+               </div>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div
           className={`${styles.historyFoldItem} ${
@@ -109,14 +195,12 @@ export const useHistory = () => {
             <HistoryIcon />
           </div>
           <div className={styles.historyFoldText}>
-            {item.messages?.[0]?.content ?? "新增AI对话"}
+            {item.title || item.messages?.[0]?.content || "新增AI对话"}
           </div>
-          <div
-            className={styles.historyFoldDelete}
-            onClick={() => handleDelete(item.id)}
-          >
-            <CloseIcon />
-          </div>
+          <div className={styles.historyFoldActions}>
+             <EditIcon onClick={() => handleStartEdit(item)} />
+             <CloseIcon onClick={() => handleDelete(item.id)} />
+           </div>
         </div>
       );
     };

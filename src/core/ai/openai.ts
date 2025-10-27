@@ -25,6 +25,7 @@ export interface OpenaiParams {
   contextMessages?: Array<ChatMessage>;
   callBacks: CallBacks;
   cancelToken?: { cancelled: boolean };
+  systemMessage?: string; // 自定义系统消息，优先级高于settings.systemPrompt
 }
 
 /**
@@ -36,14 +37,16 @@ const buildMessages = (
   inputValue: string,
   notePrompts?: string[],
   contextMessages?: Array<ChatMessage>,
+  systemMessage?: string,
 ): ChatMessage[] => {
   const messages: ChatMessage[] = [];
 
-  // 添加系统提示
-  if (settings.systemPrompt) {
+  // 添加系统提示（优先使用自定义系统消息）
+  const finalSystemMessage = systemMessage || settings.systemPrompt;
+  if (finalSystemMessage) {
     messages.push({
       role: "system",
-      content: settings.systemPrompt,
+      content: finalSystemMessage,
     });
   }
 
@@ -228,6 +231,7 @@ export const sendChatMessage = async ({
   contextMessages,
   callBacks,
   cancelToken,
+  systemMessage,
 }: OpenaiParams) => {
   const errorText = validateAPIConfig(settings);
   if (errorText && errorText.length) {
@@ -243,6 +247,7 @@ export const sendChatMessage = async ({
     inputValue,
     notePrompts,
     contextMessages,
+    systemMessage,
   );
 
   return handleStreamResponse(
