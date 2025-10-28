@@ -1,5 +1,12 @@
 import { App } from "obsidian";
-import { AddIcon, ExpandIcon, FoldIcon, HistoryIcon, CloseIcon, EditIcon } from "./icon";
+import {
+  AddIcon,
+  ExpandIcon,
+  FoldIcon,
+  HistoryIcon,
+  CloseIcon,
+  EditIcon,
+} from "./icon";
 import styles from "../css/use-history.module.css";
 import { useState, useEffect } from "react";
 import { HistoryItem } from "../type";
@@ -113,7 +120,7 @@ export const useHistory = () => {
     // 保存编辑
     const handleSaveEdit = async () => {
       if (!editingItem) return;
-      
+
       try {
         const updatedItem: HistoryItem = {
           ...editingItem,
@@ -121,14 +128,14 @@ export const useHistory = () => {
           systemMessage: editSystemMessage,
         };
         await upsertHistoryItem(updatedItem);
-        
+
         // 更新本地状态
-        setHistoryList(prev => 
-          prev.map(historyItem => 
+        setHistoryList((prev) =>
+          prev.map((historyItem) =>
             historyItem.id === editingItem.id ? updatedItem : historyItem
           )
         );
-        
+
         // 关闭弹窗并重置状态
         setIsModalOpen(false);
         setEditingItem(null);
@@ -165,12 +172,25 @@ export const useHistory = () => {
             {item.title || item.messages?.[0]?.content || "新增AI对话"}
           </div>
           <div className={styles.historyFoldActions}>
-             <EditIcon onClick={() => handleStartEdit(item)} />
-             <CloseIcon onClick={() => handleDelete(item.id)} />
-           </div>
+            <EditIcon onClick={() => handleStartEdit(item)} />
+            <CloseIcon onClick={() => handleDelete(item.id)} />
+          </div>
         </div>
       );
     };
+
+    // 历史记录 item 卡片样式
+    const historyItemCardRender = (item: HistoryItem, index: number) => (
+      <div className={styles.historyItemCard} key={index}>
+        <div className={styles.historyItemCardTitle}>
+          {item.title || item.messages?.[0]?.content || "新增AI对话"}
+        </div>
+        <div className={styles.historyItemCardActions}>
+          <EditIcon onClick={() => handleStartEdit(item)} />
+          <CloseIcon onClick={() => handleDelete(item.id)} />
+        </div>
+      </div>
+    );
 
     return (
       <>
@@ -196,7 +216,7 @@ export const useHistory = () => {
             <div className={styles.historyExpand}>
               <div className={styles.historyExpandList}>
                 {historyList.map((item: HistoryItem, index: number) =>
-                  historyItemRender(item, index)
+                  historyItemCardRender(item, index)
                 )}
               </div>
               <div className={styles.historyFoldAction}>
@@ -205,7 +225,7 @@ export const useHistory = () => {
             </div>
           )}
         </div>
-        
+
         {/* 编辑历史记录弹窗 */}
         <EditHistoryModal
           isOpen={isModalOpen}

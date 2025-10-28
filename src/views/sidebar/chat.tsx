@@ -539,6 +539,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
               onClick={handleScrollToBottom}
               aria-label="滚动到底部"
               title="滚动到底部"
+              disabled={isStreaming}
             >
               ↓
             </button>

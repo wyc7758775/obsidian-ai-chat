@@ -106,10 +106,6 @@
   cursor: pointer;
 }
 
-.historyFoldIcon {}
-.historyFoldText {}
-.historyExpand {}
-
 /* 编辑功能样式 */
 .historyFoldActions {
   display: flex;

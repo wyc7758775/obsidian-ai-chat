@@ -61,8 +61,8 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
         scrollPositionCache.set(currentId, el.scrollTop);
       };
 
-      el.addEventListener('scroll', saveScrollPosition, { passive: true });
-      return () => el.removeEventListener('scroll', saveScrollPosition);
+      el.addEventListener("scroll", saveScrollPosition, { passive: true });
+      return () => el.removeEventListener("scroll", saveScrollPosition);
     }, [currentId]);
 
     // 恢复滚动位置

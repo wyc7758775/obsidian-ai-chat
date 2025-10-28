@@ -41,8 +41,8 @@ export const EditHistoryModal: React.FC<EditHistoryModalProps> = ({
   };
 
   return (
-    <div 
-      className={styles.modalBackdrop} 
+    <div
+      className={styles.modalBackdrop}
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
       tabIndex={-1}
@@ -51,7 +51,7 @@ export const EditHistoryModal: React.FC<EditHistoryModalProps> = ({
         <div className={styles.modalHeader}>
           <h3 className={styles.modalTitle}>编辑历史记录</h3>
         </div>
-        
+
         <div className={styles.modalBody}>
           <div className={styles.formField}>
             <label className={styles.fieldLabel}>标题:</label>
@@ -64,7 +64,7 @@ export const EditHistoryModal: React.FC<EditHistoryModalProps> = ({
               autoFocus
             />
           </div>
-          
+
           <div className={styles.formField}>
             <label className={styles.fieldLabel}>AI系统信息:</label>
             <textarea
@@ -76,16 +76,16 @@ export const EditHistoryModal: React.FC<EditHistoryModalProps> = ({
             />
           </div>
         </div>
-        
+
         <div className={styles.modalFooter}>
-          <button 
+          <button
             className={`${styles.modalButton} ${styles.cancelButton}`}
             onClick={onCancel}
           >
             <CancelIcon />
             <span>取消</span>
           </button>
-          <button 
+          <button
             className={`${styles.modalButton} ${styles.saveButton}`}
             onClick={onSave}
           >
