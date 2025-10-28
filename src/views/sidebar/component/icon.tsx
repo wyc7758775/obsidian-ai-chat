@@ -6,16 +6,44 @@ export const IconWrap = ({
   color = 'currentColor',
   children,
   onClick,
+  variant = 'default',
+  animated = false,
 }: {
   label: string;
   color?: string;
   children: ReactNode;
   onClick?: () => void;
-}) => (
-  <div style={{ color }} className={styles.actionBtn} aria-label={label} onClick={onClick}>
-    {children}
-  </div>
-);
+  variant?: 'default' | 'small' | 'large' | 'pulse' | 'wiggle';
+  animated?: boolean;
+}) => {
+  const getClassName = () => {
+    const baseClass = styles.actionBtn;
+    
+    switch (variant) {
+      case 'small':
+        return styles.actionBtnSmall;
+      case 'large':
+        return styles.actionBtnLarge;
+      case 'pulse':
+        return styles.actionBtnPulse;
+      case 'wiggle':
+        return animated ? styles.actionBtnAnimated : baseClass;
+      default:
+        return animated ? styles.actionBtnAnimated : baseClass;
+    }
+  };
+
+  return (
+    <div 
+      style={{ color }} 
+      className={getClassName()} 
+      aria-label={label} 
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  );
+};
 
 export const CopyIcon = ({ onClick }: { onClick?: () => void }) => (
   <IconWrap label="复制" onClick={onClick}>
@@ -71,7 +99,7 @@ export const BookIcon = () => (
 );
 
 export const CloseIcon = ({ onClick }: { onClick?: () => void }) => (
-  <IconWrap label="删除" onClick={onClick}>
+  <IconWrap label="删除" onClick={onClick} variant="wiggle" animated={true}>
     <svg
       width="16"
       height="16"
@@ -130,7 +158,7 @@ export const ExpandIcon = ({ onClick }: { onClick?: () => void }) => (
   </IconWrap>
 );
 export const AddIcon = ({ onClick }: { onClick?: () => void }) => (
-  <IconWrap label="新增" onClick={onClick}>
+  <IconWrap label="新增" onClick={onClick} variant="pulse" animated={true}>
     <svg
       width="16"
       height="16"
@@ -165,7 +193,7 @@ export const HistoryIcon = ({ onClick }: { onClick?: () => void }) => (
 );
 
 export const EditIcon = ({ onClick }: { onClick?: () => void }) => (
-  <IconWrap label="编辑" onClick={onClick}>
+  <IconWrap label="编辑" onClick={onClick} variant="wiggle" animated={true}>
     <svg
       width="16"
       height="16"

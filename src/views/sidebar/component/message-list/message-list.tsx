@@ -175,8 +175,26 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       if (message.length === 0) {
         return (
           <div className={styles.logo}>
-            <span className={styles.logoTitle}>😊</span>
-            <span>请相信美好的事情即将到来🙂</span>
+            {/* 可爱的卡通小猫咪 */}
+            <div className={styles.cuteCat}>
+              <div className={styles.catHead}>
+                <div className={styles.catEar}></div>
+                <div className={styles.catEar}></div>
+                <div className={styles.catFace}>
+                  <div className={styles.catEye}></div>
+                  <div className={styles.catEye}></div>
+                  <div className={styles.catNose}></div>
+                  <div className={styles.catMouth}></div>
+                </div>
+              </div>
+              <div className={styles.catBody}>
+                <div className={styles.catPaw}></div>
+                <div className={styles.catPaw}></div>
+              </div>
+              <div className={styles.catTail}></div>
+            </div>
+            {/* 提示文字 */}
+            <span className={styles.gameText}>请相信美好的事情即将到来🙂</span>
           </div>
         );
       }

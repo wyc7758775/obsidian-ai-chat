@@ -1,11 +1,32 @@
 
+/* 导入全局按钮样式 */
+@import './global-buttons.module.css';
+
 .actionBtn {
-	cursor: pointer;
+	composes: buttonMedium from './global-buttons.module.css';
 	color: var(--text-faint);
-	display: flex;
-	align-items: center;
-	justify-content: center;
 }
+
 .actionBtn:hover {
-	color: var(--accent-strong);
+	color: var(--text-on-accent);
+}
+
+/* 特殊的图标按钮变体 */
+.actionBtnSmall {
+	composes: buttonSmall from './global-buttons.module.css';
+	color: var(--text-faint);
+}
+
+.actionBtnLarge {
+	composes: buttonLarge from './global-buttons.module.css';
+	color: var(--text-faint);
+}
+
+/* 带动画效果的图标按钮 */
+.actionBtnAnimated {
+	composes: actionBtn buttonWiggle from './global-buttons.module.css';
+}
+
+.actionBtnPulse {
+	composes: actionBtn buttonPulse from './global-buttons.module.css';
 }

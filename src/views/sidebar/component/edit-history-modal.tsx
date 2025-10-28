@@ -1,6 +1,5 @@
 import React from "react";
 import { HistoryItem } from "../type";
-import { SaveIcon, CancelIcon } from "./icon";
 import styles from "../css/edit-history-modal.module.css";
 
 interface EditHistoryModalProps {
@@ -82,14 +81,51 @@ export const EditHistoryModal: React.FC<EditHistoryModalProps> = ({
             className={`${styles.modalButton} ${styles.cancelButton}`}
             onClick={onCancel}
           >
-            <CancelIcon />
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+              <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
             <span>取消</span>
           </button>
           <button
             className={`${styles.modalButton} ${styles.saveButton}`}
             onClick={onSave}
           >
-            <SaveIcon />
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <polyline
+                points="17,21 17,13 7,13 7,21"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <polyline
+                points="7,3 7,8 15,8"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             <span>保存</span>
           </button>
         </div>

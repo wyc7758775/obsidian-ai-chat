@@ -10,15 +10,18 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.2s ease-out;
+  animation: backdropFadeIn 0.3s ease-out;
+  backdrop-filter: blur(4px);
 }
 
-@keyframes fadeIn {
+@keyframes backdropFadeIn {
   from {
     opacity: 0;
+    backdrop-filter: blur(0px);
   }
   to {
     opacity: 1;
+    backdrop-filter: blur(4px);
   }
 }
 
@@ -26,23 +29,27 @@
 .modalContent {
   background-color: var(--background-primary);
   border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--background-modifier-border);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   width: 90%;
   max-width: 500px;
   max-height: 80vh;
   overflow: hidden;
-  animation: slideIn 0.3s ease-out;
+  animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid var(--background-modifier-border);
 }
 
-@keyframes slideIn {
-  from {
+@keyframes modalSlideIn {
+  0% {
+    transform: translateY(-30px) scale(0.9) rotateX(10deg);
     opacity: 0;
-    transform: translateY(-20px) scale(0.95);
   }
-  to {
+  50% {
+    transform: translateY(-10px) scale(0.95) rotateX(5deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(0) scale(1) rotateX(0deg);
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
@@ -119,49 +126,125 @@
   gap: 12px;
 }
 
-/* 按钮样式 */
+/* 弹窗按钮样式 */
 .modalButton {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 8px 16px;
+  min-width: 80px;
+  height: 36px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
-  background-color: var(--background-primary);
+  background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-primary-alt) 100%);
   color: var(--text-normal);
+  font-family: var(--font-interface);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 80px;
-  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 按钮中的SVG图标样式 */
+.modalButton svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+/* 按钮光泽动画效果 */
+.modalButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.modalButton:hover::before {
+  left: 100%;
 }
 
 .modalButton:hover {
-  background-color: var(--background-modifier-hover);
+  background: linear-gradient(135deg, var(--interactive-accent) 0%, var(--interactive-accent-hover) 100%);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+  box-shadow: 0 4px 15px rgba(var(--interactive-accent-rgb), 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .modalButton:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* 保存按钮样式 */
 .saveButton {
-  background-color: var(--interactive-accent);
-  color: var(--text-on-accent);
-  border-color: var(--interactive-accent);
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border-color: #4caf50;
 }
 
 .saveButton:hover {
-  background-color: var(--interactive-accent-hover);
-  border-color: var(--interactive-accent-hover);
+  background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4), 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px) scale(1.05);
+  animation: saveButtonPulse 1.5s infinite;
+}
+
+.saveButton:active {
+  animation: saveButtonBounce 0.3s ease;
+  transform: translateY(0) scale(0.98);
+}
+
+/* 取消按钮样式 */
+.cancelButton {
+  background: linear-gradient(135deg, var(--background-secondary) 0%, var(--background-primary-alt) 100%);
+  border-color: var(--background-modifier-border-hover);
 }
 
 .cancelButton:hover {
+  background: linear-gradient(135deg, var(--background-modifier-hover) 0%, var(--background-secondary) 100%);
   border-color: var(--background-modifier-border-hover);
+  transform: translateY(-1px);
+  animation: cancelButtonWiggle 0.5s ease-in-out;
 }
+
+.cancelButton:active {
+  transform: translateY(0) scale(0.95);
+}
+
+/* 保存按钮弹跳动画 */
+@keyframes saveButtonBounce {
+  0%, 100% { transform: translateY(-2px) scale(1.05); }
+  50% { transform: translateY(-4px) scale(1.1); }
+}
+
+/* 保存按钮脉冲动画 */
+@keyframes saveButtonPulse {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4), 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6), 0 3px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* 取消按钮摇摆动画 */
+@keyframes cancelButtonWiggle {
+  0%, 100% { transform: translateY(-1px) rotate(0deg); }
+  25% { transform: translateY(-1px) rotate(-2deg); }
+  75% { transform: translateY(-1px) rotate(2deg); }
+}
+
+
 
 /* 响应式设计 */
 @media (max-width: 600px) {

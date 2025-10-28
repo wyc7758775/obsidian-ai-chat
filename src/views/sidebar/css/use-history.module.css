@@ -3,6 +3,8 @@
   border-radius: 24px;
   background-color: var(--bg-primary-second);
   border: 1px solid var(--background-primary-alt);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  margin-bottom: 16px;
 }
 
 .historyFold {
@@ -70,36 +72,111 @@
 .historyFoldAdd,
 .historyFoldExpand {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 36px; /* 增加按钮尺寸 */
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 50%;
-  background: var(--background-primary);
+  border-radius: 12px; /* 改为圆角矩形，更现代 */
+  background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-primary-alt) 100%);
   color: var(--text-normal);
-  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
 }
+
+.historyFoldAdd::before,
+.historyFoldExpand::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
 .historyFoldAdd:hover,
 .historyFoldExpand:hover {
-  background-color: var(--background-modifier-hover);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  background: linear-gradient(135deg, var(--interactive-accent) 0%, var(--interactive-accent-hover) 100%);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+  box-shadow: 0 4px 15px rgba(var(--interactive-accent-rgb), 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
+
+.historyFoldAdd:hover::before,
+.historyFoldExpand:hover::before {
+  left: 100%;
+}
+
 .historyFoldAdd:active,
-.historyFoldExpand:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+.historyFoldExpand:active { 
+  transform: translateY(0); 
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); 
+}
 
 .historyExpandList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 12px;
-  overflow-y: auto;
+  position: relative;
+  padding: 24px 12px 24px 20px; /* 增加上下内边距，提供更好的呼吸空间 */
+  height: 30vh;
+  min-height: 200px;
+  overflow-y: scroll;
   overflow-x: hidden;
-  max-height: 20rem;
-  scrollbar-width: none;
+  overscroll-behavior-y: contain;
+  
+  /* 美化容器外观 */
+  background: var(--background-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
+  
+  /* 自定义滚动条样式 */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-bg) var(--scrollbar-bg);
+  
+  /* 容器进入动画 */
+  animation: containerFadeIn 0.4s ease-out;
 }
-.historyExpandList::-webkit-scrollbar { width: 0; height: 0; }
+
+/* 容器进入动画 */
+@keyframes containerFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+
+
+
+.historyExpandList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.historyExpandList::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.historyExpandList::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb-bg);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  min-height: 20px;
+}
+
+.historyExpandList::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-active-thumb-bg);
+}
 
 .historyFoldAction {
   padding: 8px 12px;
@@ -159,4 +236,132 @@
   justify-content: flex-end;
   gap: 8px;
   margin-top: 8px;
+}
+
+/* 历史记录卡片样式 */
+.historyItemCard {
+  position: absolute;
+  display: block;
+  padding: 14px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border-hover);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  box-sizing: border-box;
+  backdrop-filter: blur(8px);
+  
+  /* 进入动画 */
+  animation: cardSlideIn 0.5s ease-out;
+  transform-origin: center;
+}
+
+/* 卡片进入动画 */
+@keyframes cardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.historyItemCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--interactive-accent) 0%, var(--interactive-accent-hover) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.historyItemCard:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--interactive-accent);
+  background: var(--background-primary-alt);
+  backdrop-filter: blur(12px);
+}
+
+/* 卡片点击动画 */
+.historyItemCard:active {
+  transform: translateY(-1px) scale(0.98);
+  transition: all 0.1s ease;
+}
+
+.historyItemCard:hover::before {
+  opacity: 1;
+}
+
+.historyItemCard:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.historyItemCardTitle {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-normal);
+  line-height: 1.5;
+  margin-bottom: 12px;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.historyItemCardActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.historyItemCard:hover .historyItemCardActions {
+  opacity: 1;
+}
+
+.historyItemCardActions > * {
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.historyItemCardActions > *:hover {
+  background-color: var(--background-modifier-hover);
+  transform: scale(1.1);
+}
+
+/* 活跃状态的卡片样式 */
+.historyItemCardActive {
+  background: linear-gradient(135deg, var(--interactive-accent) 0%, var(--interactive-accent-hover) 100%);
+  border-color: var(--interactive-accent);
+  box-shadow: 0 4px 15px rgba(var(--interactive-accent-rgb), 0.25), 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.historyItemCardActive::before {
+  opacity: 1;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+}
+
+.historyItemCardActive .historyItemCardTitle {
+  color: var(--text-on-accent);
+  font-weight: 600;
+}
+
+.historyItemCardActive .historyItemCardActions {
+  opacity: 1;
+}
+
+.historyItemCardActive:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(var(--interactive-accent-rgb), 0.3), 0 6px 15px rgba(0, 0, 0, 0.1);
 }

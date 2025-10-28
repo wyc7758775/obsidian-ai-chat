@@ -5,6 +5,21 @@
 	background: var(--bg-primary);
 	color: var(--text-normal);
 	font-family: var(--font-interface);
+	
+	/* 容器进入动画 */
+	animation: chatContainerFadeIn 0.5s ease-out;
+}
+
+/* 聊天容器进入动画 */
+@keyframes chatContainerFadeIn {
+	0% {
+		opacity: 0;
+		transform: translateX(-20px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 .fileSelector {
 	position: absolute;
@@ -17,6 +32,22 @@
 	max-width: 320px;
 	overflow: hidden;
 	backdrop-filter: blur(10px);
+	
+	/* 文件选择器进入动画 */
+	animation: fileSelectorSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	transform-origin: top;
+}
+
+/* 文件选择器进入动画 */
+@keyframes fileSelectorSlideIn {
+	0% {
+		opacity: 0;
+		transform: translateY(-10px) scale(0.95);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
 }
 .inputArea {
 	padding: 4px;

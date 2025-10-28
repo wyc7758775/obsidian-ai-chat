@@ -7,6 +7,21 @@
 	flex-direction: column;
 	gap: 16px;
 	padding-top: 12px;
+	
+	/* 容器进入动画 */
+	animation: messagesContainerFadeIn 0.4s ease-out;
+}
+
+/* 消息容器进入动画 */
+@keyframes messagesContainerFadeIn {
+	0% {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 /* 滚动条 */
 .messagesContainer::-webkit-scrollbar {
@@ -33,16 +48,37 @@
 .messageWrapper {
 	display: flex;
 	width: 100%;
-	animation: slideIn 0.3s ease-out;
 }
-@keyframes slideIn {
-	from {
+
+/* 用户消息进入动画 */
+.messageWrapper:has(.userMessage) {
+	animation: userMessageSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 助手消息进入动画 */
+.messageWrapper:has(.assistantMessage) {
+	animation: assistantMessageSlideIn 0.5s ease-out;
+}
+
+@keyframes userMessageSlideIn {
+	0% {
 		opacity: 0;
-		transform: translateY(10px);
+		transform: translateX(30px) scale(0.95);
 	}
-	to {
+	100% {
 		opacity: 1;
-		transform: translateY(0);
+		transform: translateX(0) scale(1);
+	}
+}
+
+@keyframes assistantMessageSlideIn {
+	0% {
+		opacity: 0;
+		transform: translateX(-20px) translateY(10px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateX(0) translateY(0);
 	}
 }
 
@@ -65,8 +101,13 @@
 }
 .userBubble:hover {
 	background-color: var(--interactive-accent-hover);
-	transform: translateY(-1px);
-	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+	transform: translateY(-2px) scale(1.02);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.userBubble:active {
+	transform: translateY(0) scale(0.98);
+	transition: all 0.1s ease;
 }
 .userContent {
 	word-wrap: break-word;
@@ -168,16 +209,472 @@
 	align-items: center;
 }
 
-/* 占位符 */
+/* 占位符 - 可爱卡通场景 */
 .logo {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+	gap: 30px;
+	position: relative;
+	min-height: 300px;
 }
-.logoTitle {
-	font-size: 102px;
+
+/* 温馨背景光晕 */
+.logo::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 220px;
+	height: 220px;
+	background: radial-gradient(circle, rgba(255, 182, 193, 0.15) 0%, rgba(255, 228, 225, 0.1) 50%, transparent 70%);
+	border-radius: 50%;
+	opacity: 0.8;
+	z-index: 0;
+	animation: warmGlow 4s ease-in-out infinite;
+}
+
+/* 可爱的小猫咪容器 */
+.cuteCat {
+	position: relative;
+	z-index: 2;
+	animation: catCuteness 4s ease-in-out infinite;
+	will-change: transform;
+	backface-visibility: hidden;
+}
+
+/* 猫咪头部 */
+.catHead {
+	position: relative;
+	width: 80px;
+	height: 70px;
+	background: linear-gradient(145deg, #ffb6c1 0%, #ffc0cb 50%, #ffb6c1 100%);
+	border-radius: 50% 50% 45% 45%;
+	margin: 0 auto;
+	box-shadow: 0 4px 12px rgba(255, 182, 193, 0.3);
+}
+
+/* 猫咪耳朵 */
+.catEar {
+	position: absolute;
+	width: 20px;
+	height: 25px;
+	background: linear-gradient(145deg, #ffb6c1 0%, #ffc0cb 100%);
+	border-radius: 50% 50% 0 0;
+	top: -12px;
+}
+
+.catEar:first-child {
+	left: 15px;
+	transform: rotate(-15deg);
+	animation: earWiggle 3s ease-in-out infinite;
+}
+
+.catEar:last-child {
+	right: 15px;
+	transform: rotate(15deg);
+	animation: earWiggle 3s ease-in-out infinite 0.2s;
+}
+
+/* 猫咪耳朵内部 */
+.catEar::before {
+	content: '';
+	position: absolute;
+	width: 12px;
+	height: 15px;
+	background: #ff69b4;
+	border-radius: 50% 50% 0 0;
+	top: 3px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+/* 猫咪脸部 */
+.catFace {
+	position: absolute;
+	top: 15px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 60px;
+	height: 45px;
+}
+
+/* 猫咪眼睛 */
+.catEye {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	background: #333;
+	border-radius: 50%;
+	top: 8px;
+	animation: eyeBlink 5s ease-in-out infinite;
+}
+
+.catEye:first-child {
+	left: 12px;
+}
+
+.catEye:last-child {
+	right: 12px;
+}
+
+/* 眨眼动画 */
+@keyframes eyeBlink {
+	0%, 90%, 100% {
+		transform: scaleY(1);
+	}
+	95% {
+		transform: scaleY(0.1);
+	}
+}
+
+/* 猫咪鼻子 */
+.catNose {
+	position: absolute;
+	width: 6px;
+	height: 5px;
+	background: #ff1493;
+	border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+	top: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+/* 猫咪嘴巴 */
+.catMouth {
+	position: absolute;
+	width: 16px;
+	height: 8px;
+	border: 2px solid #ff1493;
+	border-top: none;
+	border-radius: 0 0 50% 50%;
+	top: 26px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+/* 猫咪身体 */
+.catBody {
+	position: relative;
+	width: 60px;
+	height: 50px;
+	background: linear-gradient(145deg, #ffb6c1 0%, #ffc0cb 50%, #ffb6c1 100%);
+	border-radius: 30px 30px 20px 20px;
+	margin: 5px auto 0;
+	box-shadow: 0 3px 8px rgba(255, 182, 193, 0.2);
+}
+
+/* 猫咪爪子 */
+.catPaw {
+	position: absolute;
+	width: 12px;
+	height: 8px;
+	background: #ffb6c1;
+	border-radius: 50%;
+	bottom: -4px;
+	animation: pawWave 2s ease-in-out infinite;
+}
+
+.catPaw:first-child {
+	left: 8px;
+}
+
+.catPaw:last-child {
+	right: 8px;
+	animation-delay: 0.5s;
+}
+
+/* 猫咪尾巴 */
+.catTail {
+	position: absolute;
+	width: 8px;
+	height: 40px;
+	background: linear-gradient(to bottom, #ffb6c1 0%, #ffc0cb 100%);
+	border-radius: 50px;
+	right: -15px;
+	top: 20px;
+	transform-origin: top center;
+	animation: tailWag 3s ease-in-out infinite;
+}
+
+/* 提示文字 */
+.gameText {
+	position: relative;
+	z-index: 1;
+	animation: textFloat 4s ease-in-out infinite;
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+/* 小猫咪卖萌动画 */
+@keyframes catCuteness {
+	0% {
+		transform: rotate(0deg) scale(1) translateY(0px);
+	}
+	
+	/* 向左倾斜，卖萌 */
+	20% {
+		transform: rotate(-5deg) scale(1.05) translateY(-3px);
+	}
+	
+	/* 向右倾斜，继续卖萌 */
+	40% {
+		transform: rotate(5deg) scale(1.05) translateY(-3px);
+	}
+	
+	/* 轻微跳跃，超级可爱 */
+	60% {
+		transform: rotate(0deg) scale(1.1) translateY(-8px);
+	}
+	
+	/* 轻柔落下 */
+	80% {
+		transform: rotate(0deg) scale(1.02) translateY(-1px);
+	}
+	
+	/* 回到原位 */
+	100% {
+		transform: rotate(0deg) scale(1) translateY(0px);
+	}
+}
+
+/* 耳朵摆动动画 */
+@keyframes earWiggle {
+	0%, 100% {
+		transform: rotate(-15deg);
+	}
+	
+	50% {
+		transform: rotate(-25deg);
+	}
+}
+
+/* 爪子挥动动画 */
+@keyframes pawWave {
+	0%, 100% {
+		transform: translateY(0px) rotate(0deg);
+	}
+	
+	50% {
+		transform: translateY(-3px) rotate(10deg);
+	}
+}
+
+/* 尾巴摇摆动画 */
+@keyframes tailWag {
+	0% {
+		transform: rotate(0deg);
+	}
+	
+	25% {
+		transform: rotate(15deg);
+	}
+	
+	50% {
+		transform: rotate(0deg);
+	}
+	
+	75% {
+		transform: rotate(-15deg);
+	}
+	
+	100% {
+		transform: rotate(0deg);
+	}
+}
+
+/* 温馨光晕动画 */
+@keyframes warmGlow {
+	0% {
+		opacity: 0.6;
+		transform: translate(-50%, -50%) scale(1);
+	}
+	
+	50% {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(1.05);
+	}
+	
+	100% {
+		opacity: 0.6;
+		transform: translate(-50%, -50%) scale(1);
+	}
+}
+
+/* 文字轻柔浮动效果 */
+@keyframes textFloat {
+	0%, 100% {
+		transform: translateY(0px);
+		opacity: 0.7;
+	}
+	
+	50% {
+		transform: translateY(-6px);
+		opacity: 1;
+	}
+}
+
+/* 悬停时暂停动画，让用户可以仔细查看 */
+.logo:hover .logoTitle {
+	animation-play-state: paused;
+}
+
+.logo:hover span:not(.logoTitle) {
+	animation-play-state: paused;
+}
+
+/* 响应式设计 - 在小屏幕上调整小猫咪 */
+@media (max-width: 768px) {
+	.logo {
+		min-height: 250px;
+		gap: 25px;
+	}
+	
+	.logo::before {
+		width: 180px;
+		height: 180px;
+	}
+	
+	.cuteCat {
+		transform: scale(0.8);
+		animation-duration: 5s; /* 稍微慢一点，更舒缓 */
+	}
+	
+	.catHead {
+		width: 70px;
+		height: 60px;
+	}
+	
+	.catBody {
+		width: 50px;
+		height: 40px;
+	}
+	
+	.gameText {
+		font-size: 14px;
+		animation-duration: 5s;
+	}
+	
+	/* 小屏幕上的卖萌动画 - 减少幅度 */
+	@keyframes catCuteness {
+		0% {
+			transform: scale(0.8) rotate(0deg) translateY(0px);
+		}
+		
+		20% {
+			transform: scale(0.82) rotate(-3deg) translateY(-2px);
+		}
+		
+		40% {
+			transform: scale(0.82) rotate(3deg) translateY(-2px);
+		}
+		
+		60% {
+			transform: scale(0.85) rotate(0deg) translateY(-5px);
+		}
+		
+		80% {
+			transform: scale(0.81) rotate(0deg) translateY(-1px);
+		}
+		
+		100% {
+			transform: scale(0.8) rotate(0deg) translateY(0px);
+		}
+	}
+}
+
+/* 用户偏好：减少动画 */
+@media (prefers-reduced-motion: reduce) {
+	.logo::before {
+		animation: none;
+		opacity: 0.4;
+	}
+	
+	.cuteCat {
+		animation: gentlePulse 10s ease-in-out infinite;
+	}
+	
+	.catEar {
+		animation: none !important;
+	}
+	
+	.catPaw {
+		animation: none !important;
+	}
+	
+	.catTail {
+		animation: none !important;
+	}
+	
+	.catEye {
+		animation: eyeBlink 8s ease-in-out infinite !important;
+	}
+	
+	.gameText {
+		animation: none;
+		opacity: 0.8;
+	}
+	
+	/* 为偏好减少动画的用户提供温和的脉冲效果 */
+	@keyframes gentlePulse {
+		0%, 100% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		
+		50% {
+			transform: scale(1.02);
+			opacity: 0.9;
+		}
+	}
+}
+
+/* 高性能设备可以享受更丰富的动画 */
+@media (min-width: 1200px) and (min-height: 800px) {
+	.logoTitle {
+		animation-duration: 2s; /* 更快的节奏 */
+	}
+	
+	/* 添加轻微的旋转效果 */
+	@keyframes pingPongBounce {
+		0% {
+			transform: translateY(0) scale(1) rotate(0deg);
+			animation-timing-function: ease-out;
+		}
+		
+		25% {
+			transform: translateY(-30px) scale(0.95) rotate(-2deg);
+			animation-timing-function: ease-in;
+		}
+		
+		50% {
+			transform: translateY(-40px) scale(0.9) rotate(0deg);
+			animation-timing-function: ease-in;
+		}
+		
+		75% {
+			transform: translateY(-10px) scale(0.98) rotate(2deg);
+			animation-timing-function: ease-out;
+		}
+		
+		85% {
+			transform: translateY(0) scale(1.05, 0.95) rotate(0deg);
+			animation-timing-function: ease-out;
+		}
+		
+		92% {
+			transform: translateY(-5px) scale(0.98) rotate(-1deg);
+			animation-timing-function: ease-in-out;
+		}
+		
+		100% {
+			transform: translateY(0) scale(1) rotate(0deg);
+			animation-timing-function: ease-out;
+		}
+	}
 }
 
 /* 复制按钮容器与样式（适配主题，悬浮显示） */

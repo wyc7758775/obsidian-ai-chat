@@ -48,12 +48,19 @@ export const ChatInput = ({
         className={styles.inputDiv + " " + styles.inputField}
       />
       {isStreaming ? (
-        <button onClick={handleCancelStream}>||</button>
+        <button 
+          onClick={handleCancelStream}
+          className={styles.cancelBtn}
+          title="停止生成"
+        >
+          ⏸
+        </button>
       ) : (
         <button
           onClick={handleSend}
           className={styles.sendBtn}
           disabled={!inputValue.trim()}
+          title="发送消息"
         >
           ➤
         </button>

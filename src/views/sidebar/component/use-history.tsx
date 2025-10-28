@@ -8,7 +8,7 @@ import {
   EditIcon,
 } from "./icon";
 import styles from "../css/use-history.module.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { HistoryItem } from "../type";
 import { useContext } from "../hooks/use-context";
 import { EditHistoryModal } from "./edit-history-modal";
@@ -37,6 +37,11 @@ export const useHistory = () => {
     const [editingItem, setEditingItem] = useState<HistoryItem | null>(null);
     const [editTitle, setEditTitle] = useState<string>("");
     const [editSystemMessage, setEditSystemMessage] = useState<string>("");
+    
+    // 瀑布流布局相关
+    const containerRef = useRef<HTMLDivElement>(null);
+    const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const [containerHeight, setContainerHeight] = useState(0);
 
     const handleExpand = () => {
       setIsExpanded(true);
@@ -179,18 +184,95 @@ export const useHistory = () => {
       );
     };
 
+    // 瀑布流布局计算
+    const calculateWaterfallLayout = () => {
+      if (!containerRef.current || !isExpanded) return;
+      
+      const container = containerRef.current;
+      const containerWidth = container.clientWidth - 32; // 对应CSS中的左边距20px + 右边距12px
+      const cardWidth = 180;
+      const gap = 12; // 适中的间距，保持美观
+      const columns = Math.max(1, Math.floor((containerWidth + gap) / (cardWidth + gap)));
+      const actualCardWidth = (containerWidth - gap * (columns - 1)) / columns;
+      
+      const columnHeights = new Array(columns).fill(0);
+      
+      cardRefs.current.forEach((cardEl, index) => {
+        if (!cardEl) return;
+        
+        // 找到最短的列
+        const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights));
+        
+        // 设置卡片位置和宽度
+        const left = shortestColumnIndex * (actualCardWidth + gap) + 20; // 加上左边距
+        const top = columnHeights[shortestColumnIndex] + 24; // 加上容器的padding-top
+        
+        cardEl.style.left = `${left}px`;
+        cardEl.style.top = `${top}px`;
+        cardEl.style.width = `${actualCardWidth}px`;
+        
+        // 更新列高度
+        columnHeights[shortestColumnIndex] += cardEl.offsetHeight + gap;
+      });
+      
+      // 设置容器高度
+      const maxHeight = Math.max(...columnHeights);
+      setContainerHeight(maxHeight); // 简单设置高度，让CSS处理滚动空间
+    };
+
+    // 监听布局变化
+    useLayoutEffect(() => {
+      calculateWaterfallLayout();
+    }, [historyList, isExpanded]);
+
+    useEffect(() => {
+      if (isExpanded) {
+        const resizeObserver = new ResizeObserver(() => {
+          calculateWaterfallLayout();
+        });
+        
+        if (containerRef.current) {
+          resizeObserver.observe(containerRef.current);
+        }
+        
+        return () => resizeObserver.disconnect();
+      }
+    }, [isExpanded]);
+
     // 历史记录 item 卡片样式
-    const historyItemCardRender = (item: HistoryItem, index: number) => (
-      <div className={styles.historyItemCard} key={index}>
-        <div className={styles.historyItemCardTitle}>
-          {item.title || item.messages?.[0]?.content || "新增AI对话"}
+    const historyItemCardRender = (item: HistoryItem, index: number) => {
+      const isActive = item.id === currentId;
+
+      const handleEditClick = () => {
+        handleStartEdit(item);
+      };
+
+      const handleDeleteClick = () => {
+        handleDelete(item.id);
+      };
+
+      return (
+        <div
+          ref={(el) => (cardRefs.current[index] = el)}
+          className={`${styles.historyItemCard} ${
+            isActive ? styles.historyItemCardActive : ""
+          }`}
+          key={index}
+          onClick={() => handleUpdateHistoryItem(item)}
+        >
+          <div className={styles.historyItemCardTitle}>
+            {item.title || item.messages?.[0]?.content || "新增AI对话"}
+          </div>
+          <div
+            className={styles.historyItemCardActions}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <EditIcon onClick={handleEditClick} />
+            <CloseIcon onClick={handleDeleteClick} />
+          </div>
         </div>
-        <div className={styles.historyItemCardActions}>
-          <EditIcon onClick={() => handleStartEdit(item)} />
-          <CloseIcon onClick={() => handleDelete(item.id)} />
-        </div>
-      </div>
-    );
+      );
+    };
 
     return (
       <>
@@ -213,8 +295,16 @@ export const useHistory = () => {
           )}
           {/* 展开容器 */}
           {isExpanded && (
-            <div className={styles.historyExpand}>
-              <div className={styles.historyExpandList}>
+            <>
+              <div 
+                ref={containerRef}
+                className={styles.historyExpandList}
+                style={{ 
+                  height: containerHeight > 0 ? `${containerHeight + 30}px` : '30vh',
+                  minHeight: '200px',
+                  maxHeight: '50vh' // 恢复最大高度限制，防止过高
+                }}
+              >
                 {historyList.map((item: HistoryItem, index: number) =>
                   historyItemCardRender(item, index)
                 )}
@@ -222,7 +312,7 @@ export const useHistory = () => {
               <div className={styles.historyFoldAction}>
                 <FoldIcon onClick={handleFold} />
               </div>
-            </div>
+            </>
           )}
         </div>
 

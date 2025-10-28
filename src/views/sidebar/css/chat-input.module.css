@@ -4,6 +4,22 @@
 	align-items: center;
 	padding: 8px 12px;
 	position: relative;
+	
+	/* 输入框容器进入动画 */
+	animation: inputWrapperSlideIn 0.4s ease-out;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 输入框容器进入动画 */
+@keyframes inputWrapperSlideIn {
+	0% {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 .inputWrapper,
@@ -15,7 +31,8 @@
 }
 .inputWrapper:focus-within {
 	border-color: var(--interactive-accent);
-	box-shadow: 0 0 0 1px var(--interactive-accent-hover);
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2), 0 4px 12px rgba(0, 0, 0, 0.1);
+	transform: translateY(-1px);
 }
 .inputPlaceholder {
   position: absolute;
@@ -27,6 +44,28 @@
   font-size: var(--font-size-base);
   line-height: 1.4;
   z-index: 1;
+  
+  /* 占位符动画效果 */
+  animation: placeholderFadeIn 0.3s ease-out;
+  transition: all 0.2s ease;
+}
+
+/* 占位符淡入动画 */
+@keyframes placeholderFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 输入框获得焦点时占位符效果 */
+.inputWrapper:focus-within .inputPlaceholder {
+  opacity: 0.6;
+  transform: translateX(5px);
 }
 
 /* 可编辑div的样式 */
@@ -93,27 +132,135 @@
 
 
 .sendBtn {
-	width: 28px;
-	height: 28px;
-	border: none;
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-	border-radius: 50%;
+	width: 36px;
+	height: 36px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px; /* 改为圆角矩形，与历史按钮一致 */
+	background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-primary-alt) 100%);
+	color: var(--text-normal);
+	font-size: 16px;
+	font-weight: bold;
 	cursor: pointer;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 14px;
-	transition: all 0.2s ease;
+	position: relative;
+	overflow: hidden;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 光泽动画效果 */
+.sendBtn::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+	transition: left 0.5s ease;
+}
+
+.sendBtn:hover::before {
+	left: 100%;
+}
+
+/* 发送按钮在有内容时显示脉冲提示 */
+.sendBtn:not(:disabled) {
+	animation: sendBtnPulse 3s infinite;
 }
 
 .sendBtn:hover:not(:disabled) {
-	background: var(--interactive-accent-hover);
-	transform: scale(1.05);
+	background: linear-gradient(135deg, var(--interactive-accent) 0%, var(--interactive-accent-hover) 100%);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+	box-shadow: 0 4px 15px rgba(var(--interactive-accent-rgb), 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
+	transform: translateY(-1px);
+}
+
+.sendBtn:active:not(:disabled) {
+	transform: translateY(0);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .sendBtn:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
-	background: var(--background-modifier-border);
+	background: var(--background-modifier-border) !important;
+	color: var(--text-muted) !important;
+	animation: none;
+	pointer-events: none;
+}
+
+/* 发送按钮脉冲动画 */
+@keyframes sendBtnPulse {
+	0%, 100% {
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	}
+	50% {
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.3);
+	}
+}
+
+/* 发送按钮点击弹跳动画 */
+@keyframes sendBtnBounce {
+	0%, 100% { transform: translateY(-2px) scale(1.1); }
+	50% { transform: translateY(-4px) scale(1.15); }
+}
+
+/* 取消按钮样式 */
+.cancelBtn {
+	width: 36px;
+	height: 36px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 12px; /* 改为圆角矩形，与历史按钮一致 */
+	background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-primary-alt) 100%);
+	color: var(--text-normal);
+	font-size: 14px;
+	font-weight: bold;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	overflow: hidden;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 取消按钮光泽效果 */
+.cancelBtn::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+	transition: left 0.5s ease;
+}
+
+.cancelBtn:hover::before {
+	left: 100%;
+}
+
+.cancelBtn:hover {
+	background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+	color: white;
+	border-color: #ff6b6b;
+	box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4), 0 2px 8px rgba(0, 0, 0, 0.1);
+	transform: translateY(-1px);
+}
+
+.cancelBtn:active {
+	transform: translateY(0);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 取消按钮摇摆动画 */
+@keyframes cancelBtnShake {
+	0%, 100% { transform: translateY(-2px) scale(1.1) rotate(0deg); }
+	25% { transform: translateY(-2px) scale(1.1) rotate(-5deg); }
+	75% { transform: translateY(-2px) scale(1.1) rotate(5deg); }
 }
