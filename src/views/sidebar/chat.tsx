@@ -117,16 +117,28 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
     (async () => {
       try {
+        // 先获取现有的历史记录，保留用户编辑的 title 和 systemMessage
+        const existingItem = await getHistoryItemById(currentId);
         await upsertHistoryItem({
           id: currentId,
           messages,
           noteSelected: noteSelectedSerializable,
+          title: existingItem?.title, // 保留现有的 title
+          systemMessage: existingItem?.systemMessage, // 保留现有的 systemMessage
+          createdAt: existingItem?.createdAt, // 保留创建时间
         });
       } catch (e) {
         console.error("IndexedDB save failed:", e);
       }
     })();
-  }, [currentId, messages, selectedNotes, upsertHistoryItem, serializeJS]);
+  }, [
+    currentId,
+    messages,
+    selectedNotes,
+    upsertHistoryItem,
+    serializeJS,
+    getHistoryItemById,
+  ]);
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;

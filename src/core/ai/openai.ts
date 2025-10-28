@@ -1,7 +1,8 @@
 import OpenAI from "openai";
 import { yoranChatSettings } from "src/main";
-
-type ChatMessage = OpenAI.Chat.Completions.ChatCompletionMessageParam;
+import { ChatMessage, formatErrorMessage } from "./utils/token-utils";
+import { manageContextMessages } from "./managers/context-manager";
+import { manageArticleContent } from "./managers/article-manager";
 
 type CallBacks = {
   onStart?: () => void;
@@ -10,6 +11,7 @@ type CallBacks = {
   onComplete?: () => void;
   onError?: (error: Error) => void;
 };
+
 /**
  * @param settings : 配置的数据
  * @param inputValue : 输入框中的值
@@ -37,32 +39,59 @@ const buildMessages = (
   inputValue: string,
   notePrompts?: string[],
   contextMessages?: Array<ChatMessage>,
-  systemMessage?: string,
+  systemMessage?: string
 ): ChatMessage[] => {
   const messages: ChatMessage[] = [];
 
-  // 添加系统提示（优先使用自定义系统消息）
-  const finalSystemMessage = systemMessage || settings.systemPrompt;
-  if (finalSystemMessage) {
+  // 添加系统提示（合并基础系统提示和自定义系统消息）
+  const systemMessages: string[] = [];
+
+  // 首先添加基础系统提示
+  if (settings.systemPrompt) {
+    systemMessages.push(settings.systemPrompt);
+  }
+
+  // 然后添加自定义系统消息
+  if (systemMessage) {
+    systemMessages.push(systemMessage);
+  }
+
+  // 如果有系统消息，合并后添加到消息数组
+  if (systemMessages.length > 0) {
     messages.push({
       role: "system",
-      content: finalSystemMessage,
+      content: systemMessages.join("\n\n"),
     });
   }
 
-  // 添加笔记上下文
+  // 计算token分配策略
+  const totalTokens = settings.maxContextTokens;
+  const articleTokenRatio = 0.65; // 文章内容占65%
+  const contextTokenRatio = 0.25; // 历史对话占25%
+  // 剩余10%留给系统消息和用户输入
+
+  const maxArticleTokens = Math.floor(totalTokens * articleTokenRatio);
+  const maxContextTokens = Math.floor(totalTokens * contextTokenRatio);
+
+  // 添加笔记上下文（智能管理文章内容）
   if (notePrompts?.length) {
-    notePrompts.forEach((prompt) => {
-      messages.push({
-        role: "system",
-        content: prompt,
-      });
-    });
+    const managedArticleMessages = manageArticleContent(
+      notePrompts,
+      maxArticleTokens,
+      inputValue
+    );
+    messages.push(...managedArticleMessages);
   }
 
-  // 添加历史对话
+  // 添加历史对话（智能管理上下文长度）
   if (contextMessages?.length) {
-    messages.push(...contextMessages);
+    const hasArticleContent = Boolean(notePrompts?.length);
+    const managedContextMessages = manageContextMessages(
+      contextMessages,
+      maxContextTokens,
+      hasArticleContent
+    );
+    messages.push(...managedContextMessages);
   }
 
   // 添加用户输入
@@ -110,48 +139,6 @@ const createOpenAIClient = (settings: yoranChatSettings): OpenAI => {
 };
 
 /**
- * 处理和格式化错误信息
- */
-const formatErrorMessage = (error: unknown): string => {
-  if (!(error instanceof Error)) {
-    return "API 请求失败";
-  }
-
-  const message = error.message.toLowerCase();
-
-  if (message.includes("cors")) {
-    return "跨域请求被阻止，请检查 API 配置";
-  }
-
-  if (message.includes("401") || message.includes("unauthorized")) {
-    return "API Key 无效或已过期";
-  }
-
-  if (message.includes("429") || message.includes("rate limit")) {
-    return "请求频率过高，请稍后重试";
-  }
-
-  if (message.includes("timeout") || message.includes("etimedout")) {
-    return "请求超时，请检查网络连接";
-  }
-
-  if (message.includes("network") || message.includes("fetch")) {
-    return "网络连接失败，请检查网络状态";
-  }
-
-  if (message.includes("400") || message.includes("bad request")) {
-    return "请求参数错误，请检查配置";
-  }
-
-  if (message.includes("500") || message.includes("internal server")) {
-    return "服务器内部错误，请稍后重试";
-  }
-
-  // 返回原始错误信息作为后备
-  return error.message || "未知错误";
-};
-
-/**
  * 处理流式响应
  */
 export const handleStreamResponse = async (
@@ -159,7 +146,7 @@ export const handleStreamResponse = async (
   settings: yoranChatSettings,
   messages: ChatMessage[],
   callBacks: CallBacks,
-  cancelToken?: { cancelled: boolean },
+  cancelToken?: { cancelled: boolean }
 ) => {
   try {
     callBacks.onStart?.();
@@ -247,7 +234,7 @@ export const sendChatMessage = async ({
     inputValue,
     notePrompts,
     contextMessages,
-    systemMessage,
+    systemMessage
   );
 
   return handleStreamResponse(
@@ -255,6 +242,6 @@ export const sendChatMessage = async ({
     settings,
     messages,
     callBacks,
-    cancelToken,
+    cancelToken
   );
 };

@@ -69,5 +69,21 @@ export class SettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    new Setting(containerEl)
+      .setName("Max Context Tokens")
+      .setDesc("Maximum number of tokens to keep in conversation context (default: 8000). Lower values save costs but may lose conversation history.")
+      .addText((text) =>
+        text
+          .setPlaceholder("8000")
+          .setValue(this.plugin.settings.maxContextTokens.toString())
+          .onChange(async (value) => {
+            const numValue = parseInt(value);
+            if (!isNaN(numValue) && numValue > 0) {
+              this.plugin.settings.maxContextTokens = numValue;
+              await this.plugin.saveSettings();
+            }
+          })
+      );
   }
 }

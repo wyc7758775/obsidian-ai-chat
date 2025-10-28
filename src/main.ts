@@ -11,6 +11,7 @@ export interface yoranChatSettings {
   apiBaseURL: string;
   model: string;
   systemPrompt: string;
+  maxContextTokens: number; // 最大上下文 token 数量限制
 }
 
 const DEFAULT_SETTINGS: yoranChatSettings = {
@@ -18,6 +19,7 @@ const DEFAULT_SETTINGS: yoranChatSettings = {
   apiBaseURL: "https://ark.cn-beijing.volces.com/api/v3",
   model: "kimi-k2-250905", // kimi-k2-250905
   systemPrompt: "你全知全能",
+  maxContextTokens: 8000, // 默认上下文限制为 8000 tokens
 };
 
 export default class yoranChat extends Plugin {
