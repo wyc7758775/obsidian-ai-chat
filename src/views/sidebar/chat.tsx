@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import styles from "./css/ai-chat.module.css";
 import { sendChatMessage } from "../../core/ai/openai";
 import {
@@ -13,9 +13,10 @@ import { NoteSelector } from "./component/note-selector";
 import { SelectedFiles } from "./component/selected-files";
 import { ChatInput } from "./component/chat-input";
 import { PositionedPopover } from "./component/positioned-popover";
+import { Loading } from "./component/loading";
 import { useCaretPosition } from "./hooks/use-caret-position";
-import { useSerializeJS, parseSerializeJS } from "./hooks/use-serialize-js";
-import { Message, ChatComponentProps } from "./type";
+
+import { Message, ChatComponentProps, NoteReference } from "./type";
 import { useHistory } from "./component/use-history";
 import { useContext } from "./hooks/use-context";
 
@@ -29,13 +30,15 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const [inputValue, setInputValue] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   const textareaRef = useRef<HTMLDivElement>(null);
   const cancelToken = useRef({ cancelled: false });
   const messageListRef = useRef<ChatMessageHandle>(null);
 
-  const noteContextService = new NoteContextService(app);
+  // 使用 useMemo 确保 service 实例的稳定性
+  const noteContextService = useMemo(() => new NoteContextService(app), [app]);
 
   const [selectedNotes, setSelectedNotes] = useState<NoteContext[]>([]);
 
@@ -80,15 +83,16 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   }, []);
 
   const { historyRender, currentId } = useHistory();
-  const { upsertHistoryItem, getHistoryItemById } = useContext(app);
-  const serializeJS = useSerializeJS();
+  const { upsertHistoryItem, getHistoryItemById, fileStorageService } = useContext(app);
 
   useEffect(() => {
     if (!currentId) {
       setMessages([]);
+      setIsInitializing(false);
       return;
     }
 
+    setIsInitializing(true);
     (async () => {
       try {
         const item = (await getHistoryItemById(currentId)) ?? {
@@ -96,10 +100,17 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           messages: [],
         };
         setMessages(item.messages);
-        // 读取历史时将字符串快照解析回对象，并补齐必要字段
-        setSelectedNotes(parseSerializeJS(item.noteSelected as any) || []);
+        // 从 NoteReference 转换为完整的 NoteContext
+        if (item.noteSelected && item.noteSelected.length > 0) {
+          const noteContexts = await fileStorageService.convertToNoteContexts(item.noteSelected);
+          setSelectedNotes(noteContexts);
+        } else {
+          setSelectedNotes([]);
+        }
       } catch (e) {
         console.error("IndexedDB load failed:", e);
+      } finally {
+        setIsInitializing(false);
       }
     })();
   }, [currentId, getHistoryItemById]);
@@ -108,27 +119,42 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   useEffect(() => {
     if (!currentId) return;
 
-    // 改用第三方库 serialize-javascript：先快照，再字符串化，并记录 filePath
-    const noteSelectedSerializable = (selectedNotes || []).map((n: any) => {
-      const serializedStr = serializeJS(n, { maxDepth: 2 });
-      const filePath = n?.file?.path ?? n?.path ?? undefined;
-      return { serialized: serializedStr, filePath };
-    });
+    // 将 NoteContext 转换为轻量级的 NoteReference
+    const noteSelectedReferences: NoteReference[] = (selectedNotes || [])
+      .map((noteContext) => fileStorageService.convertToNoteReference(noteContext))
+      .filter((ref): ref is NoteReference => ref !== null);
+
+    console.log("=== 保存调试信息 ===");
+    console.log("currentId:", currentId);
+    console.log("selectedNotes 数量:", selectedNotes?.length || 0);
+    console.log("selectedNotes 内容:", selectedNotes);
+    console.log("noteSelectedReferences 数量:", noteSelectedReferences.length);
+    console.log("noteSelectedReferences 内容:", noteSelectedReferences);
+    console.log("messages 数量:", messages.length);
 
     (async () => {
       try {
+        console.log("=== 开始保存流程 ===");
         // 先获取现有的历史记录，保留用户编辑的 title 和 systemMessage
         const existingItem = await getHistoryItemById(currentId);
-        await upsertHistoryItem({
+        console.log("现有项目:", existingItem);
+        
+        const itemToSave = {
           id: currentId,
           messages,
-          noteSelected: noteSelectedSerializable,
+          noteSelected: noteSelectedReferences,
           title: existingItem?.title, // 保留现有的 title
           systemMessage: existingItem?.systemMessage, // 保留现有的 systemMessage
           createdAt: existingItem?.createdAt, // 保留创建时间
-        });
+        };
+        
+        console.log("准备保存的项目:", itemToSave);
+        console.log("准备保存的 noteSelected:", itemToSave.noteSelected);
+        
+        await upsertHistoryItem(itemToSave);
+        console.log("=== 保存完成 ===");
       } catch (e) {
-        console.error("IndexedDB save failed:", e);
+        console.error("保存失败:", e);
       }
     })();
   }, [
@@ -136,8 +162,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     messages,
     selectedNotes,
     upsertHistoryItem,
-    serializeJS,
     getHistoryItemById,
+    fileStorageService,
   ]);
 
   const handleSend = async () => {
@@ -439,7 +465,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     setSelectedNotes((prev: any) => {
       const exists = prev.some((p: any) => p.path === note.file?.path);
       if (exists) return prev;
-      return [...prev, note.file];
+      return [...prev, note]; // 保存完整的 NoteContext 对象
     });
 
     // 清除输入框中的 @ 符号和搜索关键字，替换为选中的笔记标题
@@ -467,13 +493,12 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
   const onSelectAllFiles = (notes: NoteContext[]) => {
     setSelectedNotes((prev) => {
-      const existingPaths = new Set(prev.map((p) => p.path));
+      const existingPaths = new Set(prev.map((p) => p.file?.path || p.path));
       const merged = [...prev];
       for (const note of notes) {
-        const file = note?.file ?? note; // 兼容 NoteContext 或已是文件对象
-        const path = file?.path;
+        const path = note.file?.path;
         if (path && !existingPaths.has(path)) {
-          merged.push(file);
+          merged.push(note); // 保存完整的 NoteContext 对象
           existingPaths.add(path);
         }
       }
@@ -494,7 +519,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   };
   const onDeleteNote = (note: NoteContext) => {
-    setSelectedNotes(selectedNotes.filter((n) => n.path !== note.path));
+    setSelectedNotes(selectedNotes.filter((n) => (n.file?.path || n.path) !== (note.file?.path || note.path)));
   };
 
   const handleScrollToBottom = () => {
@@ -503,6 +528,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
   return (
     <div className={styles.container} ref={chatContainerRef}>
+      {/* 全局初始化 Loading */}
+      {isInitializing && <Loading />}
       {/* 信息历史 */}
       {historyRender({ app })}
       {/* 消息区域 */}

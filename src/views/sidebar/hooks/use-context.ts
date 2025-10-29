@@ -17,7 +17,10 @@ export const useContext = (app: App) => {
 
   // 读取全部会话列表
   const fetchHistoryList = useCallback(async (): Promise<HistoryItem[]> => {
-    return await fileStorage.fetchHistoryList();
+    console.log("[useContext] fetchHistoryList called");
+    const result = await fileStorage.fetchHistoryList();
+    console.log("[useContext] fetchHistoryList returned", result.length, "items");
+    return result;
   }, [fileStorage]);
 
   // 按 ID 读取会话
@@ -41,9 +44,21 @@ export const useContext = (app: App) => {
     [fileStorage]
   );
 
-  // 数据迁移（从IndexedDB迁移到文件存储）
-  const migrateFromIndexedDB = useCallback(async (): Promise<void> => {
-    await fileStorage.migrateFromIndexedDB();
+
+
+  // 强制重新加载数据
+  const forceReload = useCallback(async (): Promise<void> => {
+    await fileStorage.forceReload();
+  }, [fileStorage]);
+
+  // 获取调试信息
+  const getDebugInfo = useCallback(async () => {
+    return await fileStorage.getDebugInfo();
+  }, [fileStorage]);
+
+  // 强制删除项目
+  const forceDeleteItem = useCallback(async (id: string) => {
+    return await fileStorage.forceDeleteItem(id);
   }, [fileStorage]);
 
   return {
@@ -52,6 +67,9 @@ export const useContext = (app: App) => {
     getHistoryItemById,
     addEmptyItem,
     deleteHistoryItem,
-    migrateFromIndexedDB,
+    forceReload,
+    getDebugInfo,
+    forceDeleteItem,
+    fileStorageService: fileStorage, // 导出 fileStorageService 实例
   };
 };

@@ -29,7 +29,6 @@ export const useHistory = () => {
       getHistoryItemById,
       deleteHistoryItem,
       upsertHistoryItem,
-      migrateFromIndexedDB,
     } = useContext(app);
     const [isExpanded, setIsExpanded] = useState(false);
     const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
@@ -37,7 +36,7 @@ export const useHistory = () => {
     const [editingItem, setEditingItem] = useState<HistoryItem | null>(null);
     const [editTitle, setEditTitle] = useState<string>("");
     const [editSystemMessage, setEditSystemMessage] = useState<string>("");
-    
+
     // 瀑布流布局相关
     const containerRef = useRef<HTMLDivElement>(null);
     const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -62,7 +61,7 @@ export const useHistory = () => {
           setHistoryList((prev) => [historyItem, ...prev]);
           setCurrentId(item.id);
         } catch (e) {
-          console.error("IndexedDB load failed:", e);
+          // 忽略错误
         }
       })();
     };
@@ -70,45 +69,49 @@ export const useHistory = () => {
     useEffect(() => {
       (async () => {
         try {
-          // 首先尝试从IndexedDB迁移数据到文件存储
-          await migrateFromIndexedDB();
-          
-          // 然后加载历史记录列表
+          // 加载历史记录列表
           const items = await fetchHistoryList();
           setHistoryList(items);
           setCurrentId(items[0]?.id || "");
         } catch (e) {
-          console.error("Failed to load history:", e);
+          // 忽略错误
         }
       })();
-    }, [fetchHistoryList, migrateFromIndexedDB]);
+    }, [fetchHistoryList]);
 
+    const deleteHistoryLastRecord = async (id: string) => {
+      const newItem = await addEmptyItem();
+      try {
+        const historyItem = (await getHistoryItemById(newItem.id)) ?? {
+          id: newItem.id,
+          messages: [],
+        };
+        setHistoryList([historyItem]);
+        setCurrentId(newItem.id);
+        // 创建新记录后再删除原记录
+        await deleteHistoryItem(id);
+      } catch (e) {
+        // 忽略错误
+      }
+    };
+
+    const deleteHistoryMultiRecorder = async (id: string) => {
+      // 如果有多条记录，正常删除
+      await deleteHistoryItem(id);
+      const items = await fetchHistoryList();
+      setHistoryList(items);
+
+      if (id === currentId) {
+        // 如果删除的是当前项，切换到第一条
+        setCurrentId(items[0]?.id || "");
+      }
+    };
     const handleDelete = async (id: string) => {
       // 如果删除前只有一条记录，先创建一条新记录
       if (historyList.length === 1) {
-        const newItem = await addEmptyItem();
-        try {
-          const historyItem = (await getHistoryItemById(newItem.id)) ?? {
-            id: newItem.id,
-            messages: [],
-          };
-          setHistoryList([historyItem]);
-          setCurrentId(newItem.id);
-          // 创建新记录后再删除原记录
-          await deleteHistoryItem(id);
-        } catch (e) {
-          console.error("创建新历史记录失败:", e);
-        }
+        return deleteHistoryLastRecord(id);
       } else {
-        // 如果有多条记录，正常删除
-        await deleteHistoryItem(id);
-        const items = await fetchHistoryList();
-        setHistoryList(items);
-
-        if (id === currentId) {
-          // 如果删除的是当前项，切换到第一条
-          setCurrentId(items[0]?.id || "");
-        }
+        return deleteHistoryMultiRecorder(id);
       }
     };
 
@@ -151,7 +154,7 @@ export const useHistory = () => {
         setEditTitle("");
         setEditSystemMessage("");
       } catch (e) {
-        console.error("保存编辑失败:", e);
+        // 忽略错误
       }
     };
 
@@ -191,34 +194,39 @@ export const useHistory = () => {
     // 瀑布流布局计算
     const calculateWaterfallLayout = () => {
       if (!containerRef.current || !isExpanded) return;
-      
+
       const container = containerRef.current;
       const containerWidth = container.clientWidth - 32; // 对应CSS中的左边距20px + 右边距12px
       const cardWidth = 180;
       const gap = 12; // 适中的间距，保持美观
-      const columns = Math.max(1, Math.floor((containerWidth + gap) / (cardWidth + gap)));
+      const columns = Math.max(
+        1,
+        Math.floor((containerWidth + gap) / (cardWidth + gap))
+      );
       const actualCardWidth = (containerWidth - gap * (columns - 1)) / columns;
-      
+
       const columnHeights = new Array(columns).fill(0);
-      
+
       cardRefs.current.forEach((cardEl, index) => {
         if (!cardEl) return;
-        
+
         // 找到最短的列
-        const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights));
-        
+        const shortestColumnIndex = columnHeights.indexOf(
+          Math.min(...columnHeights)
+        );
+
         // 设置卡片位置和宽度
         const left = shortestColumnIndex * (actualCardWidth + gap) + 20; // 加上左边距
         const top = columnHeights[shortestColumnIndex] + 24; // 加上容器的padding-top
-        
+
         cardEl.style.left = `${left}px`;
         cardEl.style.top = `${top}px`;
         cardEl.style.width = `${actualCardWidth}px`;
-        
+
         // 更新列高度
         columnHeights[shortestColumnIndex] += cardEl.offsetHeight + gap;
       });
-      
+
       // 设置容器高度
       const maxHeight = Math.max(...columnHeights);
       setContainerHeight(maxHeight); // 简单设置高度，让CSS处理滚动空间
@@ -234,11 +242,11 @@ export const useHistory = () => {
         const resizeObserver = new ResizeObserver(() => {
           calculateWaterfallLayout();
         });
-        
+
         if (containerRef.current) {
           resizeObserver.observe(containerRef.current);
         }
-        
+
         return () => resizeObserver.disconnect();
       }
     }, [isExpanded]);
@@ -300,13 +308,14 @@ export const useHistory = () => {
           {/* 展开容器 */}
           {isExpanded && (
             <>
-              <div 
+              <div
                 ref={containerRef}
                 className={styles.historyExpandList}
-                style={{ 
-                  height: containerHeight > 0 ? `${containerHeight + 30}px` : '30vh',
-                  minHeight: '200px',
-                  maxHeight: '50vh' // 恢复最大高度限制，防止过高
+                style={{
+                  height:
+                    containerHeight > 0 ? `${containerHeight + 30}px` : "30vh",
+                  minHeight: "200px",
+                  maxHeight: "50vh", // 恢复最大高度限制，防止过高
                 }}
               >
                 {historyList.map((item: HistoryItem, index: number) =>

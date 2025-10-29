@@ -12,7 +12,7 @@ export const SelectedFiles = ({
   return (
     <div className={styles.fileWrapper}>
       {nodes.map((note, index) => (
-        <div className={styles.fileItem} key={`${note.path}-${index}`}>
+        <div className={styles.fileItem} key={`${note.path || note.file?.path || index}-${index}`}>
           <div className={styles.fileItemLogo}>📒</div>
           <div className={styles.fileItemContent}>
             <span
@@ -23,9 +23,9 @@ export const SelectedFiles = ({
             >
               <CloseIcon />
             </span>
-            <div className={styles.filePath}>{note.name}</div>
+            <div className={styles.filePath}>{note.title || note.name || note.file?.basename || '未知文件'}</div>
             <div className={styles.fileLine}></div>
-            <div className={styles.filePath}>{note.path}</div>
+            <div className={styles.filePath}>{note.path || note.file?.path || '未知路径'}</div>
           </div>
         </div>
       ))}
