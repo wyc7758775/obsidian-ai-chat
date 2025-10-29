@@ -80,7 +80,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   }, []);
 
   const { historyRender, currentId } = useHistory();
-  const { upsertHistoryItem, getHistoryItemById } = useContext();
+  const { upsertHistoryItem, getHistoryItemById } = useContext(app);
   const serializeJS = useSerializeJS();
 
   useEffect(() => {

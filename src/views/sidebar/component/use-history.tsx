@@ -22,15 +22,15 @@ export const useHistory = () => {
   );
   const [currentId, setCurrentId] = useState<string>("");
 
-  const {
-    addEmptyItem,
-    fetchHistoryList,
-    getHistoryItemById,
-    deleteHistoryItem,
-    upsertHistoryItem,
-  } = useContext();
-
   const historyRender: React.FC<ChatMessageProps> = ({ app }) => {
+    const {
+      addEmptyItem,
+      fetchHistoryList,
+      getHistoryItemById,
+      deleteHistoryItem,
+      upsertHistoryItem,
+      migrateFromIndexedDB,
+    } = useContext(app);
     const [isExpanded, setIsExpanded] = useState(false);
     const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,14 +70,18 @@ export const useHistory = () => {
     useEffect(() => {
       (async () => {
         try {
+          // 首先尝试从IndexedDB迁移数据到文件存储
+          await migrateFromIndexedDB();
+          
+          // 然后加载历史记录列表
           const items = await fetchHistoryList();
           setHistoryList(items);
           setCurrentId(items[0]?.id || "");
         } catch (e) {
-          console.error("IndexedDB load failed:", e);
+          console.error("Failed to load history:", e);
         }
       })();
-    }, [fetchHistoryList]);
+    }, [fetchHistoryList, migrateFromIndexedDB]);
 
     const handleDelete = async (id: string) => {
       // 如果删除前只有一条记录，先创建一条新记录
