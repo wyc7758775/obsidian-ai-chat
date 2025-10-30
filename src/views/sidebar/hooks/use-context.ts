@@ -17,9 +17,7 @@ export const useContext = (app: App) => {
 
   // 读取全部会话列表
   const fetchHistoryList = useCallback(async (): Promise<HistoryItem[]> => {
-    console.log("[useContext] fetchHistoryList called");
     const result = await fileStorage.fetchHistoryList();
-    console.log("[useContext] fetchHistoryList returned", result.length, "items");
     return result;
   }, [fileStorage]);
 

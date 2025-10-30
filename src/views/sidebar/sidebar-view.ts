@@ -44,7 +44,6 @@ export class YoranSidebarView extends ItemView {
   }
 
   private handleSendMessage(message: string) {
-    console.log("发送消息:", message);
     // 这里可以添加发送消息到外部服务的逻辑
   }
 

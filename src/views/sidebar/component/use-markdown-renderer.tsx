@@ -2,7 +2,6 @@ import React from "react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import styles from "../css/message-list.module.css";
-import { CopyIcon } from "./icon";
 
 // 工具：提取 React children 的纯文本
 function toText(node: React.ReactNode): string {
@@ -20,15 +19,24 @@ type HasPosition = {
   };
 };
 
-type PreProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLPreElement>, HTMLPreElement> & {
+type PreProps = React.DetailedHTMLProps<
+  React.HTMLAttributes<HTMLPreElement>,
+  HTMLPreElement
+> & {
   children?: React.ReactNode;
 };
 
-type CodeProps = React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & {
+type CodeProps = React.DetailedHTMLProps<
+  React.HTMLAttributes<HTMLElement>,
+  HTMLElement
+> & {
   children?: React.ReactNode;
 };
 
-type TableProps = React.DetailedHTMLProps<React.TableHTMLAttributes<HTMLTableElement>, HTMLTableElement> & {
+type TableProps = React.DetailedHTMLProps<
+  React.TableHTMLAttributes<HTMLTableElement>,
+  HTMLTableElement
+> & {
   children?: React.ReactNode;
 };
 
@@ -36,7 +44,9 @@ type TableProps = React.DetailedHTMLProps<React.TableHTMLAttributes<HTMLTableEle
 export function useMarkdownRenderer() {
   const buildProps = React.useCallback((content: string) => {
     const remarkPlugins: unknown[] = [remarkGfm];
-    const rehypePlugins: unknown[] = [[rehypeHighlight, { ignoreMissing: true }]];
+    const rehypePlugins: unknown[] = [
+      [rehypeHighlight, { ignoreMissing: true }],
+    ];
 
     const components = {
       // 在 <pre> 层包裹复制按钮，避免 <p> 内嵌套 <pre> 的错误
@@ -66,7 +76,7 @@ export function useMarkdownRenderer() {
               onClick={() => navigator.clipboard.writeText(md)}
               aria-label="复制代码"
             >
-              <CopyIcon />
+              ⧉
             </button>
             <pre {...props}>{props.children}</pre>
           </div>
@@ -100,13 +110,26 @@ export function useMarkdownRenderer() {
               onClick={() => navigator.clipboard.writeText(md)}
               aria-label="复制表格Markdown"
             >
-              <CopyIcon />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 48 48"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M32 12a2 2 0 012 2v28.222c0 .982-.836 1.778-1.867 1.778H7.867C6.836 44 6 43.204 6 42.222V13.778C6 12.796 6.836 12 7.867 12H32zm-2 4H10v24h20V16zM40 4a2 2 0 012 2v25a1 1 0 01-1 1h-2a1 1 0 01-1-1V8H19a1 1 0 01-1-1V5a1 1 0 011-1h21z"
+                  fill="currentColor"
+                />
+              </svg>
             </button>
             <table {...rest}>{children}</table>
           </div>
         );
       },
-    } 
+    };
     return { remarkPlugins, rehypePlugins, components };
   }, []);
 

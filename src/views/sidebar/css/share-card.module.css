@@ -1,0 +1,121 @@
+.card {
+  background-color: var(--background-primary);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--background-modifier-border);
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.questionContainer {
+  background-color: var(--background-secondary);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.question {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 14px;
+}
+
+.answer {
+  color: var(--text-normal);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.answer h1, .answer h2, .answer h3, .answer h4 {
+  color: var(--text-normal);
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 0.3em;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.answer p {
+  margin-bottom: 1em;
+}
+
+.answer ul, .answer ol {
+  padding-left: 2em;
+}
+
+.answer blockquote {
+  border-left: 4px solid var(--background-modifier-border);
+  padding-left: 1em;
+  color: var(--text-muted);
+  margin-left: 0;
+}
+
+.answer pre {
+  background: var(--background-secondary) !important;
+  border: 1px solid var(--background-modifier-border) !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  margin: 16px 0 !important;
+  white-space: pre-wrap; /* Allow wrapping */
+  word-break: break-all; /* Break long words */
+}
+
+.answer pre code.hljs {
+  background: transparent !important;
+  color: var(--text-normal);
+}
+
+.answer code:not(pre code) {
+  background-color: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.9em;
+  color: var(--text-normal);
+}
+
+.answer table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 16px 0;
+  background-color: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+}
+
+.answer thead th {
+  background-color: var(--background-secondary);
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.answer th,
+.answer td {
+  padding: 8px 12px;
+  border: 1px solid var(--background-modifier-border);
+  text-align: left;
+}
+
+.answer tbody tr:nth-child(odd) {
+  background-color: var(--background-primary-alt);
+}
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid var(--background-modifier-border);
+}

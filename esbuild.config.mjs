@@ -73,6 +73,10 @@ const context = await esbuild.context({
 if (devWatch) {
   await context.rebuild();
   await context.watch();
+  await context.serve({
+    port: 8080,
+    servedir: outdir,
+  });
 } else {
 	await context.rebuild();
 	process.exit(0);

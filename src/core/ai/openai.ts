@@ -162,7 +162,7 @@ export const handleStreamResponse = async (
 
     for await (const part of stream) {
       if (cancelToken?.cancelled) {
-        console.log("Stream cancelled by user");
+
         break;
       }
 

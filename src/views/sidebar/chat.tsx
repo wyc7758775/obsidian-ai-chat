@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import styles from "./css/ai-chat.module.css";
 import { sendChatMessage } from "../../core/ai/openai";
 import {
@@ -83,7 +89,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   }, []);
 
   const { historyRender, currentId } = useHistory();
-  const { upsertHistoryItem, getHistoryItemById, fileStorageService } = useContext(app);
+  const { upsertHistoryItem, getHistoryItemById, fileStorageService } =
+    useContext(app);
 
   useEffect(() => {
     if (!currentId) {
@@ -102,7 +109,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         setMessages(item.messages);
         // 从 NoteReference 转换为完整的 NoteContext
         if (item.noteSelected && item.noteSelected.length > 0) {
-          const noteContexts = await fileStorageService.convertToNoteContexts(item.noteSelected);
+          const noteContexts = await fileStorageService.convertToNoteContexts(
+            item.noteSelected
+          );
           setSelectedNotes(noteContexts);
         } else {
           setSelectedNotes([]);
@@ -121,24 +130,16 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
     // 将 NoteContext 转换为轻量级的 NoteReference
     const noteSelectedReferences: NoteReference[] = (selectedNotes || [])
-      .map((noteContext) => fileStorageService.convertToNoteReference(noteContext))
+      .map((noteContext) =>
+        fileStorageService.convertToNoteReference(noteContext)
+      )
       .filter((ref): ref is NoteReference => ref !== null);
-
-    console.log("=== 保存调试信息 ===");
-    console.log("currentId:", currentId);
-    console.log("selectedNotes 数量:", selectedNotes?.length || 0);
-    console.log("selectedNotes 内容:", selectedNotes);
-    console.log("noteSelectedReferences 数量:", noteSelectedReferences.length);
-    console.log("noteSelectedReferences 内容:", noteSelectedReferences);
-    console.log("messages 数量:", messages.length);
 
     (async () => {
       try {
-        console.log("=== 开始保存流程 ===");
         // 先获取现有的历史记录，保留用户编辑的 title 和 systemMessage
         const existingItem = await getHistoryItemById(currentId);
-        console.log("现有项目:", existingItem);
-        
+
         const itemToSave = {
           id: currentId,
           messages,
@@ -147,12 +148,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           systemMessage: existingItem?.systemMessage, // 保留现有的 systemMessage
           createdAt: existingItem?.createdAt, // 保留创建时间
         };
-        
-        console.log("准备保存的项目:", itemToSave);
-        console.log("准备保存的 noteSelected:", itemToSave.noteSelected);
-        
+
         await upsertHistoryItem(itemToSave);
-        console.log("=== 保存完成 ===");
       } catch (e) {
         console.error("保存失败:", e);
       }
@@ -258,6 +255,96 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleRegenerateMessage = async (messageIndex: number) => {
+    const targetMessage = messages[messageIndex];
+
+    // 只能重新生成AI消息
+    if (targetMessage.type !== "assistant") return;
+
+    // 找到对应的用户消息（通常是前一条消息）
+    let userMessageIndex = messageIndex - 1;
+    while (
+      userMessageIndex >= 0 &&
+      messages[userMessageIndex].type !== "user"
+    ) {
+      userMessageIndex--;
+    }
+
+    if (userMessageIndex < 0) return; // 没有找到对应的用户消息
+
+    const userMessage = messages[userMessageIndex];
+
+    // 删除从AI消息开始到最后的所有消息
+    const newMessages = messages.slice(0, messageIndex);
+    setMessages(newMessages);
+
+    // 创建新的AI消息
+    const aiMessageId = Date.now().toString();
+    const aiMessage: Message = {
+      id: aiMessageId,
+      content: "",
+      type: "assistant",
+    };
+    setMessages((prev) => [...prev, aiMessage]);
+
+    // 准备笔记提示（使用当前选中的笔记）
+    const notePrompts = [];
+    for (let i = 0; i < selectedNotes.length; i++) {
+      const context = await noteContextService.getNoteContent(
+        selectedNotes[i] as any
+      );
+      notePrompts.push(
+        typeof context === "string" ? context : context?.content ?? ""
+      );
+    }
+
+    // 获取当前历史记录的系统消息
+    const getCurrentSystemMessage = async () => {
+      if (!currentId) return undefined;
+      try {
+        const currentItem = await getHistoryItemById(currentId);
+        return currentItem?.systemMessage;
+      } catch (e) {
+        console.error("Failed to get system message:", e);
+        return undefined;
+      }
+    };
+
+    const systemMessage = await getCurrentSystemMessage();
+
+    // 重新发送AI请求
+    setIsLoading(true);
+    sendChatMessage({
+      settings,
+      inputValue: userMessage.content, // 使用原始用户消息内容
+      notePrompts,
+      contextMessages: newMessages.map((msg) => ({
+        role: msg.type === "user" ? "user" : "assistant",
+        content: msg.content,
+      })),
+      systemMessage,
+      callBacks: {
+        onChunk: (chunk: string) => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId
+                ? { ...msg, content: msg.content + chunk }
+                : msg
+            )
+          );
+        },
+        onResponseStart: () => {
+          setIsLoading(false);
+        },
+        onComplete: () => {
+          cancelToken.current.cancelled = false;
+          setIsStreaming(false);
+        },
+      },
+      cancelToken: cancelToken.current,
+    });
   };
 
   const [filePosition, setFilePosition] = useState({ x: 0, y: 0 });
@@ -519,7 +606,11 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   };
   const onDeleteNote = (note: NoteContext) => {
-    setSelectedNotes(selectedNotes.filter((n) => (n.file?.path || n.path) !== (note.file?.path || note.path)));
+    setSelectedNotes(
+      selectedNotes.filter(
+        (n) => (n.file?.path || n.path) !== (note.file?.path || note.path)
+      )
+    );
   };
 
   const handleScrollToBottom = () => {
@@ -540,6 +631,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         isLoading={isLoading}
         onNearBottomChange={(near) => setShowScrollBtn(!near)}
         currentId={currentId} // 传递currentId用于滚动位置管理
+        onRegenerateMessage={handleRegenerateMessage}
       />
       {/* 文件选择器 */}
       <PositionedPopover

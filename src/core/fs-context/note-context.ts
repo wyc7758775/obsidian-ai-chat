@@ -298,7 +298,7 @@ export class NoteContextService {
     // 动态遵循用户“新建笔记默认位置”的设置
     const targetFolder = path ?? this.getNewNoteTargetFolder();
     const fullPath = targetFolder ? `${targetFolder}/${fileName}` : fileName;
-    console.log({ targetFolder, fullPath });
+
 
     try {
       return await this.vault.create(fullPath, content);

@@ -55,12 +55,10 @@ export default class yoranChat extends Plugin {
     this.registerDomEvent(document, "selectionchange", () => {
       const selection = window.getSelection();
       if (selection && selection.toString().trim()) {
-        const selectedText = selection.toString();
         // 检查选择是否在编辑器中
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeView && activeView.editor) {
-          console.log("编辑器中选中的文本:", selectedText);
-          // this.handleSelectedText(selectedText);
+          // this.handleSelectedText(selection.toString());
         }
       }
     });

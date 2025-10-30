@@ -73,10 +73,6 @@ export class FileStorageService {
    */
   private async saveToFile(): Promise<void> {
     try {
-      console.log("=== saveToFile 开始 ===");
-      console.log("缓存项数量:", this.cache.size);
-      console.log("完整文件路径:", this.getFullDataFilePath());
-      
       await this.ensureDataFile();
       const adapter = this.app.vault.adapter;
 
@@ -84,24 +80,17 @@ export class FileStorageService {
       const data: Record<string, HistoryItem> = {};
       this.cache.forEach((item, id) => {
         data[id] = item;
-        console.log(`缓存项 ${id} 的 noteSelected:`, item.noteSelected);
       });
 
       const jsonData = JSON.stringify(data, null, 2);
-      console.log("准备写入的 JSON 数据长度:", jsonData.length);
-      console.log("文件路径:", this.dataFile);
 
       // 写入文件
       await adapter.write(this.dataFile, jsonData);
-      console.log("文件写入完成");
 
       // 验证文件是否写入成功
       const savedContent = await adapter.read(this.dataFile);
       const savedData = JSON.parse(savedContent);
       const savedItemCount = Object.keys(savedData).length;
-      
-      console.log("验证：文件中的项目数量:", savedItemCount);
-      console.log("验证：期望的项目数量:", Object.keys(data).length);
 
       if (savedItemCount !== Object.keys(data).length) {
         throw new Error(
@@ -110,8 +99,6 @@ export class FileStorageService {
           } items, but file contains ${savedItemCount} items`
         );
       }
-      
-      console.log("=== saveToFile 完成 ===");
     } catch (error) {
       console.error(
         "[FileStorage] Failed to save chat history to file:",

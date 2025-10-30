@@ -1,10 +1,16 @@
 .fileWrapper {
   overflow-x: auto;
-  padding: 8px;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
   justify-content: start;
+  gap: 8px;
   scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.fileWrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .fileItem {
@@ -12,28 +18,63 @@
   align-items: center;
   justify-content: start;
   position: relative;
-  margin-right: 12px;
-  padding: 8px;
-  border-radius: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  background-color: var(--bg-primary);
+  background-color: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  transition: all 0.2s ease;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
-.fileItemLogo {
-  font-size: 36px;
-  padding-right: 8px;
+.fileItem:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.fileIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.fileIcon {
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.8;
 }
 
 .fileItemContent {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1;
 }
 
-.filePath {
-  max-width: 200px;
+.fileName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-normal);
+  max-width: 160px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.filePath {
+  font-size: 11px;
+  color: var(--text-faint);
+  max-width: 160px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.7;
 }
 
 .fileClose {
@@ -42,27 +83,28 @@
   cursor: pointer;
   padding: 2px;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  line-height: 24px;
+  width: 18px;
+  height: 18px;
+  line-height: 14px;
   text-align: center;
-  top: -6px;
-  right: -6px;
-  background-color: var(--background-modifier-border);
+  top: -4px;
+  right: -4px;
+  background-color: var(--background-primary);
   color: var(--text-faint);
+  border: 1px solid var(--background-modifier-border);
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .fileItem:hover .fileClose {
-  display: inline;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.fileItem:hover .fileClose:hover {
-  color: var(--accent-strong);
-}
-
-.fileLine {
-  height: 1px;
-  width: 100%;
-  margin: 2px 0;
-  background-color: var(--background-modifier-border);
+.fileClose:hover {
+  color: var(--text-error);
+  background-color: var(--background-modifier-error-hover);
+  border-color: var(--text-error);
+  transform: scale(1.1);
 }

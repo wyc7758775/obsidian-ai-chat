@@ -51,11 +51,18 @@
 }
 .inputArea {
 	padding: 4px;
-	background-color: var(--bg-primary-second);
-	border: 1px solid var(--background-primary-alt);
+	background-color: var(--background-primary-alt);
+	border: 1px solid var(--background-modifier-border);
 	margin-bottom: 8px;
 	border-radius: 24px;
 	position: relative;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transition: all 0.2s ease;
+}
+
+.inputArea:focus-within {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* 回到底部箭头按钮 */
@@ -74,11 +81,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  border: 1px solid var(--background-modifier-border);
   border-radius: 999px;
-  background: var(--background-modifier-hover);
+  background: var(--background-primary-alt);
   color: var(--text-normal);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   user-select: none;

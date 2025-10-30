@@ -5,10 +5,29 @@
 	--btn-color-active: var(--bg-primary); 
 }
 .theme-dark {
-	--bg-primary: #2e3440;
-	--bg-primary-second: #3b4252;
-	--btn-color: #4c566a;
-	--btn-color-active: var(--bg-primary); 
+	--bg-primary: #1f1f1f;
+	--bg-primary-second: #2a2a2a;
+	--btn-color: #404040;
+	--btn-color-active: var(--bg-primary);
+	
+	/* 深色主题下的文本颜色优化 */
+	--text-normal: #d4d4d4;
+	--text-muted: #9d9d9d;
+	--text-faint: #6a6a6a;
+	--text-on-accent: #ffffff;
+	
+	/* 深色主题下的背景颜色优化 */
+	--background-primary: #1f1f1f;
+	--background-primary-alt: #2a2a2a;
+	--background-secondary: #262626;
+	--background-modifier-border: #404040;
+	--background-modifier-hover: #333333;
+	--background-modifier-active: #404040;
+	
+	/* 深色主题下的交互颜色优化 */
+	--interactive-accent: #007acc;
+	--interactive-accent-hover: #1e88e5;
+	--interactive-accent-rgb: 0, 122, 204;
 }
 
 /* 样式覆盖 */

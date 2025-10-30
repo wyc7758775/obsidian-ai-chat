@@ -5,13 +5,15 @@ import React, {
   useImperativeHandle,
 } from "react";
 import { App } from "obsidian";
-import ReactMarkdown from "react-markdown";
 import { Message } from "../../type";
 import { NoteContextService } from "../../../../core/fs-context/note-context";
-import { CopyIcon, GenerateIcon } from "../icon";
+import { CopyIcon, GenerateIcon, RegenerateIcon, ShareIcon } from "../icon";
 import styles from "../../css/message-list.module.css";
 import { useMarkdownRenderer } from "../use-markdown-renderer";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
+
+import ShareCard from '../share-card';
+import ReactMarkdown from "react-markdown";
 
 // 滚动位置缓存，用于保存每个历史记录的滚动位置
 const scrollPositionCache = new Map<string, number>();
@@ -22,6 +24,7 @@ export interface ChatMessageProps {
   isLoading: boolean;
   onNearBottomChange?: (near: boolean) => void;
   currentId?: string; // 当前历史记录ID，用于滚动位置管理
+  onRegenerateMessage?: (messageIndex: number) => void; // 重新生成消息的回调
 }
 
 export type ChatMessageHandle = {
@@ -30,7 +33,7 @@ export type ChatMessageHandle = {
 };
 
 export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
-  ({ messages, app, isLoading, onNearBottomChange, currentId }, ref) => {
+  ({ messages, app, isLoading, onNearBottomChange, currentId, onRegenerateMessage }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const {
       endRef: messagesEndRef,
@@ -41,7 +44,60 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       nearBottomPx: 50,
       behavior: "smooth",
     });
+
     const buildMarkdownProps = useMarkdownRenderer();
+
+    const handleShare = async (question: string, answer: string) => {
+      const cardElement = document.createElement('div');
+      // Hide the element from the user's view
+      cardElement.style.position = 'absolute';
+      cardElement.style.left = '-9999px';
+      cardElement.style.width = '400px';
+      document.body.appendChild(cardElement);
+
+      const questionNode = <ReactMarkdown {...buildMarkdownProps(question) as any}>{question}</ReactMarkdown>;
+      const answerNode = <ReactMarkdown {...buildMarkdownProps(answer) as any}>{answer}</ReactMarkdown>;
+
+      const card = <ShareCard question={questionNode} answer={answerNode} />;
+
+      const { default: ReactDOM } = await import('react-dom');
+      ReactDOM.render(card, cardElement);
+
+      // Give React time to render
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      try {
+        const domtoimage = (await import('dom-to-image-more')).default;
+        const dataUrl = await domtoimage.toPng(cardElement, {
+          // It is recommended to specify the pixel ratio of the device to ensure the image is clear
+          pixelRatio: window.devicePixelRatio,
+          // Set a background color to prevent transparency issues
+          bgcolor: getComputedStyle(document.body).getPropertyValue('--background-primary').trim() || '#ffffff',
+          // Copy all styles from the original document to the cloned one
+          style: {
+            // This ensures that all styles are copied
+            ...Object.fromEntries(
+              Array.from(document.styleSheets)
+                .flatMap(sheet => Array.from(sheet.cssRules))
+                .filter(rule => rule instanceof CSSStyleRule)
+                .map(rule => [(rule as CSSStyleRule).selectorText, rule.cssText])
+            ),
+          },
+        });
+        
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = 'yoran-chat-share.png';
+        link.click();
+
+      } catch (error) {
+        console.error('Oops, something went wrong!', error);
+      } finally {
+        // Clean up the temporary element
+        document.body.removeChild(cardElement);
+      }
+    };
+
 
     const noteContextService = new NoteContextService(app);
     // 创建新笔记
@@ -149,6 +205,10 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
                   <GenerateIcon
                     onClick={() => createFile(message.content, index)}
                   />
+                  <RegenerateIcon
+                    onClick={() => onRegenerateMessage?.(index)}
+                  />
+                  <ShareIcon onClick={() => handleShare(messages[index - 1]?.content, message.content)} />
                 </div>
               )}
             </div>
@@ -175,29 +235,42 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       if (message.length === 0) {
         return (
           <div className={styles.logo}>
-            {/* 可爱的卡通小猫咪 */}
-            <div className={styles.cuteCat}>
-              <div className={styles.catHead}>
-                <div className={styles.catEar}></div>
-                <div className={styles.catEar}></div>
-                <div className={styles.catFace}>
-                  <div className={styles.catEye}></div>
-                  <div className={styles.catEye}></div>
-                  <div className={styles.catNose}></div>
-                  <div className={styles.catMouth}></div>
+            <svg style={{ position: "absolute", width: 0, height: 0 }}>
+              <filter id="pencilTexture">
+                <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" result="noise" />
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="pencil" />
+                <feGaussianBlur in="pencil" stdDeviation="0.2" result="blurred" />
+                <feBlend in="SourceGraphic" in2="blurred" mode="multiply" />
+              </filter>
+            </svg>
+            <div className={styles.container}>
+              <div className={styles.cat}>
+                <div className={styles.head}>
+                  <div className={`${styles.ear} ${styles.left}`}></div>
+                  <div className={`${styles.ear} ${styles.right}`}></div>
+                  <div className={`${styles.eye} ${styles.left}`}></div>
+                  <div className={`${styles.eye} ${styles.right}`}></div>
+                  <div className={styles.nose}></div>
+                  <div className={`${styles.mouth} ${styles.left}`}></div>
+                  <div className={`${styles.mouth} ${styles.right}`}></div>
+                  <div className={`${styles.whisker} ${styles.left1}`}></div>
+                  <div className={`${styles.whisker} ${styles.left2}`}></div>
+                  <div className={`${styles.whisker} ${styles.right1}`}></div>
+                  <div className={`${styles.whisker} ${styles.right2}`}></div>
+                  <div className={`${styles.blush} ${styles.left}`}></div>
+                  <div className={`${styles.blush} ${styles.right}`}></div>
                 </div>
+                <div className={styles.body}>
+                  <div className={styles.heart}></div>
+                </div>
+                <div className={styles.tail}></div>
               </div>
-              <div className={styles.catBody}>
-                <div className={styles.catPaw}></div>
-                <div className={styles.catPaw}></div>
-              </div>
-              <div className={styles.catTail}></div>
             </div>
-            {/* 提示文字 */}
-            <span className={styles.gameText}>请相信美好的事情即将到来🙂</span>
+            <div className={styles.gameText}>No messages, start a conversation!</div>
           </div>
         );
       }
+      return null;
     };
 
     return (
