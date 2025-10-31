@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 12px;
+  border-radius: 6px;
   background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-primary-alt) 100%);
   color: var(--text-normal);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -78,7 +78,7 @@
   padding: 8px 16px;
   min-width: 80px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .buttonRectLarge {
@@ -86,7 +86,7 @@
   padding: 12px 24px;
   min-width: 100px;
   height: 44px;
-  border-radius: 10px;
+  border-radius: 6px;
   font-size: 16px;
 }
 
