@@ -12,14 +12,22 @@ export interface yoranChatSettings {
   model: string;
   systemPrompt: string;
   maxContextTokens: number; // 最大上下文 token 数量限制
+  suggestionTemplates?: string[]; // 空状态建议提示词，最多10条
 }
 
 const DEFAULT_SETTINGS: yoranChatSettings = {
   appKey: "come on",
   apiBaseURL: "https://ark.cn-beijing.volces.com/api/v3",
   model: "kimi-k2-250905", // kimi-k2-250905
-  systemPrompt: "你全知全能",
+  systemPrompt: "简略的回答我的任何问题",
   maxContextTokens: 8000, // 默认上下文限制为 8000 tokens
+  // 默认建议提示词（作为占位与回退）
+  suggestionTemplates: [
+    "请帮我总结这篇笔记的重点并给出行动项",
+    "把这段文字润色为更流畅、自然的中文",
+    "为这篇文章生成一个结构化大纲（含章节与要点）",
+    "指出内容的逻辑问题并给出改进建议",
+  ],
 };
 
 export default class yoranChat extends Plugin {
@@ -32,7 +40,7 @@ export default class yoranChat extends Plugin {
     this.registerView(
       VIEW_TYPE_YORAN_SIDEBAR,
       (leaf: WorkspaceLeaf) =>
-        (this.view = new YoranSidebarView(leaf, this.settings)),
+        (this.view = new YoranSidebarView(leaf, this.settings))
     );
 
     this.app.workspace.onLayoutReady(() => {

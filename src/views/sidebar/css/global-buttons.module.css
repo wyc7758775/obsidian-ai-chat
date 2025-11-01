@@ -15,7 +15,7 @@
   overflow: hidden;
   cursor: pointer;
   font-family: var(--font-interface);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -37,7 +37,12 @@
 
 /* 悬停状态 */
 .baseButton:hover {
-  background: linear-gradient(135deg, var(--interactive-accent) 0%, var(--interactive-accent-hover) 100%);
+  /* hover 高亮加透明度：让视觉更柔和（50% 不透明） */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--interactive-accent) 50%, transparent) 0%,
+    color-mix(in srgb, var(--interactive-accent-hover) 50%, transparent) 100%
+  );
   color: var(--text-on-accent);
   border-color: var(--interactive-accent);
   box-shadow: 0 4px 15px rgba(var(--interactive-accent-rgb), 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -53,22 +58,25 @@
 /* 按钮尺寸变体 */
 .buttonSmall {
   composes: baseButton;
-  width: 32px;
-  height: 32px;
+  /* 全局缩小 2px：更紧凑的图标按钮尺寸 */
+  width: 26px;
+  height: 26px;
   padding: 6px;
 }
 
 .buttonMedium {
   composes: baseButton;
-  width: 36px;
-  height: 36px;
+  /* 全局缩小 2px：中号按钮更紧凑 */
+  width: 34px;
+  height: 34px;
   padding: 8px;
 }
 
 .buttonLarge {
   composes: baseButton;
-  width: 40px;
-  height: 40px;
+  /* 全局缩小 2px：大号按钮更紧凑 */
+  width: 38px;
+  height: 38px;
   padding: 10px;
 }
 
@@ -77,7 +85,8 @@
   composes: baseButton;
   padding: 8px 16px;
   min-width: 80px;
-  height: 36px;
+  /* 全局缩小 2px：文本按钮高度更紧凑 */
+  height: 34px;
   border-radius: 4px;
 }
 
@@ -85,7 +94,8 @@
   composes: baseButton;
   padding: 12px 24px;
   min-width: 100px;
-  height: 44px;
+  /* 全局缩小 2px：大号文本按钮高度更紧凑 */
+  height: 42px;
   border-radius: 6px;
   font-size: 16px;
 }
@@ -98,7 +108,12 @@
 }
 
 .buttonPrimary:hover {
-  background: linear-gradient(135deg, var(--interactive-accent-hover) 0%, var(--interactive-accent) 100%);
+  /* hover 高亮加透明度：让视觉更柔和（50% 不透明） */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--interactive-accent-hover) 50%, transparent) 0%,
+    color-mix(in srgb, var(--interactive-accent) 50%, transparent) 100%
+  );
   box-shadow: 0 6px 20px rgba(var(--interactive-accent-rgb), 0.35), 0 3px 10px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
@@ -115,7 +130,8 @@
 }
 
 .buttonDanger:hover {
-  background: linear-gradient(135deg, #ff5252 0%, #d32f2f 100%);
+  /* hover 高亮加透明度：让视觉更柔和（50% 不透明） */
+  background: linear-gradient(135deg, rgba(255, 82, 82, 0.5) 0%, rgba(211, 47, 47, 0.5) 100%);
   box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4), 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -126,7 +142,8 @@
 }
 
 .buttonSuccess:hover {
-  background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
+  /* hover 高亮加透明度：让视觉更柔和（50% 不透明） */
+  background: linear-gradient(135deg, rgba(69, 160, 73, 0.5) 0%, rgba(56, 142, 60, 0.5) 100%);
   box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4), 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -185,8 +202,9 @@
 /* 浮动动作按钮 */
 .fabButton {
   composes: baseButton;
-  width: 56px;
-  height: 56px;
+  /* 全局缩小 2px：悬浮动作按钮更轻盈 */
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   position: fixed;
   bottom: 24px;
@@ -210,8 +228,9 @@
   }
   
   .fabButton {
-    width: 48px;
-    height: 48px;
+    /* 全局缩小 2px：移动端悬浮动作按钮 */
+    width: 46px;
+    height: 46px;
     bottom: 16px;
     right: 16px;
   }

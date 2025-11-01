@@ -83,9 +83,10 @@
   cursor: pointer;
   padding: 2px;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  line-height: 14px;
+  /* 全局缩小 2px：文件项关闭小圆钮更精致 */
+  width: 16px;
+  height: 16px;
+  line-height: 12px;
   text-align: center;
   top: -4px;
   right: -4px;

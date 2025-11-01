@@ -1,11 +1,13 @@
 import { useCallback, useMemo } from "react";
 import { HistoryItem } from "../type";
 import { FileStorageService } from "../../../core/storage/file-storage";
+import { RoleStorageService, RoleItem } from "../../../core/storage/role-storage";
 import { App } from "obsidian";
 
 export const useContext = (app: App) => {
   // 创建文件存储服务实例
   const fileStorage = useMemo(() => new FileStorageService(app), [app]);
+  const roleStorage = useMemo(() => new RoleStorageService(app), [app]);
 
   // 插入或更新历史记录项
   const upsertHistoryItem = useCallback(
@@ -69,5 +71,18 @@ export const useContext = (app: App) => {
     getDebugInfo,
     forceDeleteItem,
     fileStorageService: fileStorage, // 导出 fileStorageService 实例
+    // 角色相关
+    fetchRoles: useCallback(async (): Promise<RoleItem[]> => {
+      return await roleStorage.fetchRoles();
+    }, [roleStorage]),
+    getDefaultRole: useCallback(async (): Promise<RoleItem | null> => {
+      return await roleStorage.getDefaultRole();
+    }, [roleStorage]),
+    upsertRole: useCallback(async (role: RoleItem) => {
+      await roleStorage.upsertRole(role);
+    }, [roleStorage]),
+    deleteRoleByName: useCallback(async (name: string) => {
+      await roleStorage.deleteRoleByName(name);
+    }, [roleStorage]),
   };
 };

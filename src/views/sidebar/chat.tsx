@@ -38,6 +38,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+  // 标记当前会话期间是否发生了消息内容变更，用于控制角色系统提示是否覆盖保存
+  const [messagesChanged, setMessagesChanged] = useState(false);
 
   const textareaRef = useRef<HTMLDivElement>(null);
   const cancelToken = useRef({ cancelled: false });
@@ -88,7 +90,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   }, []);
 
-  const { historyRender, currentId } = useHistory();
+  const { historyRender, currentId, selectedRole } = useHistory();
   const { upsertHistoryItem, getHistoryItemById, fileStorageService } =
     useContext(app);
 
@@ -96,6 +98,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     if (!currentId) {
       setMessages([]);
       setIsInitializing(false);
+      // 切换会话时重置消息变更标记
+      setMessagesChanged(false);
       return;
     }
 
@@ -107,6 +111,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           messages: [],
         };
         setMessages(item.messages);
+        setMessagesChanged(false);
         // 从 NoteReference 转换为完整的 NoteContext
         if (item.noteSelected && item.noteSelected.length > 0) {
           const noteContexts = await fileStorageService.convertToNoteContexts(
@@ -145,7 +150,14 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           messages,
           noteSelected: noteSelectedReferences,
           title: existingItem?.title, // 保留现有的 title
-          systemMessage: existingItem?.systemMessage, // 保留现有的 systemMessage
+          systemMessage:
+            messagesChanged && selectedRole?.systemPrompt
+              ? selectedRole.systemPrompt
+              : existingItem?.systemMessage,
+          roleName:
+            messagesChanged && selectedRole?.name
+              ? selectedRole.name
+              : existingItem?.roleName,
           createdAt: existingItem?.createdAt, // 保留创建时间
         };
 
@@ -161,7 +173,11 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     upsertHistoryItem,
     getHistoryItemById,
     fileStorageService,
+    messagesChanged,
+    selectedRole,
   ]);
+
+  // 已在顶部声明 messagesChanged，这里移除重复声明
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -173,6 +189,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     };
 
     setMessages((prev) => [...prev, newMessage]);
+    setMessagesChanged(true);
     clearInput();
 
     onSendMessage?.(inputValue);
@@ -207,7 +224,11 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       }
     };
 
-    const systemMessage = await getCurrentSystemMessage();
+    /**
+     * 构建本次请求的系统提示：优先使用当前选择的角色。
+     * 说明：历史持久化仍然受 messagesChanged 控制，这里只影响即时请求上下文。
+     */
+    const systemMessage = selectedRole?.systemPrompt ?? (await getCurrentSystemMessage());
 
     setIsLoading(true);
     sendChatMessage({
@@ -279,6 +300,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     // 删除从AI消息开始到最后的所有消息
     const newMessages = messages.slice(0, messageIndex);
     setMessages(newMessages);
+    setMessagesChanged(true);
 
     // 创建新的AI消息
     const aiMessageId = Date.now().toString();
@@ -312,7 +334,10 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       }
     };
 
-    const systemMessage = await getCurrentSystemMessage();
+    /**
+     * 构建重新生成的系统提示：优先使用当前选择的角色。
+     */
+    const systemMessage = selectedRole?.systemPrompt ?? (await getCurrentSystemMessage());
 
     // 重新发送AI请求
     setIsLoading(true);
@@ -617,6 +642,40 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     messageListRef.current?.scrollToBottom?.();
   };
 
+  /**
+   * 将建议文本插入到输入框：
+   * - 写入 contentEditable 与本地状态
+   * - 调整高度并将光标移至末尾，最后聚焦
+   * @param text 建议文本内容
+   */
+  const handleInsertSuggestion = useCallback((text: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.textContent = text;
+    setInputValue(text);
+    adjustTextareaHeight();
+
+    setTimeout(() => {
+      try {
+        setDivCursorPosition(text.length);
+      } catch (_) {
+        const range = document.createRange();
+        const selection = window.getSelection();
+        const lastChild = textarea.lastChild;
+        if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
+          range.setStart(lastChild, (lastChild.textContent || "").length);
+        } else {
+          range.selectNodeContents(textarea);
+          range.collapse(false);
+        }
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      }
+      textarea.focus();
+    }, 0);
+  }, [adjustTextareaHeight, setDivCursorPosition]);
+
   return (
     <div className={styles.container} ref={chatContainerRef}>
       {/* 全局初始化 Loading */}
@@ -632,6 +691,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         onNearBottomChange={(near) => setShowScrollBtn(!near)}
         currentId={currentId} // 传递currentId用于滚动位置管理
         onRegenerateMessage={handleRegenerateMessage}
+        onInsertSuggestion={handleInsertSuggestion}
+        suggestions={settings.suggestionTemplates}
       />
       {/* 文件选择器 */}
       <PositionedPopover

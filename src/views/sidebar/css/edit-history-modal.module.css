@@ -134,7 +134,8 @@
   gap: 8px;
   padding: 8px 16px;
   min-width: 80px;
-  height: 36px;
+  /* 全局缩小 2px：弹窗按钮更紧凑 */
+  height: 34px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
   background: linear-gradient(135deg, var(--background-primary) 0%, var(--background-primary-alt) 100%);

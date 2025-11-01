@@ -85,5 +85,26 @@ export class SettingTab extends PluginSettingTab {
             }
           })
       );
+
+    // 自定义空状态建议提示词（最多10条）
+    new Setting(containerEl)
+      .setName("Suggestion Templates")
+      .setDesc("每行一条，最多 10 条；留空则使用默认建议")
+      .addTextArea((text) =>
+        text
+          .setPlaceholder("请在此输入建议提示词，每行一条，最多10条")
+          .setValue((this.plugin.settings.suggestionTemplates || []).join("\n"))
+          .onChange(async (value) => {
+            // 将输入拆分为行，去除空白并限制最多10条
+            const lines = value
+              .split(/\r?\n/)
+              .map((l) => l.trim())
+              .filter((l) => l.length > 0)
+              .slice(0, 10);
+
+            this.plugin.settings.suggestionTemplates = lines;
+            await this.plugin.saveSettings();
+          })
+      );
   }
 }

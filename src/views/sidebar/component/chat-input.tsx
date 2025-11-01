@@ -48,7 +48,7 @@ export const ChatInput = ({
         className={styles.inputDiv + " " + styles.inputField}
       />
       {isStreaming ? (
-        <button 
+        <button
           onClick={handleCancelStream}
           className={styles.cancelBtn}
           title="停止生成"

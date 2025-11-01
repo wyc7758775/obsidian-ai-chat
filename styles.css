@@ -3,12 +3,14 @@
 	--bg-primary-second: #ffffff;
 	--btn-color: rgb(230, 230, 230);
 	--btn-color-active: var(--bg-primary); 
+	--input-bg: rgb(230, 230, 230);
 }
 .theme-dark {
 	--bg-primary: #1f1f1f;
 	--bg-primary-second: #2a2a2a;
 	--btn-color: #404040;
 	--btn-color-active: var(--bg-primary);
+	--input-bg: #404040;
 	
 	/* 深色主题下的文本颜色优化 */
 	--text-normal: #d4d4d4;

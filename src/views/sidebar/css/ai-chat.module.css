@@ -50,7 +50,7 @@
 	}
 }
 .inputArea {
-	background-color: var(--background-primary-alt);
+	background-color: var(--bg-primary-second);
 	margin-bottom: 8px;
 	border-radius: 6px;
 	position: relative;
@@ -74,8 +74,9 @@
 	justify-content: center;
 }
 .scrollToBottomBtn {
-  width: 28px;
-  height: 28px;
+  /* 全局缩小 2px：滚动到底部按钮更轻巧 */
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -2,19 +2,38 @@
 /* 导入全局按钮样式 */
 @import './global-buttons.module.css';
 
+.iconStatic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 静态图标颜色更浅，提高柔和度与层次感 */
+  color: var(--text-faint);
+  width: 16px;
+  height: 16px;
+}
 .actionBtn {
 	composes: buttonMedium from './global-buttons.module.css';
 	color: var(--text-faint);
 }
 
 .actionBtn:hover {
+	/* 悬停时提升可读性与对比度 */
 	color: var(--text-on-accent);
 }
 
 /* 特殊的图标按钮变体 */
 .actionBtnSmall {
-	composes: buttonSmall from './global-buttons.module.css';
-	color: var(--text-faint);
+  composes: buttonSmall from './global-buttons.module.css';
+  color: var(--text-faint);
+}
+
+/* 最小尺寸的图标按钮（用于建议添加等极小交互） */
+.actionBtnTiny {
+  composes: buttonSmall from './global-buttons.module.css';
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  color: var(--text-faint);
 }
 
 .actionBtnLarge {

@@ -17,14 +17,16 @@
 
 .historyFoldList {
   display: flex;
-  align-items: center;
-  overflow-x: auto;
-  overflow-y: hidden;
+  align-items: flex-start;
+  flex-wrap: wrap; /* 支持换行，容器更紧凑 */
+  max-height: 180px; /* 限制高度，出现竖向滚动 */
+  overflow-y: auto;
+  overflow-x: hidden;
   gap: 8px;
-  padding: 2px 4px;
+  padding: 6px 8px;
   scrollbar-width: thin;
 }
-.historyFoldList::-webkit-scrollbar { height: 2px; }
+.historyFoldList::-webkit-scrollbar { width: 6px; height: 6px; }
 .historyFoldList::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb-bg); }
 .historyFoldList::-webkit-scrollbar-track { background: transparent; }
 
@@ -34,7 +36,7 @@
   justify-content: center;
   gap: 8px;
   min-width: max-content;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
   background-color: var(--bg-primary);
   color: var(--text-normal);
@@ -176,11 +178,6 @@
 
 .historyExpandList::-webkit-scrollbar-thumb:hover {
   background-color: var(--scrollbar-active-thumb-bg);
-}
-
-.historyFoldAction {
-  padding: 8px 12px;
-  cursor: pointer;
 }
 
 /* 编辑功能样式 */
@@ -364,4 +361,36 @@
 .historyItemCardActive:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 30px rgba(var(--interactive-accent-rgb), 0.3), 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* 历史记录卡片操作图标样式 */
+.historyWrap {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+}
+.historyItemPreview {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.historyItemQuestion,
+.historyItemAnswer {
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* 超过 3 行省略 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.historyItemQuestion {
+  color: var(--text-normal);
+}
+
+.historyItemAnswer {
+  color: var(--text-muted);
 }

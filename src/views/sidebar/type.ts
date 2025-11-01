@@ -29,4 +29,5 @@ export interface HistoryItem {
   createdAt?: number;
   title?: string; // 历史记录标题，默认为第一条消息内容
   systemMessage?: string; // AI系统信息
+  roleName?: string; // 关联角色名称（用于展示与切换）
 }
