@@ -27,12 +27,14 @@ export const IconWrapWithClick = ({
   children,
   onClick,
   variant = "small",
+  className,
 }: {
   label: string;
   color?: string;
   children: ReactNode;
   onClick?: () => void;
   variant?: "default" | "tiny" | "small" | "large" | "pulse" | "wiggle";
+  className?: string;
 }) => {
   const getClassName = () => {
     const baseClass = styles.actionBtn;
@@ -55,7 +57,7 @@ export const IconWrapWithClick = ({
   return (
     <div
       style={{ color }}
-      className={getClassName()}
+      className={`${getClassName()} ${className || ""}`}
       aria-label={label}
       onClick={onClick}
     >
@@ -375,8 +377,14 @@ export const RegenerateIcon = ({ onClick }: { onClick?: () => void }) => (
 );
 
 // 角色展开图标
-export const RoleExpandIcon = ({ onClick }: { onClick?: () => void }) => (
-  <IconWrapWithClick label="展开角色" onClick={onClick}>
+export const RoleExpandIcon = ({
+  onClick,
+  className,
+}: {
+  onClick?: () => void;
+  className?: string;
+}) => (
+  <IconWrapWithClick label="展开角色" onClick={onClick} className={className}>
     <svg
       className="icon"
       viewBox="0 0 1024 1024"
@@ -393,8 +401,14 @@ export const RoleExpandIcon = ({ onClick }: { onClick?: () => void }) => (
 );
 
 // 控制 历史记录展开收起图标
-export const HistoryExpandIcon = ({ onClick }: { onClick?: () => void }) => (
-  <IconWrapWithClick label="展开历史记录" onClick={onClick}>
+export const HistoryExpandIcon = ({
+  onClick,
+  className,
+}: {
+  onClick?: () => void;
+  className?: string;
+}) => (
+  <IconWrapWithClick label="展开历史记录" onClick={onClick} className={className}>
     <svg
       className="icon"
       viewBox="0 0 1024 1024"

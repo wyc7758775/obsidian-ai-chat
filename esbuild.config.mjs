@@ -74,7 +74,7 @@ if (devWatch) {
   await context.rebuild();
   await context.watch();
   await context.serve({
-    port: 8080,
+    port: 8081,
     servedir: outdir,
   });
 } else {

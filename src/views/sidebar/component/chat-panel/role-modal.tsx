@@ -2,7 +2,6 @@ import React from "react";
 import styles from "./css/role-modal.module.css";
 
 export interface RoleModalProps {
-  isOpen: boolean;
   roleName: string;
   rolePrompt: string;
   onNameChange: (name: string) => void;
@@ -16,7 +15,6 @@ export interface RoleModalProps {
  * 使用现有的弹窗样式，保持与历史编辑一致的视觉风格。
  */
 export const RoleModal: React.FC<RoleModalProps> = ({
-  isOpen,
   roleName,
   rolePrompt,
   onNameChange,
@@ -24,8 +22,6 @@ export const RoleModal: React.FC<RoleModalProps> = ({
   onSave,
   onCancel,
 }) => {
-  if (!isOpen) return null;
-
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onCancel();

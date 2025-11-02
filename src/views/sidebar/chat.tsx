@@ -186,6 +186,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
+    setIsStreaming(true); // 在发送时立即设置为 streaming 状态
+
     const newMessage: Message = {
       id: Date.now().toString(),
       content: inputValue,
@@ -255,12 +257,21 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             )
           );
         },
-        onResponseStart: () => {
-          setIsLoading(false);
-        },
         onComplete: () => {
-          cancelToken.current.cancelled = false;
-          setIsStreaming(false);
+          setIsLoading(false);
+          setIsStreaming(false); // 在接收完成后设置为非 streaming 状态
+        },
+        onError: (error: any) => {
+          console.error("Stream error:", error);
+          setIsLoading(false);
+          setIsStreaming(false); // 在出错时也需要设置为非 streaming 状态
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageId
+                ? { ...msg, content: `Error: ${error.message}` }
+                : msg
+            )
+          );
         },
       },
       cancelToken: cancelToken.current,
@@ -274,6 +285,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const handleCancelStream = () => {
     cancelToken.current.cancelled = true;
     setIsStreaming(false);
+    setIsLoading(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
