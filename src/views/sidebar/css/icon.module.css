@@ -14,17 +14,25 @@
 .actionBtn {
 	composes: buttonMedium from './global-buttons.module.css';
 	color: var(--text-faint);
+  background-color: transparent;
 }
 
 .actionBtn:hover {
 	/* 悬停时提升可读性与对比度 */
 	color: var(--text-on-accent);
+  background-color: var(--background-modifier-hover);
+}
+
+/* 按下态透明度，与按钮激活风格一致 */
+.actionBtn:active {
+  background-color: rgba(var(--interactive-accent-rgb), 0.16);
 }
 
 /* 特殊的图标按钮变体 */
 .actionBtnSmall {
   composes: buttonSmall from './global-buttons.module.css';
   color: var(--text-faint);
+  background-color: transparent;
 }
 
 /* 最小尺寸的图标按钮（用于建议添加等极小交互） */

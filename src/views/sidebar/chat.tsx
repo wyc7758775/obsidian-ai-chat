@@ -23,7 +23,7 @@ import { Loading } from "./component/loading";
 import { useCaretPosition } from "./hooks/use-caret-position";
 
 import { Message, ChatComponentProps, NoteReference } from "./type";
-import { useHistory } from "./component/use-history";
+import { useHistory } from "./component/chat-panel/index";
 import { useContext } from "./hooks/use-context";
 
 const PADDING = 12;
@@ -90,7 +90,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   }, []);
 
-  const { historyRender, currentId, selectedRole } = useHistory();
+  const { historyRender, currentId, selectedRole, forceHistoryUpdate } =
+    useHistory();
   const { upsertHistoryItem, getHistoryItemById, fileStorageService } =
     useContext(app);
 
@@ -103,6 +104,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       return;
     }
 
+    // 切换时立刻清空，避免闪烁
+    setSelectedNotes([]);
     setIsInitializing(true);
     (async () => {
       try {
@@ -162,6 +165,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         };
 
         await upsertHistoryItem(itemToSave);
+        forceHistoryUpdate(); // 触发历史列表刷新
       } catch (e) {
         console.error("保存失败:", e);
       }
@@ -228,7 +232,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
      * 构建本次请求的系统提示：优先使用当前选择的角色。
      * 说明：历史持久化仍然受 messagesChanged 控制，这里只影响即时请求上下文。
      */
-    const systemMessage = selectedRole?.systemPrompt ?? (await getCurrentSystemMessage());
+    const systemMessage =
+      selectedRole?.systemPrompt ?? (await getCurrentSystemMessage());
 
     setIsLoading(true);
     sendChatMessage({
@@ -337,7 +342,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     /**
      * 构建重新生成的系统提示：优先使用当前选择的角色。
      */
-    const systemMessage = selectedRole?.systemPrompt ?? (await getCurrentSystemMessage());
+    const systemMessage =
+      selectedRole?.systemPrompt ?? (await getCurrentSystemMessage());
 
     // 重新发送AI请求
     setIsLoading(true);
@@ -490,7 +496,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
       setInputValue(value);
       adjustTextareaHeight();
-      setShowFileSelector(false);
 
       const currentPosition = getDivCursorPosition();
 
@@ -648,36 +653,43 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
    * - 调整高度并将光标移至末尾，最后聚焦
    * @param text 建议文本内容
    */
-  const handleInsertSuggestion = useCallback((text: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+  const handleInsertSuggestion = useCallback(
+    (text: string) => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
 
-    textarea.textContent = text;
-    setInputValue(text);
-    adjustTextareaHeight();
+      textarea.textContent = text;
+      setInputValue(text);
+      adjustTextareaHeight();
 
-    setTimeout(() => {
-      try {
-        setDivCursorPosition(text.length);
-      } catch (_) {
-        const range = document.createRange();
-        const selection = window.getSelection();
-        const lastChild = textarea.lastChild;
-        if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
-          range.setStart(lastChild, (lastChild.textContent || "").length);
-        } else {
-          range.selectNodeContents(textarea);
-          range.collapse(false);
+      setTimeout(() => {
+        try {
+          setDivCursorPosition(text.length);
+        } catch (_) {
+          const range = document.createRange();
+          const selection = window.getSelection();
+          const lastChild = textarea.lastChild;
+          if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
+            range.setStart(lastChild, (lastChild.textContent || "").length);
+          } else {
+            range.selectNodeContents(textarea);
+            range.collapse(false);
+          }
+          selection?.removeAllRanges();
+          selection?.addRange(range);
         }
-        selection?.removeAllRanges();
-        selection?.addRange(range);
-      }
-      textarea.focus();
-    }, 0);
-  }, [adjustTextareaHeight, setDivCursorPosition]);
+        textarea.focus();
+      }, 0);
+    },
+    [adjustTextareaHeight, setDivCursorPosition]
+  );
 
   return (
-    <div className={styles.container} ref={chatContainerRef}>
+    <div
+      className={styles.container}
+      ref={chatContainerRef}
+      style={{ overflowY: isInitializing ? "hidden" : "auto" }}
+    >
       {/* 全局初始化 Loading */}
       {isInitializing && <Loading />}
       {/* 信息历史 */}

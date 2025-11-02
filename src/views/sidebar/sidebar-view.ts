@@ -27,6 +27,11 @@ export class YoranSidebarView extends ItemView {
   }
 
   async onOpen() {
+    // If root exists, we've already initialized. Do nothing.
+    if (this.root) {
+      return;
+    }
+
     const container = this.containerEl.children[1];
     container.empty();
 
@@ -55,10 +60,6 @@ export class YoranSidebarView extends ItemView {
   }
 
   async onClose() {
-    // 清理 React 根节点
-    if (this.root) {
-      this.root.unmount();
-      this.root = null;
-    }
+    // To keep the view alive, we don't unmount the component.
   }
 }

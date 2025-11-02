@@ -287,11 +287,10 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
           "指出内容的逻辑问题并给出改进建议",
         ];
 
-        const suggestionsList: string[] = (
+        const suggestionsList: string[] =
           Array.isArray(suggestions) && suggestions.length > 0
             ? suggestions.slice(0, 10)
-            : defaultSuggestions
-        );
+            : defaultSuggestions;
 
         return (
           <div className={styles.emptyWrap}>

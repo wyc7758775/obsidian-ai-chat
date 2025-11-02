@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef } from "react";
 import styles from "../css/positioned-popover.module.css";
 
 export interface PositionedPopoverProps {
@@ -23,28 +23,31 @@ export interface PositionedPopoverProps {
  * 用于控制组件的绝对定位和显隐状态
  * 支持自定义位置、样式和层级
  */
-export const PositionedPopover = forwardRef<HTMLDivElement, PositionedPopoverProps>(
-  ({ visible, x, y, className, style, children, zIndex = 1000 }, ref) => {
-    const defaultStyle: React.CSSProperties = {
-      position: 'absolute',
-      left: `${x}px`,
-      top: `${y}px`,
-      opacity: visible ? 1 : 0,
-      zIndex: visible ? zIndex : -1,
-      pointerEvents: visible ? 'auto' : 'none',
-      ...style,
-    };
+export const PositionedPopover = forwardRef<
+  HTMLDivElement,
+  PositionedPopoverProps
+>(({ visible, x, y, className, style, children, zIndex = 1000 }, ref) => {
+  if (!visible) return;
 
-    return (
-      <div
-        ref={ref}
-        className={[styles.popover, className].filter(Boolean).join(" ")}
-        style={defaultStyle}
-      >
-        {children}
-      </div>
-    );
-  }
-);
+  const defaultStyle: React.CSSProperties = {
+    position: "absolute",
+    left: `${x}px`,
+    top: `${y}px`,
+    opacity: visible ? 1 : 0,
+    zIndex: visible ? zIndex : -1,
+    pointerEvents: visible ? "auto" : "none",
+    ...style,
+  };
 
-PositionedPopover.displayName = 'PositionedPopover';
+  return (
+    <div
+      ref={ref}
+      className={[styles.popover, className].filter(Boolean).join(" ")}
+      style={defaultStyle}
+    >
+      {children}
+    </div>
+  );
+});
+
+PositionedPopover.displayName = "PositionedPopover";

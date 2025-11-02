@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "../css/edit-history-modal.module.css";
+import styles from "./css/role-modal.module.css";
 
 export interface RoleModalProps {
   isOpen: boolean;

@@ -1,24 +1,27 @@
 import { App, Notice } from "obsidian";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import {
   AddChatIcon,
   PersonIcon,
   CloseIcon,
   RoleExpandIcon,
   HistoryExpandIcon,
-} from "./icon";
-import { EditIcon, AddSmallIcon } from "./icon";
-import styles from "../css/use-history.module.css";
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { HistoryItem } from "../type";
-import type { RoleItem } from "../../../core/storage/role-storage";
-import { useContext } from "../hooks/use-context";
+  CatEmptyIcon,
+  EditIcon,
+  AddSmallIcon,
+} from "../icon";
+import styles from "./css/styles.module.css";
+import { HistoryItem } from "../../type";
+import { useContext } from "../../hooks/use-context";
+
+import type { RoleItem } from "../../../../core/storage/role-storage";
 import { RoleModal } from "./role-modal";
-import { EditHistoryModal } from "./edit-history-modal";
-// 移除编辑弹窗相关：历史记录仅支持删除，不再编辑
+import { debounce } from "../../../../utils";
 
 export type ChatMessageProps = {
   app: App;
 };
+
 export const useHistory = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem>(
     {} as HistoryItem
@@ -26,6 +29,15 @@ export const useHistory = () => {
   const [currentId, setCurrentId] = useState<string>("");
   // 当前选中的角色需要在 hook 作用域声明，便于外部读取与内部更新
   const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
+  // 用于强制刷新历史记录列表的触发器
+  const [updater, setUpdater] = useState(0);
+
+  /**
+   * 强制刷新历史记录列表
+   */
+  const forceHistoryUpdate = () => {
+    setUpdater((u) => u + 1);
+  };
 
   const historyRender: React.FC<ChatMessageProps> = ({ app }) => {
     const {
@@ -43,35 +55,13 @@ export const useHistory = () => {
     const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
     const [showHistoryCards, setShowHistoryCards] = useState<boolean>(false);
     const [roles, setRoles] = useState<RoleItem[]>([]);
-    // 历史记录编辑弹窗
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState<HistoryItem | null>(null);
-    const [editTitle, setEditTitle] = useState<string>("");
-    const [editSystemMessage, setEditSystemMessage] = useState<string>("");
     // 新增/编辑角色弹窗
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [roleNameInput, setRoleNameInput] = useState("");
     const [rolePromptInput, setRolePromptInput] = useState("");
-    const [editingRoleOriginalName, setEditingRoleOriginalName] = useState<string | null>(null);
-
-    /**
-     * 防抖函数：用于限制高频点击新增对话按钮，避免重复触发。
-     * @param fn 需要被防抖的函数
-     * @param wait 间隔时间（毫秒）
-     */
-    const debounce = <F extends (...args: any[]) => void>(
-      fn: F,
-      wait = 500
-    ) => {
-      let timer: number | undefined;
-      return (...args: Parameters<F>) => {
-        if (timer) window.clearTimeout(timer);
-        timer = window.setTimeout(() => {
-          timer = undefined;
-          fn(...args);
-        }, wait);
-      };
-    };
+    const [editingRoleOriginalName, setEditingRoleOriginalName] = useState<
+      string | null
+    >(null);
 
     // 瀑布流布局相关
     const containerRef = useRef<HTMLDivElement>(null);
@@ -134,16 +124,20 @@ export const useHistory = () => {
           // 加载历史记录列表
           const items = await fetchHistoryList();
           setHistoryList(items);
-          setCurrentId(items[0]?.id || "");
+          if (!currentId || !items.some((item) => item.id === currentId)) {
+            setCurrentId(items[0]?.id || "");
+          }
           // 加载角色列表并默认选中第一位
           const roleList = await fetchRoles();
           setRoles(roleList);
-          setSelectedRole(roleList[0] ?? null);
+          if (!selectedRole) {
+            setSelectedRole(roleList[0] ?? null);
+          }
         } catch (e) {
           // 忽略错误
         }
       })();
-    }, [fetchHistoryList]);
+    }, [fetchHistoryList, updater]);
 
     // 根据当前历史记录的角色信息同步选中角色
     useEffect(() => {
@@ -205,45 +199,6 @@ export const useHistory = () => {
       }
     };
 
-    // 开始编辑历史记录
-    const handleStartEdit = (item: HistoryItem, e?: React.MouseEvent) => {
-      e?.stopPropagation();
-      setEditingItem(item);
-      setEditTitle(item.title || item.messages?.[0]?.content || "新增AI对话");
-      setEditSystemMessage(item.systemMessage || "");
-      setIsModalOpen(true);
-    };
-
-    const handleSaveEdit = async () => {
-      if (!editingItem) return;
-      try {
-        const updatedItem: HistoryItem = {
-          ...editingItem,
-          title: editTitle,
-          systemMessage: editSystemMessage,
-        };
-        await upsertHistoryItem(updatedItem);
-        setHistoryList((prev) =>
-          prev.map((historyItem) =>
-            historyItem.id === editingItem.id ? updatedItem : historyItem
-          )
-        );
-        setIsModalOpen(false);
-        setEditingItem(null);
-        setEditTitle("");
-        setEditSystemMessage("");
-      } catch (e) {
-        // 忽略错误
-      }
-    };
-
-    const handleCancelEdit = () => {
-      setIsModalOpen(false);
-      setEditingItem(null);
-      setEditTitle("");
-      setEditSystemMessage("");
-    };
-
     // 保存角色到存储并刷新列表
     const handleSaveRole = async () => {
       const name = roleNameInput.trim();
@@ -275,8 +230,6 @@ export const useHistory = () => {
       setIsRoleModalOpen(false);
       setEditingRoleOriginalName(null);
     };
-
-    // 历史记录不支持编辑，相关处理函数移除
 
     const roleItemRender = (role: RoleItem, index: number) => {
       const isActive = role.name === selectedRole?.name;
@@ -380,14 +333,17 @@ export const useHistory = () => {
       const updated = historyList.map((item) => {
         let targetRole = roles.find((r) => r.name === item.roleName) || null;
         if (!targetRole && item.systemMessage) {
-          targetRole = roles.find((r) => r.systemPrompt === item.systemMessage) || null;
+          targetRole =
+            roles.find((r) => r.systemPrompt === item.systemMessage) || null;
         }
         if (!targetRole) {
           targetRole = roles[0] || null;
         }
         if (!targetRole) return item;
 
-        const needFix = item.roleName !== targetRole.name || item.systemMessage !== targetRole.systemPrompt;
+        const needFix =
+          item.roleName !== targetRole.name ||
+          item.systemMessage !== targetRole.systemPrompt;
         if (!needFix) return item;
 
         changed = true;
@@ -429,10 +385,14 @@ export const useHistory = () => {
        */
       const getFirstUserAndAssistant = (messages?: HistoryItem["messages"]) => {
         const list = messages || [];
-        const firstUser = list.find((m: any) => m?.type === "user")?.content || "";
-        const firstAssistant = list.find((m: any) => m?.type === "assistant")?.content || "";
+        const firstUser =
+          list.find((m: any) => m?.type === "user")?.content || "";
+        const firstAssistant =
+          list.find((m: any) => m?.type === "assistant")?.content || "";
         return { question: firstUser, answer: firstAssistant };
       };
+
+      const isEmpty = !item.messages || item.messages.length === 0;
 
       const { question, answer } = getFirstUserAndAssistant(item.messages);
 
@@ -445,24 +405,36 @@ export const useHistory = () => {
           key={index}
           onClick={() => handleUpdateHistoryItem(item)}
         >
-          <div className={styles.historyItemCardTitle}>
-            {item.roleName || "未设置角色"}
-          </div>
-          <div className={styles.historyItemPreview}>
-            <div className={styles.historyItemQuestion} title={question}>
-              {question || "（暂无用户问题）"}
+          {isEmpty ? (
+            <div className={styles.historyItemCardEmpty}>
+              <div className={styles.emptyIcon}>
+                <CatEmptyIcon />
+              </div>
+              <div className={styles.gameText}>No messages!</div>
             </div>
-            <div className={styles.historyItemAnswer} title={answer}>
-              {answer || "（暂无 AI 回答）"}
-            </div>
-          </div>
-          <div
-            className={styles.historyItemCardActions}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <EditIcon onClick={() => handleStartEdit(item)} />
-            <CloseIcon onClick={handleDeleteClick} />
-          </div>
+          ) : (
+            <>
+              <div className={styles.historyItemCardTitle}>
+                <span className={styles.roleBadge}>
+                  {item.roleName || "未设置角色"}
+                </span>
+              </div>
+              <div className={styles.historyItemPreview}>
+                <div className={styles.historyItemQuestion} title={question}>
+                  {question || "（暂无用户问题）"}
+                </div>
+                <div className={styles.historyItemAnswer} title={answer}>
+                  {answer || "（暂无 AI 回答）"}
+                </div>
+              </div>
+              <div
+                className={styles.historyItemCardActions}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <CloseIcon onClick={handleDeleteClick} />
+              </div>
+            </>
+          )}
         </div>
       );
     };
@@ -470,12 +442,14 @@ export const useHistory = () => {
     return (
       <>
         <div className={styles.historyWrap}>
-          <RoleExpandIcon onClick={toggleRoleList} />
-          <HistoryExpandIcon onClick={toggleHistory} />
-          <AddChatIcon onClick={handleAdd} />
+          <div className={styles.historyActions}>
+            <RoleExpandIcon onClick={toggleRoleList} />
+            <HistoryExpandIcon onClick={toggleHistory} />
+            <AddChatIcon onClick={handleAdd} />
+          </div>
           {selectedRole && (
             <span style={{ marginLeft: 8, color: "var(--text-muted)" }}>
-              当前角色：{selectedRole.name}
+              person：{selectedRole.name}
             </span>
           )}
         </div>
@@ -504,7 +478,6 @@ export const useHistory = () => {
               style={{
                 height:
                   containerHeight > 0 ? `${containerHeight + 30}px` : "30vh",
-                minHeight: "200px",
                 maxHeight: "50vh", // 恢复最大高度限制，防止过高
               }}
             >
@@ -525,18 +498,6 @@ export const useHistory = () => {
           onSave={handleSaveRole}
           onCancel={handleCancelRole}
         />
-
-        {/* 编辑历史记录弹窗 */}
-        <EditHistoryModal
-          isOpen={isModalOpen}
-          historyItem={editingItem}
-          editTitle={editTitle}
-          editSystemMessage={editSystemMessage}
-          onTitleChange={setEditTitle}
-          onSystemMessageChange={setEditSystemMessage}
-          onSave={handleSaveEdit}
-          onCancel={handleCancelEdit}
-        />
       </>
     );
   };
@@ -545,5 +506,6 @@ export const useHistory = () => {
     historyItems,
     currentId,
     selectedRole,
+    forceHistoryUpdate,
   };
 };
