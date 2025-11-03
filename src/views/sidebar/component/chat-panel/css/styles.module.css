@@ -331,11 +331,14 @@
 }
 
 .historyItemCardActions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  opacity: 0.6;
+  opacity: 0;
   transition: opacity 0.2s ease;
 }
 
@@ -376,6 +379,10 @@
 }
 
 .historyItemCardActive .historyItemCardActions {
+  opacity: 0;
+}
+
+.historyItemCardActive:hover .historyItemCardActions {
   opacity: 1;
 }
 
@@ -478,7 +485,15 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  position: relative;
 }
+
+.historyItemCardEmpty .historyItemCardActions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
 .emptyIcon {
   width: 60px;
   height: 60px;
@@ -493,23 +508,28 @@
 }
 .historyAndRolesContainer {
   position: absolute;
-  top: 40px; /* 确保在按钮下方 */
+  top: 30px; /* 确保在按钮下方 */
   left: 0;
   width: 100%;
   z-index: 10;
   box-sizing: border-box;
 }
-
-.historyAndRolesContainer::before {
+.historyAndRolesContainer:before {
+  top: 0px;
   content: "";
   position: absolute;
-  top: -8px;
-  left: 20px; /* 根据按钮位置微调 */
   width: 0;
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-bottom: 8px solid var(--bg-primary-second);
+  border-bottom: 8px solid var(--background-modifier-border-hover);
+}
+.historyListPosition:before  {
+  left: 40px; 
+}
+
+.rolesPosition:before {
+  left: 8px;
 }
 
 .chatContainer {

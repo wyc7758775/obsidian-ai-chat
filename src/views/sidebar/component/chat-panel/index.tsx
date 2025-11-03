@@ -1,5 +1,5 @@
 import { App, Notice } from "obsidian";
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   AddChatIcon,
   CloseIcon,
@@ -12,6 +12,7 @@ import { HistoryItem } from "../../type";
 import { useContext } from "../../hooks/use-context";
 import { debounce } from "../../../../utils";
 import { RoleModal, useRoles } from "./roles";
+import { useWaterfallLayout } from "./use-waterfall-layout";
 
 export type ChatMessageProps = {
   app: App;
@@ -75,10 +76,11 @@ export const useHistory = () => {
       handleCancelRole,
     } = useRoles(app);
 
-    // 瀑布流布局相关
-    const containerRef = useRef<HTMLDivElement>(null);
-    const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-    const [containerHeight, setContainerHeight] = useState(0);
+    // 瀑布流布局相关（封装为 Hook）
+    const { containerRef, cardRefs, containerHeight } = useWaterfallLayout({
+      active: showHistoryAndRoles === "history",
+      itemsCount: historyList.length,
+    });
     const historyAndRolesRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -228,65 +230,7 @@ export const useHistory = () => {
       }
     };
 
-    // 瀑布流布局计算
-    const calculateWaterfallLayout = () => {
-      if (!containerRef.current || showHistoryAndRoles !== "history") return;
-
-      const container = containerRef.current;
-      const containerWidth = container.clientWidth - 32; // 对应CSS中的左边距20px + 右边距12px
-      const cardWidth = 180;
-      const gap = 12; // 适中的间距，保持美观
-      const columns = Math.max(
-        1,
-        Math.floor((containerWidth + gap) / (cardWidth + gap))
-      );
-      const actualCardWidth = (containerWidth - gap * (columns - 1)) / columns;
-
-      const columnHeights = new Array(columns).fill(0);
-
-      cardRefs.current.forEach((cardEl, index) => {
-        if (!cardEl) return;
-
-        // 找到最短的列
-        const shortestColumnIndex = columnHeights.indexOf(
-          Math.min(...columnHeights)
-        );
-
-        // 设置卡片位置和宽度
-        const left = shortestColumnIndex * (actualCardWidth + gap) + 20; // 加上左边距
-        const top = columnHeights[shortestColumnIndex] + 24; // 加上容器的padding-top
-
-        cardEl.style.left = `${left}px`;
-        cardEl.style.top = `${top}px`;
-        cardEl.style.width = `${actualCardWidth}px`;
-
-        // 更新列高度
-        columnHeights[shortestColumnIndex] += cardEl.offsetHeight + gap;
-      });
-
-      // 设置容器高度
-      const maxHeight = Math.max(...columnHeights);
-      setContainerHeight(maxHeight); // 简单设置高度，让CSS处理滚动空间
-    };
-
-    // 监听布局变化
-    useLayoutEffect(() => {
-      calculateWaterfallLayout();
-    }, [historyList, showHistoryAndRoles]);
-
-    useEffect(() => {
-      if (showHistoryAndRoles === "history") {
-        const resizeObserver = new ResizeObserver(() => {
-          calculateWaterfallLayout();
-        });
-
-        if (containerRef.current) {
-          resizeObserver.observe(containerRef.current);
-        }
-
-        return () => resizeObserver.disconnect();
-      }
-    }, [showHistoryAndRoles]);
+    // 瀑布流逻辑已迁移至 useWaterfallLayout Hook
 
     // 历史记录 item 卡片样式
     const historyItemCardRender = (item: HistoryItem, index: number) => {
@@ -328,6 +272,12 @@ export const useHistory = () => {
                 <CatEmptyIcon />
               </div>
               <div className={styles.gameText}>No messages!</div>
+              <div
+                className={styles.historyItemCardActions}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <CloseIcon onClick={handleDeleteClick} />
+              </div>
             </div>
           ) : (
             <>
@@ -363,7 +313,9 @@ export const useHistory = () => {
             <div className={styles.historyActions}>
               <RoleExpandIcon
                 onClick={handleExpand}
-                className={showHistoryAndRoles === "roles" ? styles.activeIcon : ""}
+                className={
+                  showHistoryAndRoles === "roles" ? styles.activeIcon : ""
+                }
               />
               <HistoryExpandIcon
                 onClick={handleHistoryExpand}
@@ -380,7 +332,13 @@ export const useHistory = () => {
           {showHistoryAndRoles && (
             <div
               ref={historyAndRolesRef}
-              className={styles.historyAndRolesContainer}
+              className={`${styles.historyAndRolesContainer}
+              ${
+                showHistoryAndRoles === "history"
+                  ? styles.historyListPosition
+                  : styles.rolesPosition
+              }
+                `}
             >
               {/*  角色切换 */}
               {showHistoryAndRoles === "roles" && renderRoleList()}
@@ -392,7 +350,9 @@ export const useHistory = () => {
                     className={styles.historyExpandList}
                     style={{
                       height:
-                        containerHeight > 0 ? `${containerHeight + 30}px` : "30vh",
+                        containerHeight > 0
+                          ? `${containerHeight + 30}px`
+                          : "30vh",
                       maxHeight: "50vh", // 恢复最大高度限制，防止过高
                     }}
                   >

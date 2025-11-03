@@ -1,10 +1,10 @@
 .fileWrapper {
   overflow-x: auto;
-  padding: 8px 12px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: start;
-  gap: 8px;
+  gap: 4px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -18,8 +18,8 @@
   align-items: center;
   justify-content: start;
   position: relative;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 4;
+  border-radius: 4px;
   cursor: pointer;
   background-color: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
@@ -80,21 +80,15 @@
 .fileClose {
   display: none;
   position: absolute;
-  cursor: pointer;
-  padding: 2px;
-  border-radius: 50%;
-  /* 全局缩小 2px：文件项关闭小圆钮更精致 */
-  width: 16px;
-  height: 16px;
-  line-height: 12px;
   text-align: center;
   top: -4px;
   right: -4px;
-  background-color: var(--background-primary);
-  color: var(--text-faint);
-  border: 1px solid var(--background-modifier-border);
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--background-modifier-border);
+  padding: 2px;
 }
 
 .fileItem:hover .fileClose {
@@ -102,10 +96,6 @@
   align-items: center;
   justify-content: center;
 }
-
 .fileClose:hover {
-  color: var(--text-error);
-  background-color: var(--background-modifier-error-hover);
-  border-color: var(--text-error);
-  transform: scale(1.1);
+  background-color: var(--background-modifier-hover);
 }
