@@ -134,7 +134,13 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
 
     const noteContextService = new NoteContextService(app);
     // 创建新笔记
-    const createFile = (content: string, index: number) => {
+    const createFile = async (content: string, index: number) => {
+      const confirmed = await new Promise<boolean>((resolve) => {
+        // 使用 Obsidian 自带的确认对话框
+        resolve(confirm("确定要将此条 AI 回复创建为新笔记吗？"));
+      });
+      if (!confirmed) return;
+
       noteContextService.createNote({
         title: messages[index - 1]?.content ?? "",
         content,

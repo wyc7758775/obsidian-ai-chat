@@ -290,23 +290,53 @@ export class NoteContextService {
     return "";
   }
 
-  // 创建新笔记
-  async createNote(context: NoteContext): Promise<TFile> {
-    const { title = "新笔记", content = "", path } = context;
-    const fileName = `${title}.md`;
+  /**
+   * 创建新笔记（统一返回 Promise 结果对象）
+   *
+   * 边界与有效性处理：
+   * - 如果 title 为空或全空白，使用默认标题 "新笔记"。
+   * - 清理标题中不合法的文件名字符（如 / \ : * ? " < > |）。
+   * - 按用户设置的“新建笔记默认位置”生成路径；支持传入覆盖路径。
+   * - 若目标路径已存在同名文件，则返回失败结果而非抛异常。
+   * - 成功与失败均以 { success, file?, error?, fullPath } 形式返回，不抛出异常。
+   */
+  async createNote(context: NoteContext): Promise<{
+    success: boolean;
+    file?: TFile;
+    error?: string;
+    fullPath: string;
+  }> {
+    const rawTitle = (context.title ?? "新笔记").trim();
+    // 清理非法文件名字符
+    const safeTitle = rawTitle
+      ? rawTitle.replace(/[\\/:*?"<>|]/g, "-")
+      : "新笔记";
+
+    const content = context.content ?? "";
+    const fileName = `${safeTitle}.md`;
 
     // 动态遵循用户“新建笔记默认位置”的设置
-    const targetFolder = path ?? this.getNewNoteTargetFolder();
+    const targetFolder = context.path ?? this.getNewNoteTargetFolder();
     const fullPath = targetFolder ? `${targetFolder}/${fileName}` : fileName;
 
-
     try {
-      return await this.vault.create(fullPath, content);
+      // 若已存在同名文件，直接返回失败结果以避免抛错
+      const existed = this.vault.getAbstractFileByPath(fullPath);
+      if (existed instanceof TFile) {
+        const msg = `创建笔记失败：已存在同名文件 (${fullPath})`;
+        new Notice(msg);
+        return { success: false, error: msg, fullPath };
+      }
+      new Notice("创建笔记成功!");
+
+      const file = await this.vault.create(fullPath, content);
+      return { success: true, file, fullPath };
     } catch (err: unknown) {
-      new Notice(
-        `创建笔记失败: ${err instanceof Error ? err.message : String(err)}`
-      );
-      throw err;
+      const msg = `创建笔记失败: ${
+        err instanceof Error ? err.message : String(err)
+      }`;
+      new Notice(msg);
+      return { success: false, error: msg, fullPath };
     }
   }
 }
