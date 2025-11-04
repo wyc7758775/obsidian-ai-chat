@@ -320,7 +320,6 @@ export class NoteContextService {
     const fullPath = targetFolder ? `${targetFolder}/${fileName}` : fileName;
 
     try {
-      // 若已存在同名文件，直接返回失败结果以避免抛错
       const existed = this.vault.getAbstractFileByPath(fullPath);
       if (existed instanceof TFile) {
         const msg = `创建笔记失败：已存在同名文件 (${fullPath})`;

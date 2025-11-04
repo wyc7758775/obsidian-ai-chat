@@ -1,26 +1,15 @@
-import React, {
-  useEffect,
-  useRef,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
+import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { App } from "obsidian";
 import { Message } from "../../type";
 import { NoteContextService } from "../../../../core/fs-context/note-context";
-import {
-  CopyIcon,
-  GenerateIcon,
-  RegenerateIcon,
-  ShareIcon,
-  AddSmallIcon,
-} from "../icon";
+import { CopyIcon, GenerateIcon, RegenerateIcon, ShareIcon } from "../icon";
 import styles from "../../css/message-list.module.css";
 import { useMarkdownRenderer } from "../use-markdown-renderer";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
+import { useShare } from "./use-share";
+import { messageEmptyRender } from "./message-empty";
 
-import ShareCard from "../share-card";
 import ReactMarkdown from "react-markdown";
-import { CatLogo } from "./cat-logo";
 
 // 滚动位置缓存，用于保存每个历史记录的滚动位置
 const scrollPositionCache = new Map<string, number>();
@@ -67,77 +56,22 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
     });
 
     const buildMarkdownProps = useMarkdownRenderer();
+    const { shareToImg } = useShare();
 
     const handleShare = async (question: string, answer: string) => {
-      const cardElement = document.createElement("div");
-      // Hide the element from the user's view
-      cardElement.style.position = "absolute";
-      cardElement.style.left = "-9999px";
-      cardElement.style.width = "400px";
-      document.body.appendChild(cardElement);
-
-      const questionNode = (
-        <ReactMarkdown {...(buildMarkdownProps(question) as any)}>
-          {question}
-        </ReactMarkdown>
-      );
-      const answerNode = (
-        <ReactMarkdown {...(buildMarkdownProps(answer) as any)}>
-          {answer}
-        </ReactMarkdown>
-      );
-
-      const card = <ShareCard question={questionNode} answer={answerNode} />;
-
-      const { default: ReactDOM } = await import("react-dom");
-      ReactDOM.render(card, cardElement);
-
-      // Give React time to render
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      try {
-        const domtoimage = (await import("dom-to-image-more")).default;
-        const dataUrl = await domtoimage.toPng(cardElement, {
-          // It is recommended to specify the pixel ratio of the device to ensure the image is clear
-          pixelRatio: window.devicePixelRatio,
-          // Set a background color to prevent transparency issues
-          bgcolor:
-            getComputedStyle(document.body)
-              .getPropertyValue("--background-primary")
-              .trim() || "#ffffff",
-          // Copy all styles from the original document to the cloned one
-          style: {
-            // This ensures that all styles are copied
-            ...Object.fromEntries(
-              Array.from(document.styleSheets)
-                .flatMap((sheet) => Array.from(sheet.cssRules))
-                .filter((rule) => rule instanceof CSSStyleRule)
-                .map((rule) => [
-                  (rule as CSSStyleRule).selectorText,
-                  rule.cssText,
-                ])
-            ),
-          },
-        });
-
-        const link = document.createElement("a");
-        link.href = dataUrl;
-        link.download = "yoran-chat-share.png";
-        link.click();
-      } catch (error) {
-        console.error("Oops, something went wrong!", error);
-      } finally {
-        // Clean up the temporary element
-        document.body.removeChild(cardElement);
-      }
+      return await shareToImg(question, answer);
     };
 
     const noteContextService = new NoteContextService(app);
     // 创建新笔记
     const createFile = async (content: string, index: number) => {
       const confirmed = await new Promise<boolean>((resolve) => {
-        // 使用 Obsidian 自带的确认对话框
-        resolve(confirm("确定要将此条 AI 回复创建为新笔记吗？"));
+        resolve(
+          confirm(
+            "确定要将此条 AI 回复创建为新笔记吗？ 笔记名为：" +
+              messages[index - 1]?.content
+          )
+        );
       });
       if (!confirmed) return;
 
@@ -285,34 +219,9 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
      * @param message 当前消息列表
      */
     const messageEmpty = (message: Message[]) => {
-      if (message.length === 0) {
-        const defaultSuggestions: string[] = [
-          "请帮我总结这篇笔记的重点并给出行动项",
-          "把这段文字润色为更流畅、自然的中文",
-          "为这篇文章生成一个结构化大纲（含章节与要点）",
-          "指出内容的逻辑问题并给出改进建议",
-        ];
+      if (message.length !== 0) return null;
 
-        const suggestionsList: string[] =
-          Array.isArray(suggestions) && suggestions.length > 0
-            ? suggestions.slice(0, 10)
-            : defaultSuggestions;
-
-        return (
-          <div className={styles.emptyWrap}>
-            <CatLogo />
-            <div className={styles.suggestionsWrap} aria-label="建议提示">
-              {suggestionsList.map((text: string, idx: number) => (
-                <div className={styles.suggestionItem} key={idx}>
-                  <span className={styles.suggestionText}>{text}</span>
-                  <AddSmallIcon onClick={() => onInsertSuggestion?.(text)} />
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      }
-      return null;
+      return messageEmptyRender(suggestions, onInsertSuggestion);
     };
 
     return (

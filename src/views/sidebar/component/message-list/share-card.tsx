@@ -1,5 +1,5 @@
-import React from 'react';
-import styles from '../css/share-card.module.css';
+import React from "react";
+import styles from "./share-card.module.css";
 
 interface ShareCardProps {
   question: React.ReactNode;
