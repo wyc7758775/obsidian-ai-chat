@@ -2,12 +2,13 @@ import { useCallback, useMemo } from "react";
 import { HistoryItem } from "../type";
 import { FileStorageService } from "../../../core/storage/file-storage";
 import { RoleStorageService, RoleItem } from "../../../core/storage/role-storage";
+import { PLUGIN_FOLDER_NAME } from "src/main";
 import { App } from "obsidian";
 
 export const useContext = (app: App) => {
   // 创建文件存储服务实例
-  const fileStorage = useMemo(() => new FileStorageService(app), [app]);
-  const roleStorage = useMemo(() => new RoleStorageService(app), [app]);
+  const fileStorage = useMemo(() => new FileStorageService(app, PLUGIN_FOLDER_NAME), [app]);
+  const roleStorage = useMemo(() => new RoleStorageService(app, PLUGIN_FOLDER_NAME), [app]);
 
   // 插入或更新历史记录项
   const upsertHistoryItem = useCallback(

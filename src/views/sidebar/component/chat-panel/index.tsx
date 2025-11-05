@@ -158,30 +158,48 @@ export const useHistory = () => {
       }
     };
 
-    useEffect(() => {
-      (async () => {
-        try {
-          // 加载历史记录列表
-          const items = await fetchHistoryList();
-          setHistoryList(items);
-          if (!currentId || !items.some((item) => item.id === currentId)) {
-            const firstItem = items[0];
-            if (firstItem) {
-              handleUpdateHistoryItem(firstItem);
-            } else {
-              setCurrentId("");
-            }
+  useEffect(() => {
+    (async () => {
+      try {
+        // 加载历史记录列表
+        const items = await fetchHistoryList();
+        setHistoryList(items);
+        /**
+         * 首次加载逻辑（函数级注释）：
+         * - 若列表为空，自动创建一个“空会话”作为种子，避免 currentId 为空导致无法保存。
+         * - 若 currentId 不存在或不在列表中，则切换到第一条记录。
+         * 边界处理：
+         * - items 为空：创建新记录并设置 currentId；
+         * - items 非空但找不到 currentId：切换到第一条；
+         */
+        if (!items || items.length === 0) {
+          // 创建种子会话，保证后续保存逻辑能写入文件
+          const seed = await addEmptyItem();
+          const seedItem = (await getHistoryItemById(seed.id)) ?? {
+            id: seed.id,
+            messages: [],
+          };
+          setHistoryList([seedItem]);
+          setCurrentId(seed.id);
+          handleUpdateHistoryItem(seedItem);
+        } else if (!currentId || !items.some((item) => item.id === currentId)) {
+          const firstItem = items[0];
+          if (firstItem) {
+            handleUpdateHistoryItem(firstItem);
           } else {
-            const currentItem = items.find((it) => it.id === currentId);
-            if (currentItem) {
-              handleUpdateHistoryItem(currentItem);
-            }
+            setCurrentId("");
           }
-        } catch (e) {
-          // 忽略错误
+        } else {
+          const currentItem = items.find((it) => it.id === currentId);
+          if (currentItem) {
+            handleUpdateHistoryItem(currentItem);
+          }
         }
-      })();
-    }, [fetchHistoryList, updater]);
+      } catch (e) {
+        // 忽略错误
+      }
+    })();
+  }, [fetchHistoryList, updater]);
 
     useEffect(() => {
       if (!selectedRole || !historyItems.id) return;

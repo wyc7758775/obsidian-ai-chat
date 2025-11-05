@@ -11,12 +11,21 @@ export interface RoleItem {
  */
 export class RoleStorageService {
   private app: App;
-  private rolesFile = "chat-roles.json"; // 与 chat-history.json 同级（vault 根目录）
+  private rolesFile = "chat-roles.json"; // 默认文件名，最终路径由插件文件夹名决定
   private cache: RoleItem[] = [];
   private isLoaded = false;
 
-  constructor(app: App) {
+  private pluginFolderName: string;
+
+  /**
+   * 构造函数：注入 Obsidian App 与插件名
+   * - 输入：`app`、`pluginFolderName`（未清洗）
+   * - 输出：无
+   * - 边界处理：未提供插件名时回退为 `obsidian-plugin`
+   */
+  constructor(app: App, pluginFolderName?: string) {
     this.app = app;
+    this.pluginFolderName = pluginFolderName || "obsidian-plugin";
   }
 
   /**
@@ -24,12 +33,49 @@ export class RoleStorageService {
    */
   private async ensureRolesFile(): Promise<void> {
     const adapter = this.app.vault.adapter;
+    // 解析路径并确保目录存在
+    await this.resolveRolesFilePath();
     const exists = await adapter.exists(this.rolesFile);
     if (!exists) {
       const defaultRoles: RoleItem[] = [
-        { name: "默认角色", systemPrompt: "你是一个温柔可靠的助手，专注于写作优化与总结。" },
+        {
+          name: "默认角色",
+          systemPrompt: "你是一个温柔可靠的助手，专注于写作优化与总结。",
+        },
       ];
       await adapter.write(this.rolesFile, JSON.stringify(defaultRoles, null, 2));
+    }
+    // 内容校验：空或损坏则重置为默认角色
+    try {
+      const content = await adapter.read(this.rolesFile);
+      if (!content || content.trim() === "") {
+        const defaults: RoleItem[] = [
+          {
+            name: "默认角色",
+            systemPrompt: "你是一个温柔可靠的助手，专注于写作优化与总结。",
+          },
+        ];
+        await adapter.write(this.rolesFile, JSON.stringify(defaults, null, 2));
+        return;
+      }
+      const parsed = JSON.parse(content);
+      if (!Array.isArray(parsed)) {
+        const defaults: RoleItem[] = [
+          {
+            name: "默认角色",
+            systemPrompt: "你是一个温柔可靠的助手，专注于写作优化与总结。",
+          },
+        ];
+        await adapter.write(this.rolesFile, JSON.stringify(defaults, null, 2));
+      }
+    } catch (_) {
+      const defaults: RoleItem[] = [
+        {
+          name: "默认角色",
+          systemPrompt: "你是一个温柔可靠的助手，专注于写作优化与总结。",
+        },
+      ];
+      await adapter.write(this.rolesFile, JSON.stringify(defaults, null, 2));
     }
   }
 
@@ -57,6 +103,33 @@ export class RoleStorageService {
     await adapter.write(this.rolesFile, JSON.stringify(this.cache, null, 2));
   }
 
+  /**
+   * 解析并设置角色文件路径：`<plugin>/chat-roles.json`
+   * - 清洗插件名为安全文件夹名
+   * - 确保目录存在
+   */
+  private async resolveRolesFilePath(): Promise<void> {
+    const adapter = this.app.vault.adapter;
+    const safeFolder = this.normalizeFolderName(this.pluginFolderName);
+    if (safeFolder) {
+      const exists = await adapter.exists(safeFolder);
+      if (!exists) {
+        await adapter.mkdir(safeFolder);
+      }
+      this.rolesFile = `${safeFolder}/chat-roles.json`;
+      return;
+    }
+    this.rolesFile = "chat-roles.json";
+  }
+
+  /** 将字符串清洗为安全的文件夹名 */
+  private normalizeFolderName(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+  }
+
   /** 获取全部角色 */
   async fetchRoles(): Promise<RoleItem[]> {
     await this.loadFromFile();
@@ -73,7 +146,8 @@ export class RoleStorageService {
   async upsertRole(role: RoleItem): Promise<void> {
     await this.loadFromFile();
     const idx = this.cache.findIndex((r) => r.name === role.name);
-    if (idx >= 0) this.cache[idx] = role; else this.cache.push(role);
+    if (idx >= 0) this.cache[idx] = role;
+    else this.cache.push(role);
     await this.saveToFile();
   }
 

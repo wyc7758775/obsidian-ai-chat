@@ -8,12 +8,20 @@ import { NoteContext } from "../fs-context/note-context";
  */
 export class FileStorageService {
   private app: App;
-  private dataFile = "chat-history.json"; // 存储在vault根目录
+  private dataFile = "chat-history.json"; // 存储在目标目录下
   private cache: Map<string, HistoryItem> = new Map();
   private isLoaded = false;
+  private pluginFolderName: string;
 
-  constructor(app: App) {
+  /**
+   * 构造函数：注入 Obsidian App 与插件名
+   * - 输入：`app`（Obsidian 应用实例）、`pluginFolderName`（插件文件夹名，未清洗）
+   * - 输出：无
+   * - 边界处理：当未提供插件名时，回退为 `obsidian-plugin`
+   */
+  constructor(app: App, pluginFolderName?: string) {
     this.app = app;
+    this.pluginFolderName = pluginFolderName || "obsidian-plugin";
   }
 
   /**
@@ -22,10 +30,13 @@ export class FileStorageService {
   private async ensureDataFile(): Promise<void> {
     const adapter = this.app.vault.adapter;
 
+    // 解析并设置数据文件路径（优先使用插件文件夹名）
+    await this.resolveDataFilePath();
+
     // 检查文件是否存在
     const exists = await adapter.exists(this.dataFile);
     if (!exists) {
-      // 确保目录存在（只有当文件不在根目录时）
+      // 确保目录存在（当文件不在根目录时）
       const lastSlashIndex = this.dataFile.lastIndexOf("/");
       if (lastSlashIndex > 0) {
         const dir = this.dataFile.substring(0, lastSlashIndex);
@@ -35,6 +46,24 @@ export class FileStorageService {
       }
 
       // 创建空的数据文件
+      await adapter.write(this.dataFile, JSON.stringify({}));
+    }
+
+    // 读取并校验内容：如果为空或损坏，重置为 {}
+    try {
+      const content = await adapter.read(this.dataFile);
+      // 允许空对象与空数组，其他必须为可解析 JSON
+      if (!content || content.trim() === "") {
+        await adapter.write(this.dataFile, JSON.stringify({}));
+        return;
+      }
+      const parsed = JSON.parse(content);
+      // 若不是对象，则重置为 {}
+      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+        await adapter.write(this.dataFile, JSON.stringify({}));
+      }
+    } catch (_) {
+      // 解析失败或读取失败时，直接重置为 {}
       await adapter.write(this.dataFile, JSON.stringify({}));
     }
   }
@@ -116,7 +145,7 @@ export class FileStorageService {
     console.log("保存的 item.id:", item.id);
     console.log("保存的 item.noteSelected:", item.noteSelected);
     console.log("文件路径:", this.dataFile);
-    
+
     await this.loadFromFile();
 
     // 更新缓存
@@ -124,7 +153,7 @@ export class FileStorageService {
 
     // 保存到文件
     await this.saveToFile();
-    
+
     console.log("保存完成，缓存大小:", this.cache.size);
   }
 
@@ -210,8 +239,6 @@ export class FileStorageService {
     }
   }
 
-
-
   /**
    * 强制重新加载数据（清理缓存并重新从文件加载）
    */
@@ -219,6 +246,43 @@ export class FileStorageService {
     this.cache.clear();
     this.isLoaded = false;
     await this.loadFromFile();
+  }
+
+  /**
+   * 解析并设置数据文件路径
+   * - 优先使用“插件名”为文件夹，例如：`<plugin>/chat-history.json`
+   * - 插件名会被清洗为安全文件夹名（去除空格与特殊字符，转小写）
+   * - 若解析失败，回退到根目录 `chat-history.json`
+   */
+  private async resolveDataFilePath(): Promise<void> {
+    const adapter = this.app.vault.adapter;
+    try {
+      const safeFolder = this.normalizeFolderName(this.pluginFolderName);
+      if (safeFolder) {
+        this.dataFile = `${safeFolder}/chat-history.json`;
+        // 确保目录存在
+        const exists = await adapter.exists(safeFolder);
+        if (!exists) {
+          await adapter.mkdir(safeFolder);
+        }
+        return;
+      }
+      this.dataFile = "chat-history.json";
+    } catch (e) {
+      this.dataFile = "chat-history.json";
+    }
+  }
+
+  /**
+   * 清洗插件名为安全的文件夹名
+   * - 输入：任意字符串（可能包含空格与特殊字符）
+   * - 输出：只包含字母数字与连字符的小写名称
+   */
+  private normalizeFolderName(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
   }
 
   /**
@@ -242,7 +306,8 @@ export class FileStorageService {
   getFullDataFilePath(): string {
     // 使用 vault 的名称和适配器信息
     const adapter = this.app.vault.adapter as any;
-    const basePath = adapter.basePath || adapter.path || this.app.vault.getName();
+    const basePath =
+      adapter.basePath || adapter.path || this.app.vault.getName();
     return `${basePath}/${this.dataFile}`;
   }
 
@@ -335,9 +400,11 @@ export class FileStorageService {
    * 动态获取最新的文件内容和元数据
    * 使用时间戳验证文件是否为预期的文件
    */
-  async convertToNoteContexts(noteRefs: NoteReference[]): Promise<NoteContext[]> {
+  async convertToNoteContexts(
+    noteRefs: NoteReference[]
+  ): Promise<NoteContext[]> {
     const results: NoteContext[] = [];
-    
+
     for (const ref of noteRefs) {
       const file = this.getTFileByPath(ref.path);
       if (file) {
