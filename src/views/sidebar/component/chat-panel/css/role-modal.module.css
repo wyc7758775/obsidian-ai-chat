@@ -188,7 +188,7 @@
 /* 保存按钮样式 */
 .saveButton {
   background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-  color: white;
+  color: white !important;
   border-color: #4caf50;
 }
 
@@ -206,6 +206,7 @@
 
 /* 取消按钮样式 */
 .cancelButton {
+  color: var(--text-normal) !important;
   background: linear-gradient(135deg, var(--background-secondary) 0%, var(--background-primary-alt) 100%);
   border-color: var(--background-modifier-border-hover);
 }

@@ -258,8 +258,6 @@ export const useHistory = () => {
       }
     };
 
-    // 瀑布流逻辑已迁移至 useWaterfallLayout Hook
-
     // 历史记录 item 卡片样式
     const historyItemCardRender = (item: HistoryItem, index: number) => {
       const isActive = item.id === currentId;
@@ -351,11 +349,12 @@ export const useHistory = () => {
                   showHistoryAndRoles === "history" ? styles.activeIcon : ""
                 }
               />
+              <AddChatIcon onClick={handleAdd} />
             </div>
             <div className={styles.currentRole}>
+              <span>Person: </span>
               {selectedRole ? selectedRole.name : "默认角色"}
             </div>
-            <AddChatIcon onClick={handleAdd} />
           </div>
           {showHistoryAndRoles && (
             <div

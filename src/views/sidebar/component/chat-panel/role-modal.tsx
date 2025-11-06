@@ -33,6 +33,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       onCancel();
     }
   };
+  const isEditMode = roleName !== "";
 
   return (
     <div
@@ -43,7 +44,9 @@ export const RoleModal: React.FC<RoleModalProps> = ({
     >
       <div className={styles.modalContent}>
         <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>新增角色</h3>
+          <h3 className={styles.modalTitle}>
+            {isEditMode ? "编辑角色" : "新增角色"}
+          </h3>
         </div>
 
         <div className={styles.modalBody}>
