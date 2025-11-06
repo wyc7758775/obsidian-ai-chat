@@ -164,7 +164,7 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
               index === messages.length - 1 &&
               message.type === "assistant" ? (
                 <div className={styles.typing} aria-label="AI生成中">
-                  思考中
+                  thinking
                   <span className={styles.dot}></span>
                   <span className={styles.dot}></span>
                   <span className={styles.dot}></span>
@@ -209,11 +209,6 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       );
     };
 
-    /**
-     * 当消息列表为空时的占位区域：
-     * - 展示猫咪 Logo
-     * - 提供四条朴素建议，点击“添加”后将建议文本插入输入框
-     */
     /**
      * 空消息状态渲染：优先使用设置中的建议（最多10条），否则使用默认建议。
      * @param message 当前消息列表

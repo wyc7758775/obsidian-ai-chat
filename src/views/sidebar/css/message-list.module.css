@@ -139,6 +139,7 @@
 
 /* 流式加载指示器（增强版） */
 .typing {
+  font-size: 0.8rem;
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -169,8 +170,8 @@
 }
 
 .dot {
-  width: 8px; /* 增大点的大小 */
-  height: 8px;
+  width: 4px; /* 增大点的大小 */
+  height: 4px;
   border-radius: 50%;
   background: var(--interactive-accent); /* 使用更显眼的颜色 */
   animation: dotBounce 1.4s ease-in-out infinite;

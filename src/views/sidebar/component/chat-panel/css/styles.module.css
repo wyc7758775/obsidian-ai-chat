@@ -2,10 +2,6 @@
 .history {
   position: relative;
   border-radius: 6px;
-  background-color: var(--bg-primary-second);
-  border: 1px solid var(--background-primary-alt);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
-  margin-bottom: 16px;
   margin-top: 8px;
 }
 
@@ -152,11 +148,6 @@
   border-radius: 6px;
   border: 1px solid var(--background-modifier-border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
-  
-  /* 自定义滚动条样式 */
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb-bg) var(--scrollbar-bg);
-  
   /* 容器进入动画 */
   animation: containerFadeIn 0.4s ease-out;
 }
@@ -172,10 +163,6 @@
     transform: translateY(0) scale(1);
   }
 }
-
-
-
-
 
 .historyExpandList::-webkit-scrollbar {
   width: 8px;
@@ -287,10 +274,11 @@
 .historyItemCard::before {
   content: '';
   position: absolute;
-  top: 0;
+  top: 1px;
   left: 0;
   right: 0;
   height: 3px;
+  border-radius: 4px 4px 0 0;
   background: linear-gradient(90deg, var(--interactive-accent) 0%, var(--interactive-accent-hover) 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -514,21 +502,42 @@
   z-index: 10;
   box-sizing: border-box;
 }
+/* 外层（边框三角形）：比内层略大 */
 .historyAndRolesContainer:before {
-  top: 0px;
   content: "";
   position: absolute;
+  top: 0px;
+  z-index: 1;
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 9px solid var(--background-modifier-border); /* 边框颜色 */
+}
+/* 内层（填充三角形）：略小覆盖在上面，产生斜边边框 */
+.historyAndRolesContainer:after {
+  content: "";
+  position: absolute;
+  top: 2px; /* 比 :before 稍微下移 1px，让边框露出 */
+  z-index: 2;
   width: 0;
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-bottom: 8px solid var(--background-modifier-border-hover);
+  border-bottom: 8px solid var(--background-secondary); /* 原填充色 */
 }
 .historyListPosition:before  {
-  left: 40px; 
+  left: 39px; 
+}
+/* 同步内层填充三角的水平位置 */
+.historyListPosition:after {
+  left: 40px;
 }
 
 .rolesPosition:before {
+  left: 7px;
+}
+.rolesPosition:after {
   left: 8px;
 }
 

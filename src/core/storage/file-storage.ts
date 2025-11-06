@@ -59,7 +59,11 @@ export class FileStorageService {
       }
       const parsed = JSON.parse(content);
       // 若不是对象，则重置为 {}
-      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+      if (
+        parsed === null ||
+        typeof parsed !== "object" ||
+        Array.isArray(parsed)
+      ) {
         await adapter.write(this.dataFile, JSON.stringify({}));
       }
     } catch (_) {
@@ -141,20 +145,11 @@ export class FileStorageService {
    * 保存或更新历史记录项
    */
   async upsertHistoryItem(item: HistoryItem): Promise<void> {
-    console.log("=== FileStorageService.upsertHistoryItem ===");
-    console.log("保存的 item.id:", item.id);
-    console.log("保存的 item.noteSelected:", item.noteSelected);
-    console.log("文件路径:", this.dataFile);
-
     await this.loadFromFile();
-
     // 更新缓存
     this.cache.set(item.id, item);
-
     // 保存到文件
     await this.saveToFile();
-
-    console.log("保存完成，缓存大小:", this.cache.size);
   }
 
   /**
