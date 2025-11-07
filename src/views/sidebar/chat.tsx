@@ -289,6 +289,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (isStreaming) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
