@@ -25,6 +25,7 @@ import { useCaretPosition } from "./hooks/use-caret-position";
 import { Message, ChatComponentProps, NoteReference } from "./type";
 import { useHistory } from "./component/chat-panel/index";
 import { useContext } from "./hooks/use-context";
+import { useScrollToBottom } from "./use-scroll-to-bottom";
 
 const PADDING = 12;
 export const ChatComponent: React.FC<ChatComponentProps> = ({
@@ -182,7 +183,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   ]);
 
   // 已在顶部声明 messagesChanged，这里移除重复声明
-
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
@@ -656,9 +656,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     );
   };
 
-  const handleScrollToBottom = () => {
+  const { ScrollToBottomRender } = useScrollToBottom(() => {
     messageListRef.current?.scrollToBottom?.();
-  };
+  });
 
   /**
    * 将建议文本插入到输入框：
@@ -737,19 +737,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       </PositionedPopover>
       {/* 输入区域 */}
       <div className={styles.inputArea}>
-        {showScrollBtn && (
-          <div className={styles.scrollToBottomBtnContainer}>
-            <button
-              className={styles.scrollToBottomBtn}
-              onClick={handleScrollToBottom}
-              aria-label="滚动到底部"
-              title="滚动到底部"
-              disabled={isStreaming}
-            >
-              ↓
-            </button>
-          </div>
-        )}
+        {showScrollBtn && <ScrollToBottomRender disabled={isStreaming} />}
         {selectedNotes.length > 0 && (
           <SelectedFiles nodes={selectedNotes} onDeleteNote={onDeleteNote} />
         )}
