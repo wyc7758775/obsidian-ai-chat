@@ -27,7 +27,7 @@ export const SelectedFiles = ({
                   onDeleteNote(note);
                 }}
               >
-                <DeleteIcon />
+                <DeleteIcon variant="small" />
               </span>
               <div className={styles.fileName}>
                 {note.title || note.name || note.file?.basename || "未知文件"}

@@ -22,7 +22,7 @@ export const useScrollToBottom = (
   const endRef = useRef<HTMLDivElement>(null);
   // 这里用 isNearBottom 来表达"接近底部"的语义，并兼容旧的 isAtBottom 命名
   const [isNearBottom, setIsNearBottom] = useState(true);
-  
+
   // 新增状态：用户是否主动滚动了
   const [userScrolled, setUserScrolled] = useState(false);
   // 记录上次自动滚动的时间，用于区分用户滚动和自动滚动
@@ -34,13 +34,13 @@ export const useScrollToBottom = (
     const container = containerRef?.current;
     // 记录自动滚动时间
     lastAutoScrollTime.current = Date.now();
-    
+
     if (container) {
       container.scrollTo({ top: container.scrollHeight, behavior });
     } else {
       endRef.current?.scrollIntoView({ behavior });
     }
-    
+
     // 重置用户滚动状态，因为这是程序触发的滚动
     setUserScrolled(false);
   }, [containerRef, behavior]);
@@ -89,20 +89,20 @@ export const useScrollToBottom = (
       const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
       const nearBottom = distance <= nearBottomPx;
       setIsNearBottom(nearBottom);
-      
+
       // 检测用户主动滚动
       const now = Date.now();
       const timeSinceAutoScroll = now - lastAutoScrollTime.current;
-      
+
       // 如果距离上次自动滚动超过100ms，且用户不在底部，认为是用户主动滚动
       if (timeSinceAutoScroll > 100 && !nearBottom) {
         setUserScrolled(true);
-        
+
         // 清除之前的定时器
         if (scrollTimeoutRef.current) {
           clearTimeout(scrollTimeoutRef.current);
         }
-        
+
         // 设置定时器：如果用户滚动到底部附近，重置用户滚动状态
         scrollTimeoutRef.current = setTimeout(() => {
           if (nearBottom) {
@@ -110,7 +110,7 @@ export const useScrollToBottom = (
           }
         }, 500); // 500ms后检查是否在底部
       }
-      
+
       // 如果用户滚动到底部附近，立即重置用户滚动状态
       if (nearBottom && userScrolled) {
         setUserScrolled(false);
@@ -120,7 +120,7 @@ export const useScrollToBottom = (
     el.addEventListener("scroll", onScroll, { passive: true });
     // 初始化一次状态
     onScroll();
-    
+
     return () => {
       el.removeEventListener("scroll", onScroll);
       if (scrollTimeoutRef.current) {
@@ -129,11 +129,11 @@ export const useScrollToBottom = (
     };
   }, [containerRef, nearBottomPx, userScrolled]);
 
-  return { 
-    endRef, 
-    isAtBottom: isNearBottom, 
-    isNearBottom, 
+  return {
+    endRef,
+    isAtBottom: isNearBottom,
+    isNearBottom,
     scrollToBottom,
-    userScrolled // 暴露用户滚动状态，供调试使用
+    userScrolled, // 暴露用户滚动状态，供调试使用
   };
 };

@@ -9,17 +9,32 @@ import styles from "../css/icon.module.css";
  */
 export const IconWrapStatic = ({
   color = "currentColor",
+  variant = "large",
   label,
   children,
 }: {
   color?: string;
   label?: string;
+  variant?: "small" | "large";
   children: ReactNode;
-}) => (
-  <div style={{ color }} className={styles.iconStatic} aria-label={label}>
-    {children}
-  </div>
-);
+}) => {
+  const getClassName = () => {
+    const baseClass = styles.iconStatic;
+    switch (variant) {
+      case "small":
+        return `${baseClass} ${styles.iconSmall}`;
+      case "large":
+        return `${baseClass} ${styles.iconLarge}`;
+      default:
+        return `${baseClass} ${styles.iconSmall}`;
+    }
+  };
+  return (
+    <div style={{ color }} className={getClassName()} aria-label={label}>
+      {children}
+    </div>
+  );
+};
 
 export const IconWrapWithClick = ({
   label,
@@ -603,12 +618,15 @@ export const CatEmptyIcon = () => {
   );
 };
 // 当前已经选择的文件的关闭按钮
-export const DeleteIcon = () => {
+export const DeleteIcon = ({
+  variant = "large",
+}: {
+  variant?: "small" | "large";
+}) => {
   return (
-    <IconWrapStatic label="删除">
+    <IconWrapStatic label="删除" variant={variant}>
       <svg
-        t="1762179324505"
-        class="icon"
+        className="icon"
         viewBox="0 0 1024 1024"
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"
@@ -630,8 +648,7 @@ export const FolderIcon = () => {
   return (
     <IconWrapStatic>
       <svg
-        t="1762178779861"
-        class="icon"
+        className="icon"
         viewBox="0 0 1024 1024"
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"
@@ -653,8 +670,7 @@ export const FileIcon = () => {
   return (
     <IconWrapStatic>
       <svg
-        t="1762178828494"
-        class="icon"
+        className="icon"
         viewBox="0 0 1024 1024"
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"
