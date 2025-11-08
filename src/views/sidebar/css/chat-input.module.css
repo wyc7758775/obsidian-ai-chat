@@ -121,10 +121,6 @@
 	transition: left 0.5s ease;
 }
 
-.sendBtn:hover:not(:disabled)::before {
-	left: 100%;
-}
-
 /* 发送按钮在有内容时显示脉冲提示 */
 .sendBtn:not(:disabled) {
 	animation: sendBtnPulse 3s infinite;
