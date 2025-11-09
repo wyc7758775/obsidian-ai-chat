@@ -78,8 +78,7 @@ export const useHistory = () => {
           !historyAndRolesRef.current.contains(event.target as Node)
         ) {
           const el = event.target as Element | null;
-          const keyEl = el?.closest?.("[data-key]") as Element | null;
-          const keyAttr = keyEl?.getAttribute?.("data-key");
+          const keyAttr = el?.getAttribute?.("data-key");
           if (keyAttr && keyAttr === showHistoryAndRoles) return;
           setShowHistoryAndRoles(null);
         }

@@ -201,7 +201,30 @@ export class NoteContextService {
       totalNotes: allNotes.length,
       totalWords,
       totalCharacters,
-    };
+  };
+  }
+
+  /**
+   * 打开笔记（函数级注释）
+   * - 功能：根据传入的 TFile/NoteContext/path 解析目标文件，并在 Obsidian 中打开。
+   * - 输入有效性：当无法解析到文件或路径为空时返回 false；支持 markdown 及其他可打开类型。
+   * - 特殊情况处理：若当前已打开同一笔记，仍获取新叶子打开，以保持默认行为一致；异常时捕获并提示。
+   */
+  async openNote(fileOrCtx?: TFile | NoteContext | string): Promise<boolean> {
+    try {
+      const file = this.resolveToFile(fileOrCtx);
+      if (!file) {
+        new Notice("无法打开：未找到对应文件");
+        return false;
+      }
+      const leaf = this.app.workspace.getLeaf(true);
+      await (leaf as any)?.openFile?.(file);
+      return true;
+    } catch (error) {
+      console.error("打开笔记失败:", error);
+      new Notice("打开笔记失败");
+      return false;
+    }
   }
 
   // 按文件夹分组获取笔记

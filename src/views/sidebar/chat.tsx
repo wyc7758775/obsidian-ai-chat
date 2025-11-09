@@ -739,7 +739,11 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       <div className={styles.inputArea}>
         {showScrollBtn && <ScrollToBottomRender disabled={isStreaming} />}
         {selectedNotes.length > 0 && (
-          <SelectedFiles nodes={selectedNotes} onDeleteNote={onDeleteNote} />
+          <SelectedFiles
+            nodes={selectedNotes}
+            onDeleteNote={onDeleteNote}
+            noteContextService={noteContextService}
+          />
         )}
         {
           <ChatInput
