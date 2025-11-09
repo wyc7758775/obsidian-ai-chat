@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, MouseEvent, HTMLAttributes } from "react";
 import styles from "../css/icon.module.css";
 
 /**
@@ -36,6 +36,16 @@ export const IconWrapStatic = ({
   );
 };
 
+/**
+ * 可点击的图标容器组件
+ * - 功能：包裹 SVG 图标，提供点击、尺寸变体与高亮（active）状态。
+ * - 高亮：通过 `active` 在视觉上突出当前图标，并设置无障碍 `aria-pressed`。
+ * - 变体：`default | tiny | small | large | pulse | wiggle` 控制尺寸与动效。
+ * 边界条件：
+ * - label：为空时回退到通用描述，保证无障碍可读；
+ * - variant：仅接受预设枚举值；
+ * - children：应传入有效的 SVG 内容，否则仅渲染容器。
+ */
 export const IconWrapWithClick = ({
   label,
   color = "currentColor",
@@ -43,14 +53,17 @@ export const IconWrapWithClick = ({
   onClick,
   variant = "small",
   className,
+  active = false,
+  ...rest
 }: {
   label: string;
   color?: string;
   children: ReactNode;
-  onClick?: () => void;
+  onClick?: (e?: MouseEvent<HTMLDivElement>) => void;
   variant?: "default" | "tiny" | "small" | "large" | "pulse" | "wiggle";
   className?: string;
-}) => {
+  active?: boolean;
+} & HTMLAttributes<HTMLDivElement>) => {
   const getClassName = () => {
     const baseClass = styles.actionBtn;
 
@@ -71,9 +84,11 @@ export const IconWrapWithClick = ({
 
   return (
     <div
+      {...rest}
       style={{ color }}
-      className={`${getClassName()} ${className || ""}`}
-      aria-label={label}
+      className={`${getClassName()} ${active ? styles.actionBtnActive : ""} ${className || ""}`}
+      aria-label={label || "图标按钮"}
+      aria-pressed={active || undefined}
       onClick={onClick}
     >
       {children}
@@ -395,11 +410,19 @@ export const RegenerateIcon = ({ onClick }: { onClick?: () => void }) => (
 export const RoleExpandIcon = ({
   onClick,
   className,
+  active,
+  ...rest
 }: {
-  onClick?: () => void;
+  onClick?: (e?: MouseEvent<HTMLDivElement>) => void;
   className?: string;
-}) => (
-  <IconWrapWithClick label="展开角色" onClick={onClick} className={className}>
+  active?: boolean;
+} & HTMLAttributes<HTMLDivElement>) => (
+  /**
+   * 角色展开图标
+   * - 说明：支持 `active` 高亮用于指示当前面板处于展开状态。
+   * - 边界：当 `active` 为真时添加高亮样式与 `aria-pressed`。
+   */
+  <IconWrapWithClick label="展开角色" onClick={onClick} className={className} active={!!active} {...rest}>
     <svg
       className="icon"
       viewBox="0 0 1024 1024"
@@ -419,14 +442,19 @@ export const RoleExpandIcon = ({
 export const HistoryExpandIcon = ({
   onClick,
   className,
+  active,
+  ...rest
 }: {
-  onClick?: () => void;
+  onClick?: (e?: MouseEvent<HTMLDivElement>) => void;
   className?: string;
-}) => (
+  active?: boolean;
+} & HTMLAttributes<HTMLDivElement>) => (
   <IconWrapWithClick
     label="展开历史记录"
     onClick={onClick}
     className={className}
+    active={!!active}
+    {...rest}
   >
     <svg
       className="icon"
@@ -469,17 +497,16 @@ export const AddChatIcon = ({ onClick }: { onClick?: () => void }) => (
     <svg
       className="icon"
       viewBox="0 0 1024 1024"
+      version="1.1"
       xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
+      p-id="1786"
+      width="200"
+      height="200"
     >
       <path
-        d="M512 9.309091c273.128727 0 495.429818 217.832727 502.504727 489.285818l0.186182 14.149818c0 83.642182-17.314909 152.436364-52.782545 205.637818a37.236364 37.236364 0 0 1-61.998546-41.332363c24.669091-36.957091 38.260364-86.621091 40.075637-149.550546L940.218182 512a428.218182 428.218182 0 0 0-856.250182-12.427636L83.781818 512v232.727273a195.490909 195.490909 0 0 0 185.716364 195.258182L279.272727 940.218182h231.610182c59.019636 0 118.085818-7.912727 177.338182-23.738182a37.236364 37.236364 0 0 1 19.223273 71.912727 761.949091 761.949091 0 0 1-171.985455 25.879273l-24.576 0.418909H279.272727a269.963636 269.963636 0 0 1-269.777454-259.630545L9.309091 744.727273v-232.727273C9.309091 234.356364 234.356364 9.309091 512 9.309091z m50.269091 515.258182a37.236364 37.236364 0 0 1 4.654545 74.193454l-4.654545 0.279273H286.301091a37.236364 37.236364 0 0 1-4.654546-74.146909l4.654546-0.279273h275.874909z m139.636364-186.181818a37.236364 37.236364 0 0 1 4.654545 74.193454l-4.654545 0.279273H286.301091a37.236364 37.236364 0 0 1-4.654546-74.146909l4.654546-0.279273h415.511273z"
-        fill="#333333"
-      ></path>
-      <path
-        d="M847.872 734.487273c21.410909 0 38.772364 17.361455 38.772364 38.772363v38.772364h38.772363a38.772364 38.772364 0 1 1 0 77.591273h-38.772363v38.818909a38.772364 38.772364 0 0 1-77.591273 0v-38.818909h-38.772364a38.772364 38.772364 0 1 1 0-77.544728l38.772364-0.046545v-38.772364c0-21.410909 17.361455-38.772364 38.818909-38.772363z"
-        fill="#333333"
+        d="M243.456 103.2704H512c28.2624 0 51.2-23.1424 51.2-51.6608C563.2 23.0912 540.2624 0 512 0H243.456C109.0048 0 0 109.8752 0 245.4528v419.9936C0 863.488 159.232 1024 355.584 1024h424.96C914.9952 1024 1024 914.1248 1024 778.5472V512c0-28.5184-22.9376-51.6096-51.2-51.6096S921.6 483.4816 921.6 512v266.5472c0 78.5408-63.1296 142.1824-141.056 142.1824h-424.96C215.7568 920.7296 102.4 806.4512 102.4 665.4464V245.4528C102.4 166.912 165.5296 103.2704 243.456 103.2704z m391.7312-30.208c65.8432 142.5408 168.96 239.616 309.2992 291.328h0.1024c12.288 4.5568 26.2656 4.4032 39.1168-1.536 25.7024-11.776 36.864-42.3936 24.9344-68.2496a51.5584 51.5584 0 0 0-29.0816-26.8288c-113.664-41.8304-197.376-121.0368-251.2384-237.6192a51.456 51.456 0 0 0-68.1984-25.344c-25.7024 11.8784-36.864 42.4448-24.9344 68.3008zM536.2688 290.816c-28.3136 0-51.2 23.0912-51.2 51.6096v142.2336h-142.848c-28.2624 0-51.2 23.0912-51.2 51.6096 0 28.5184 22.9376 51.6608 51.2 51.6608h142.848v142.1824c0 28.5184 22.8864 51.6096 51.2 51.6096 28.2624 0 51.2-23.04 51.2-51.6096v-142.1824h142.848c28.2624 0 51.2-23.1424 51.2-51.6608 0-28.5184-22.9376-51.6096-51.2-51.6096h-142.848V342.3744c0-28.5184-22.9376-51.6096-51.2-51.6096z"
+        fill="#000000"
+        p-id="1787"
       ></path>
     </svg>
   </IconWrapWithClick>

@@ -1,5 +1,6 @@
 import { App, Notice } from "obsidian";
 import { useState, useEffect, useRef } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import {
   AddChatIcon,
   CloseIcon,
@@ -17,6 +18,13 @@ import { useWaterfallLayout } from "./use-waterfall-layout";
 export type ChatMessageProps = {
   app: App;
 };
+
+/**
+ * 面板类型（联合类型）
+ * - 说明：使用字面量联合类型更直接，避免到处使用魔法字符串。
+ * - 边界：仅允许 'history'、'roles' 或 null；null 表示不展示任何面板。
+ */
+type ShowPanel = "history" | "roles" | null;
 
 export const useHistory = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem>(
@@ -43,25 +51,50 @@ export const useHistory = () => {
       upsertHistoryItem,
     } = useContext(app);
     const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
-    const [showHistoryAndRoles, setShowHistoryAndRoles] = useState<
-      "history" | "roles" | null
-    >(null);
+    const [showHistoryAndRoles, setShowHistoryAndRoles] =
+      useState<ShowPanel>(null);
 
-    const handleExpand = () => {
-      if (showHistoryAndRoles === "roles") {
-        setShowHistoryAndRoles(null);
-      } else {
-        setShowHistoryAndRoles("roles");
-      }
+    const handleExpand = (e?: ReactMouseEvent<HTMLDivElement>) => {
+      const nextKey =
+        (e?.currentTarget as HTMLElement)?.dataset?.key ?? "roles";
+      setShowHistoryAndRoles((prev) =>
+        prev === nextKey ? null : (nextKey as ShowPanel)
+      );
     };
 
-    const handleHistoryExpand = () => {
-      if (showHistoryAndRoles === "history") {
-        setShowHistoryAndRoles(null);
-      } else {
-        setShowHistoryAndRoles("history");
-      }
+    const handleHistoryExpand = (e?: ReactMouseEvent<HTMLDivElement>) => {
+      const nextKey =
+        (e?.currentTarget as HTMLElement)?.dataset?.key ?? "history";
+      setShowHistoryAndRoles((prev) =>
+        prev === nextKey ? null : (nextKey as ShowPanel)
+      );
     };
+
+    const historyAndRolesRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          historyAndRolesRef.current &&
+          !historyAndRolesRef.current.contains(event.target as Node)
+        ) {
+          const el = event.target as Element | null;
+          const keyEl = el?.closest?.("[data-key]") as Element | null;
+          const keyAttr = keyEl?.getAttribute?.("data-key");
+          if (keyAttr && keyAttr === showHistoryAndRoles) return;
+          setShowHistoryAndRoles(null);
+        }
+      };
+
+      if (showHistoryAndRoles) {
+        document.addEventListener("mousedown", handleClickOutside);
+      } else {
+        document.removeEventListener("mousedown", handleClickOutside);
+      }
+
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [showHistoryAndRoles]);
 
     const {
       renderRoleList,
@@ -81,30 +114,6 @@ export const useHistory = () => {
       active: showHistoryAndRoles === "history",
       itemsCount: historyList.length,
     });
-    const historyAndRolesRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          historyAndRolesRef.current &&
-          !historyAndRolesRef.current.contains(event.target as Node)
-        ) {
-          // @ts-ignore
-          if (event.target?.className?.includes?.("icon-wrap")) return;
-          setShowHistoryAndRoles(null);
-        }
-      };
-
-      if (showHistoryAndRoles) {
-        document.addEventListener("mousedown", handleClickOutside);
-      } else {
-        document.removeEventListener("mousedown", handleClickOutside);
-      }
-
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [showHistoryAndRoles]);
 
     /**
      * 新增对话逻辑：
@@ -338,16 +347,14 @@ export const useHistory = () => {
           <div className={styles.historyWrap}>
             <div className={styles.historyActions}>
               <RoleExpandIcon
+                data-key="roles"
+                active={showHistoryAndRoles === "roles"}
                 onClick={handleExpand}
-                className={
-                  showHistoryAndRoles === "roles" ? styles.activeIcon : ""
-                }
               />
               <HistoryExpandIcon
+                data-key="history"
+                active={showHistoryAndRoles === "history"}
                 onClick={handleHistoryExpand}
-                className={
-                  showHistoryAndRoles === "history" ? styles.activeIcon : ""
-                }
               />
               <AddChatIcon onClick={handleAdd} />
             </div>
@@ -371,22 +378,20 @@ export const useHistory = () => {
               {showHistoryAndRoles === "roles" && renderRoleList()}
               {/* 历史记录卡片 */}
               {showHistoryAndRoles === "history" && (
-                <div className={styles.history}>
-                  <div
-                    ref={containerRef}
-                    className={styles.historyExpandList}
-                    style={{
-                      height:
-                        containerHeight > 0
-                          ? `${containerHeight + 30}px`
-                          : "30vh",
-                      maxHeight: "50vh", // 恢复最大高度限制，防止过高
-                    }}
-                  >
-                    {historyList.map((item: HistoryItem, index: number) =>
-                      historyItemCardRender(item, index)
-                    )}
-                  </div>
+                <div
+                  ref={containerRef}
+                  className={styles.historyExpandList}
+                  style={{
+                    height:
+                      containerHeight > 0
+                        ? `${containerHeight + 30}px`
+                        : "30vh",
+                    maxHeight: "50vh", // 恢复最大高度限制，防止过高
+                  }}
+                >
+                  {historyList.map((item: HistoryItem, index: number) =>
+                    historyItemCardRender(item, index)
+                  )}
                 </div>
               )}
             </div>

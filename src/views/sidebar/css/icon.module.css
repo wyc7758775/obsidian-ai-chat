@@ -66,3 +66,15 @@
   width: 16px;
   height: 16px;
 }
+
+/* 激活高亮状态：用于当前选中或展开的图标按钮 */
+.actionBtnActive {
+  color: var(--text-on-accent);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--interactive-accent-rgb), 0.18) 0%,
+    rgba(var(--interactive-accent-rgb), 0.26) 100%
+  );
+  border-color: var(--interactive-accent);
+  box-shadow: 0 4px 12px rgba(var(--interactive-accent-rgb), 0.25);
+}

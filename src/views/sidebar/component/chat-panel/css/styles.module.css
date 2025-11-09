@@ -1,10 +1,3 @@
-
-.history {
-  position: relative;
-  border-radius: 6px;
-  margin-top: 8px;
-}
-
 .historyFold {
   display: flex;
   align-items: center;
@@ -24,13 +17,15 @@
   margin-top: 8px;
   padding: 12px; /* 与历史容器保持一致呼吸感 */
   margin-bottom: 16px;
+  margin-left: 4px;
+  margin-right: 12px;
   scrollbar-width: thin;
   
   /* 风格与历史容器一致 */
   background: var(--background-secondary);
   border-radius: 6px;
   border: 1px solid var(--background-modifier-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.2);
   animation: containerFadeIn 0.4s ease-out;
 }
 .historyFoldList::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -135,6 +130,9 @@
 }
 
 .historyExpandList {
+  margin-top: 8px;
+  margin-left: 12px;
+  margin-right: 12px;
   position: relative;
   padding: 24px 12px 24px 20px; /* 增加上下内边距，提供更好的呼吸空间 */
   height: 30vh;
@@ -147,7 +145,7 @@
   background: var(--background-secondary);
   border-radius: 6px;
   border: 1px solid var(--background-modifier-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.2);
   /* 容器进入动画 */
   animation: containerFadeIn 0.4s ease-out;
 }
