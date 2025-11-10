@@ -1,4 +1,8 @@
-import { ChatMessage, estimateTokens, compressMessage } from "../utils/token-utils";
+import {
+  ChatMessage,
+  estimateTokens,
+  compressMessage,
+} from "../utils/token-utils";
 
 /**
  * 文章分块函数
@@ -6,7 +10,10 @@ import { ChatMessage, estimateTokens, compressMessage } from "../utils/token-uti
  * @param maxChunkSize 最大块大小
  * @returns 分块后的内容数组
  */
-export const chunkArticle = (content: string, maxChunkSize = 2000): string[] => {
+export const chunkArticle = (
+  content: string,
+  maxChunkSize = 2000
+): string[] => {
   const chunks: string[] = [];
   const paragraphs = content.split(/\n\s*\n/); // 按段落分割
 
@@ -174,7 +181,7 @@ export const manageArticleContent = (
           );
 
           messages.push({
-            role: "system",
+            role: "user",
             content: compressedContent,
           });
           totalTokens += estimateTokens(compressedContent);
