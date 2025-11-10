@@ -26,6 +26,7 @@ import { Message, ChatComponentProps, NoteReference } from "./type";
 import { useHistory } from "./component/chat-panel/index";
 import { useContext } from "./hooks/use-context";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
+import { useSend } from "./hooks/use-send";
 
 const PADDING = 12;
 export const ChatComponent: React.FC<ChatComponentProps> = ({
@@ -34,8 +35,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   app,
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -50,47 +49,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const noteContextService = useMemo(() => new NoteContextService(app), [app]);
 
   const [selectedNotes, setSelectedNotes] = useState<NoteContext[]>([]);
-
-  const adjustTextareaHeight = useCallback(() => {
-    console.log("textareaRef.current", textareaRef.current);
-    if (!textareaRef.current) return;
-
-    const textarea = textareaRef.current;
-    const minHeight = 20;
-
-    // 重置高度
-    textarea.style.height = "auto";
-
-    // 获取内容高度
-    const contentHeight = textarea.scrollHeight;
-
-    // 设置新高度（不限制最大值）
-    const newHeight = Math.max(minHeight, contentHeight);
-    textarea.style.height = `${newHeight}px`;
-
-    // 确保没有滚动条
-    textarea.style.overflowY = "hidden";
-
-    // 可选：如果高度变化很大，滚动到输入框位置
-    if (contentHeight > 100) {
-      setTimeout(() => {
-        textarea.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-        });
-      }, 0);
-    }
-  }, []);
-
-  const clearInput = useCallback(() => {
-    setInputValue("");
-    if (textareaRef.current) {
-      textareaRef.current.textContent = "";
-      textareaRef.current.innerHTML = "";
-      // 重新设置焦点
-      textareaRef.current.focus();
-    }
-  }, []);
 
   const { historyRender, currentId, selectedRole, forceHistoryUpdate } =
     useHistory();
@@ -183,32 +141,18 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     selectedRole,
   ]);
 
-  // 已在顶部声明 messagesChanged，这里移除重复声明
-  const handleSend = async () => {
-    if (!inputValue.trim()) return;
-
-    setIsStreaming(true); // 在发送时立即设置为 streaming 状态
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: inputValue,
-      type: "user",
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setMessagesChanged(true);
-    clearInput();
-
-    onSendMessage?.(inputValue);
-
-    const aiMessageId = (Date.now() + 1).toString();
-    const aiMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      content: "",
-      type: "assistant",
-    };
-    setMessages((prev) => [...prev, aiMessage]);
-
+  // 获取当前历史记录的系统消息
+  const getCurrentSystemMessage = async () => {
+    if (!currentId) return undefined;
+    try {
+      const currentItem = await getHistoryItemById(currentId);
+      return currentItem?.systemMessage;
+    } catch (e) {
+      console.error("Failed to get system message:", e);
+      return undefined;
+    }
+  };
+  const getNotePrompts = async () => {
     const notePrompts = [];
     for (let i = 0; i < selectedNotes.length; i++) {
       const context = await noteContextService.getNoteContent(
@@ -218,18 +162,29 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         typeof context === "string" ? context : context?.content ?? ""
       );
     }
+    return notePrompts;
+  };
 
-    // 获取当前历史记录的系统消息
-    const getCurrentSystemMessage = async () => {
-      if (!currentId) return undefined;
-      try {
-        const currentItem = await getHistoryItemById(currentId);
-        return currentItem?.systemMessage;
-      } catch (e) {
-        console.error("Failed to get system message:", e);
-        return undefined;
-      }
-    };
+  const {
+    onSend,
+    keyPressSend,
+    isStreaming,
+    setIsStreaming,
+    inputValue,
+    setInputValue,
+    adjustTextareaHeight,
+  } = useSend({
+    textareaRef,
+  });
+  // 已在顶部声明 messagesChanged，这里移除重复声明
+  const handleSend = async () => {
+    if (!onSend()) return;
+
+    const { userParams, aiParams } = onSend()!;
+
+    setMessages((prev) => [...prev, userParams, aiParams]);
+    setMessagesChanged(true);
+    onSendMessage?.(inputValue);
 
     /**
      * 构建本次请求的系统提示：优先使用当前选择的角色。
@@ -242,7 +197,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     sendChatMessage({
       settings,
       inputValue,
-      notePrompts,
+      notePrompts: await getNotePrompts(),
       contextMessages: messages.map((msg) => ({
         role: msg.type === "user" ? "user" : "assistant",
         content: msg.content,
@@ -252,7 +207,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         onChunk: (chunk: string) => {
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === aiMessageId
+              msg.id === aiParams.id
                 ? { ...msg, content: msg.content + chunk }
                 : msg
             )
@@ -268,7 +223,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           setIsStreaming(false); // 在出错时也需要设置为非 streaming 状态
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === aiMessageId
+              msg.id === aiParams.id
                 ? { ...msg, content: `Error: ${error.message}` }
                 : msg
             )
@@ -288,14 +243,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     cancelToken.current.cancelled = true;
     setIsStreaming(false);
     setIsLoading(false);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (isStreaming) return;
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
   };
 
   const handleRegenerateMessage = async (messageIndex: number) => {
@@ -751,7 +698,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           <ChatInput
             textareaRef={textareaRef}
             handleInputChange={handleInputChange}
-            handleKeyPress={handleKeyPress}
+            handleKeyPress={(e) => keyPressSend(e, handleSend)}
             handleSend={handleSend}
             blurCallBack={blurCallBack}
             handleCancelStream={handleCancelStream}
