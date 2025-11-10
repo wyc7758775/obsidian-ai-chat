@@ -52,6 +52,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const [selectedNotes, setSelectedNotes] = useState<NoteContext[]>([]);
 
   const adjustTextareaHeight = useCallback(() => {
+    console.log("textareaRef.current", textareaRef.current);
     if (!textareaRef.current) return;
 
     const textarea = textareaRef.current;
@@ -276,6 +277,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       },
       cancelToken: cancelToken.current,
     });
+    adjustTextareaHeight();
   };
 
   const blurCallBack = useCallback(() => {
