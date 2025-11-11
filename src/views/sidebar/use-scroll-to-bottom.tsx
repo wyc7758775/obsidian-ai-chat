@@ -3,12 +3,21 @@ import styles from "./css/ai-chat.module.css";
 export const useScrollToBottom = <T extends () => void>(onClickBack: T) => {
   const handleClick = () => {
     onClickBack();
-    // messageListRef.current?.scrollToBottom?.();
   };
 
-  const ScrollToBottomRender = ({ disabled }: { disabled: boolean }) => {
+  const ScrollToBottomRender = ({
+    disabled,
+    isShow,
+  }: {
+    disabled: boolean;
+    isShow: boolean;
+  }) => {
     return (
-      <div className={styles.scrollToBottomBtnContainer}>
+      <div
+        className={`${styles.scrollToBottomBtnContainer} ${
+          isShow ? styles.show : styles.hide
+        }`}
+      >
         <button
           className={styles.scrollToBottomBtn}
           onClick={handleClick}

@@ -71,12 +71,38 @@
 	position: absolute;
   z-index: 1000;
 	top: -30px;
-	display: flex;
 	align-items: center;
 	justify-content: center;
+	display: flex;
+}
+.show {
+	animation: scrollToBottomBtnFadeIn 0.3s ease-in-out;
+}
+.hide {
+	animation: scrollToBottomBtnFadeOut 0.3s ease-in-out forwards;
+}
+@keyframes scrollToBottomBtnFadeOut {
+	0% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	100% {
+		opacity: 0;
+		display: none;
+		transform: translateY(10px);
+	}
+}
+@keyframes scrollToBottomBtnFadeIn {
+	0% {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 .scrollToBottomBtn {
-  /* 全局缩小 2px：滚动到底部按钮更轻巧 */
   width: 26px;
   height: 26px;
   display: flex;

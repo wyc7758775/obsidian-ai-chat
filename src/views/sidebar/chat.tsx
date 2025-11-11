@@ -686,7 +686,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       </PositionedPopover>
       {/* 输入区域 */}
       <div className={styles.inputArea}>
-        {showScrollBtn && <ScrollToBottomRender disabled={isStreaming} />}
+        <ScrollToBottomRender disabled={isStreaming} isShow={showScrollBtn} />
         {selectedNotes.length > 0 && (
           <SelectedFiles
             nodes={selectedNotes}
