@@ -66,10 +66,11 @@
 }
 
 /* 回到底部箭头按钮 */
+/* 999 需要比文件弹窗少 1 */
 .scrollToBottomBtnContainer {
 	width: 100%;
 	position: absolute;
-  z-index: 1000;
+  z-index: 999;
 	top: -30px;
 	align-items: center;
 	justify-content: center;

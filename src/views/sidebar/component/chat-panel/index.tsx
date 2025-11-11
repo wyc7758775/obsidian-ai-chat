@@ -359,7 +359,7 @@ export const useHistory = () => {
             </div>
             <div className={styles.currentRole}>
               <span>Person: </span>
-              {selectedRole ? selectedRole.name : "默认角色"}
+              <span>{selectedRole ? selectedRole.name : "默认角色"}</span>
             </div>
           </div>
           {showHistoryAndRoles && (

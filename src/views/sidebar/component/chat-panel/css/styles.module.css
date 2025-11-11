@@ -388,6 +388,9 @@
   align-items: center;
   justify-content: start;
   gap: 8px;
+  border: 1px solid var(--background-modifier-border);
+  padding: 4px;
+  border-radius: 4px;
 }
 
 .currentRole {
@@ -396,7 +399,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0 8px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .historyItemPreview {

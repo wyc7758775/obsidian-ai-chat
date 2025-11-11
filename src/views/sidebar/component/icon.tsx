@@ -86,7 +86,9 @@ export const IconWrapWithClick = ({
     <div
       {...rest}
       style={{ color }}
-      className={`${getClassName()} ${active ? styles.actionBtnActive : ""} ${className || ""}`}
+      className={`${getClassName()} ${active ? styles.actionBtnActive : ""} ${
+        className || ""
+      }`}
       aria-label={label || "图标按钮"}
       aria-pressed={active || undefined}
       onClick={onClick}
@@ -422,7 +424,13 @@ export const RoleExpandIcon = ({
    * - 说明：支持 `active` 高亮用于指示当前面板处于展开状态。
    * - 边界：当 `active` 为真时添加高亮样式与 `aria-pressed`。
    */
-  <IconWrapWithClick label="展开角色" onClick={onClick} className={className} active={!!active} {...rest}>
+  <IconWrapWithClick
+    label="展开角色"
+    onClick={onClick}
+    className={className}
+    active={!!active}
+    {...rest}
+  >
     <svg
       className="icon"
       viewBox="0 0 1024 1024"
@@ -729,6 +737,27 @@ export const FileIcon = () => {
           d="M327.68 634.88m40.96 0l225.28 0q40.96 0 40.96 40.96l0 0q0 40.96-40.96 40.96l-225.28 0q-40.96 0-40.96-40.96l0 0q0-40.96 40.96-40.96Z"
           fill="#000000"
           p-id="1751"
+        ></path>
+      </svg>
+    </IconWrapStatic>
+  );
+};
+export const AllActiveFileIcon = () => {
+  return (
+    <IconWrapStatic>
+      <svg
+        className="icon"
+        viewBox="0 0 1024 1024"
+        version="1.1"
+        xmlns="http://www.w3.org/2000/svg"
+        p-id="1684"
+        width="200"
+        height="200"
+      >
+        <path
+          d="M58.5 105c0-24.3 19.7-44 44-44h316c24.3 0 44 19.7 44 44v316c0 24.3-19.7 44-44 44h-316c-24.3 0-44-19.7-44-44V105z m88 44v228h228V149h-228z m418-44c0-24.3 19.7-44 44-44h316c24.3 0 44 19.7 44 44v316c0 24.3-19.7 44-44 44h-316c-24.3 0-44-19.7-44-44V105z m88 44v228h228V149h-228z m-594 460c0-24.3 19.7-44 44-44h316c24.3 0 44 19.7 44 44v316c0 24.3-19.7 44-44 44h-316c-24.3 0-44-19.7-44-44V609z m88 44v228h228V653h-228z m418-44c0-24.3 19.7-44 44-44h316c24.3 0 44 19.7 44 44v316c0 24.3-19.7 44-44 44h-316c-24.3 0-44-19.7-44-44V609z m88 44v228h228V653h-228z"
+          fill="#000000"
+          p-id="1685"
         ></path>
       </svg>
     </IconWrapStatic>

@@ -1,9 +1,10 @@
-import { App, TFile, Vault, Notice } from "obsidian";
+import { App, TFile, Vault, Notice, TFolder } from "obsidian";
 
+export type IconType = "file" | "folder";
 export interface NoteContext {
-  file?: TFile;
+  file?: TFile | TFolder;
   title?: string;
-  icon?: string;
+  iconType?: IconType;
   name?: string;
   content?: string;
   path?: string;
@@ -126,12 +127,41 @@ export class NoteContextService {
         openFiles.push({
           title: file.basename,
           file: file,
-          icon: "📄", // 默认文档图标
+          iconType: "file",
+        });
+      }
+    }
+
+    // 获取当前文件夹
+    const currentFolder = this.getCurrentBrowsingFolder();
+    if (currentFolder) {
+      // 避免重复添加根目录
+      const isRoot = currentFolder.path === "/";
+      const alreadyExists = openFiles.some(
+        (item) => item.file?.path === currentFolder.path
+      );
+      if (!alreadyExists) {
+        openFiles.unshift({
+          title: isRoot ? this.app.vault.getName() : currentFolder.name,
+          file: currentFolder,
+          iconType: "folder",
         });
       }
     }
 
     return openFiles;
+  };
+
+  // 获取“当前被浏览的文件夹”
+  // 规则：若存在活跃文件，则返回其直接父文件夹；
+  //      否则返回 vault 根目录。
+  getCurrentBrowsingFolder = (): TFolder | null => {
+    const activeFile = this.app.workspace.getActiveFile();
+    if (activeFile) {
+      return activeFile.parent ?? this.app.vault.getRoot();
+    }
+    // 没有任何文件被打开时，返回根
+    return this.app.vault.getRoot();
   };
 
   // 获取相关笔记（基于链接和标签）
@@ -201,7 +231,7 @@ export class NoteContextService {
       totalNotes: allNotes.length,
       totalWords,
       totalCharacters,
-  };
+    };
   }
 
   /**

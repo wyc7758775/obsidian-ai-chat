@@ -3,7 +3,7 @@ import {
   NoteContextService,
   NoteContext,
 } from "../../../core/fs-context/note-context";
-import { BookIcon } from "./icon";
+import { BookIcon, FolderIcon } from "./icon";
 import styles from "../css/note-selector.module.css";
 
 export interface FileSelectorProps {
@@ -60,8 +60,8 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
               className={styles.fileOption}
               onMouseDown={() => handleSelectNote(note)}
             >
-              <div className={styles.fileAvatar}>
-                <span className={styles.fileIcon}>{note.icon}</span>
+              <div className={styles.mentionAllIcon}>
+                {note.iconType === "folder" ? <FolderIcon /> : <BookIcon />}
               </div>
               <span className={styles.fileTitle}>{note.title}</span>
             </div>
