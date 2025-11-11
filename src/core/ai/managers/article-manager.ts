@@ -4,6 +4,8 @@ import {
   compressMessage,
 } from "../utils/token-utils";
 
+const articleRoleType = "user";
+
 /**
  * 文章分块函数
  * @param content 文章内容
@@ -155,7 +157,7 @@ export const manageArticleContent = (
             : selectedChunks.join("\n\n");
 
         messages.push({
-          role: "system",
+          role: articleRoleType,
           content: compressedContent,
         });
 
@@ -165,7 +167,7 @@ export const manageArticleContent = (
       // 文章不超过限制，直接添加
       if (totalTokens + promptTokens <= maxArticleTokens) {
         messages.push({
-          role: "system",
+          role: articleRoleType,
           content: prompt,
         });
         totalTokens += promptTokens;
@@ -181,7 +183,7 @@ export const manageArticleContent = (
           );
 
           messages.push({
-            role: "user",
+            role: articleRoleType,
             content: compressedContent,
           });
           totalTokens += estimateTokens(compressedContent);
