@@ -34,38 +34,59 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   settings,
   app,
 }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
-  // 标记当前会话期间是否发生了消息内容变更，用于控制角色系统提示是否覆盖保存
   const [messagesChanged, setMessagesChanged] = useState(false);
+  const [sessions, setSessions] = useState<
+    Record<string, { messages: Message[]; selectedNotes: NoteContext[] }>
+  >({});
 
   const textareaRef = useRef<HTMLDivElement>(null);
   const cancelToken = useRef({ cancelled: false });
-  const messageListRef = useRef<ChatMessageHandle>(null);
 
   // 使用 useMemo 确保 service 实例的稳定性
   const noteContextService = useMemo(() => new NoteContextService(app), [app]);
 
-  const [selectedNotes, setSelectedNotes] = useState<NoteContext[]>([]);
-
-  const { historyRender, currentId, selectedRole, forceHistoryUpdate } =
-    useHistory();
+  const {
+    historyRender: HistoryPanel,
+    currentId,
+    selectedRole,
+    forceHistoryUpdate,
+  } = useHistory();
   const { upsertHistoryItem, getHistoryItemById, fileStorageService } =
     useContext(app);
 
+  const currentSession = useMemo(() => {
+    if (!currentId || !sessions[currentId])
+      return { messages: [], selectedNotes: [] };
+    return sessions[currentId];
+  }, [currentId, sessions]);
+  const currentMessages: Message[] = currentSession.messages ?? [];
+  const currentSelectedNotes: NoteContext[] =
+    currentSession.selectedNotes ?? [];
+
+  /**
+   * 会话容器初始化与懒加载
+   * 输入参数：依赖于 `currentId` 与会话存储 `sessions`
+   * 边界处理：
+   * - `currentId` 为空：跳过加载并结束初始化
+   * - 已存在容器：直接结束初始化与重置变更标记
+   * - 不存在容器：拉取历史与笔记引用并创建容器
+   */
   useEffect(() => {
     if (!currentId) {
-      setMessages([]);
       setIsInitializing(false);
-      // 切换会话时重置消息变更标记
       setMessagesChanged(false);
       return;
     }
 
-    // 切换时立刻清空，避免闪烁
-    setSelectedNotes([]);
+    if (sessions[currentId]) {
+      setIsInitializing(false);
+      setMessagesChanged(false);
+      return;
+    }
+
     setIsInitializing(true);
     (async () => {
       try {
@@ -73,31 +94,41 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           id: currentId,
           messages: [],
         };
-        setMessages(item.messages);
-        setMessagesChanged(false);
-        // 从 NoteReference 转换为完整的 NoteContext
+        let noteContexts: NoteContext[] = [];
         if (item.noteSelected && item.noteSelected.length > 0) {
-          const noteContexts = await fileStorageService.convertToNoteContexts(
+          noteContexts = await fileStorageService.convertToNoteContexts(
             item.noteSelected
           );
-          setSelectedNotes(noteContexts);
-        } else {
-          setSelectedNotes([]);
         }
+        setSessions((prev) => ({
+          ...prev,
+          [currentId]: {
+            messages: item.messages ?? [],
+            selectedNotes: noteContexts,
+          },
+        }));
+        setMessagesChanged(false);
       } catch (e) {
         console.error("IndexedDB load failed:", e);
       } finally {
         setIsInitializing(false);
+        if (pendingHideHistoryRef.current) {
+          try {
+            window.dispatchEvent(new Event("yoran-chat-initialized"));
+          } catch (_e) {
+            void 0;
+          }
+          pendingHideHistoryRef.current = false;
+        }
       }
     })();
-  }, [currentId, getHistoryItemById]);
+  }, [currentId, getHistoryItemById, fileStorageService, sessions]);
 
   // ChatComponent 组件内的保存 useEffect
   useEffect(() => {
     if (!currentId) return;
 
-    // 将 NoteContext 转换为轻量级的 NoteReference
-    const noteSelectedReferences: NoteReference[] = (selectedNotes || [])
+    const noteSelectedReferences: NoteReference[] = (currentSelectedNotes || [])
       .map((noteContext) =>
         fileStorageService.convertToNoteReference(noteContext)
       )
@@ -105,14 +136,12 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
     (async () => {
       try {
-        // 先获取现有的历史记录，保留用户编辑的 title 和 systemMessage
         const existingItem = await getHistoryItemById(currentId);
-
         const itemToSave = {
           id: currentId,
-          messages,
+          messages: currentMessages,
           noteSelected: noteSelectedReferences,
-          title: existingItem?.title, // 保留现有的 title
+          title: existingItem?.title,
           systemMessage:
             messagesChanged && selectedRole?.systemPrompt
               ? selectedRole.systemPrompt
@@ -121,19 +150,19 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             messagesChanged && selectedRole?.name
               ? selectedRole.name
               : existingItem?.roleName,
-          createdAt: existingItem?.createdAt, // 保留创建时间
+          createdAt: existingItem?.createdAt,
         };
 
         await upsertHistoryItem(itemToSave);
-        forceHistoryUpdate(); // 触发历史列表刷新
+        forceHistoryUpdate();
       } catch (e) {
         console.error("保存失败:", e);
       }
     })();
   }, [
     currentId,
-    messages,
-    selectedNotes,
+    currentMessages,
+    currentSelectedNotes,
     upsertHistoryItem,
     getHistoryItemById,
     fileStorageService,
@@ -142,6 +171,10 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   ]);
 
   // 获取当前历史记录的系统消息
+  /**
+   * 获取当前会话的系统提示
+   * 特殊情况：`currentId` 为空时返回 `undefined`
+   */
   const getCurrentSystemMessage = async () => {
     if (!currentId) return undefined;
     try {
@@ -152,11 +185,15 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       return undefined;
     }
   };
+  /**
+   * 构造笔记提示上下文
+   * 边界处理：当无选中笔记时返回空数组
+   */
   const getNotePrompts = async () => {
     const notePrompts = [];
-    for (let i = 0; i < selectedNotes.length; i++) {
+    for (let i = 0; i < currentSelectedNotes.length; i++) {
       const context = await noteContextService.getNoteContent(
-        selectedNotes[i] as any
+        currentSelectedNotes[i] as any
       );
       notePrompts.push(
         typeof context === "string" ? context : context?.content ?? ""
@@ -177,12 +214,29 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     textareaRef,
   });
   // 已在顶部声明 messagesChanged，这里移除重复声明
+  /**
+   * 发送消息并创建 AI 回复占位
+   * 输入参数有效性：需要有效 `currentId`
+   * 特殊情况处理：当 `onSend()` 校验失败或 `currentId` 为空时中断
+   */
   const handleSend = async () => {
     if (!onSend()) return;
 
     const { userParams, aiParams } = onSend()!;
-
-    setMessages((prev) => [...prev, userParams, aiParams]);
+    if (!currentId) return;
+    setSessions((prev) => {
+      const prevSession = prev[currentId] ?? {
+        messages: [],
+        selectedNotes: [],
+      };
+      return {
+        ...prev,
+        [currentId]: {
+          ...prevSession,
+          messages: [...prevSession.messages, userParams, aiParams],
+        },
+      };
+    });
     setMessagesChanged(true);
     onSendMessage?.(inputValue);
 
@@ -198,20 +252,28 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       settings,
       inputValue,
       notePrompts: await getNotePrompts(),
-      contextMessages: messages.map((msg) => ({
+      contextMessages: currentMessages.map((msg) => ({
         role: msg.type === "user" ? "user" : "assistant",
         content: msg.content,
       })),
       systemMessage, // 传递当前历史记录的系统消息
       callBacks: {
         onChunk: (chunk: string) => {
-          setMessages((prev) =>
-            prev.map((msg) =>
+          setSessions((prev) => {
+            const prevSession = prev[currentId] ?? {
+              messages: [],
+              selectedNotes: [],
+            };
+            const updated = prevSession.messages.map((msg) =>
               msg.id === aiParams.id
                 ? { ...msg, content: msg.content + chunk }
                 : msg
-            )
-          );
+            );
+            return {
+              ...prev,
+              [currentId]: { ...prevSession, messages: updated },
+            };
+          });
         },
         onComplete: () => {
           setIsLoading(false);
@@ -221,13 +283,21 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           console.error("Stream error:", error);
           setIsLoading(false);
           setIsStreaming(false); // 在出错时也需要设置为非 streaming 状态
-          setMessages((prev) =>
-            prev.map((msg) =>
+          setSessions((prev) => {
+            const prevSession = prev[currentId] ?? {
+              messages: [],
+              selectedNotes: [],
+            };
+            const updated = prevSession.messages.map((msg) =>
               msg.id === aiParams.id
                 ? { ...msg, content: `Error: ${error.message}` }
                 : msg
-            )
-          );
+            );
+            return {
+              ...prev,
+              [currentId]: { ...prevSession, messages: updated },
+            };
+          });
         },
       },
       cancelToken: cancelToken.current,
@@ -245,8 +315,15 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     setIsLoading(false);
   };
 
+  /**
+   * 重新生成指定 AI 消息
+   * 输入参数有效性：`messageIndex` 应为当前会话消息范围内的索引
+   * 特殊情况：
+   * - 目标消息非 AI 类型则中断
+   * - 找不到对应用户消息则中断
+   */
   const handleRegenerateMessage = async (messageIndex: number) => {
-    const targetMessage = messages[messageIndex];
+    const targetMessage = currentMessages[messageIndex];
 
     // 只能重新生成AI消息
     if (targetMessage.type !== "assistant") return;
@@ -255,18 +332,28 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     let userMessageIndex = messageIndex - 1;
     while (
       userMessageIndex >= 0 &&
-      messages[userMessageIndex].type !== "user"
+      currentMessages[userMessageIndex].type !== "user"
     ) {
       userMessageIndex--;
     }
 
     if (userMessageIndex < 0) return; // 没有找到对应的用户消息
 
-    const userMessage = messages[userMessageIndex];
+    const userMessage = currentMessages[userMessageIndex];
 
     // 删除从AI消息开始到最后的所有消息
-    const newMessages = messages.slice(0, messageIndex);
-    setMessages(newMessages);
+    const newMessages = currentMessages.slice(0, messageIndex);
+    if (!currentId) return;
+    setSessions((prev) => {
+      const prevSession = prev[currentId] ?? {
+        messages: [],
+        selectedNotes: [],
+      };
+      return {
+        ...prev,
+        [currentId]: { ...prevSession, messages: newMessages },
+      };
+    });
     setMessagesChanged(true);
 
     // 创建新的AI消息
@@ -276,13 +363,25 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       content: "",
       type: "assistant",
     };
-    setMessages((prev) => [...prev, aiMessage]);
+    setSessions((prev) => {
+      const prevSession = prev[currentId] ?? {
+        messages: [],
+        selectedNotes: [],
+      };
+      return {
+        ...prev,
+        [currentId]: {
+          ...prevSession,
+          messages: [...prevSession.messages, aiMessage],
+        },
+      };
+    });
 
     // 准备笔记提示（使用当前选中的笔记）
     const notePrompts = [];
-    for (let i = 0; i < selectedNotes.length; i++) {
+    for (let i = 0; i < currentSelectedNotes.length; i++) {
       const context = await noteContextService.getNoteContent(
-        selectedNotes[i] as any
+        currentSelectedNotes[i] as any
       );
       notePrompts.push(
         typeof context === "string" ? context : context?.content ?? ""
@@ -320,13 +419,21 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       systemMessage,
       callBacks: {
         onChunk: (chunk: string) => {
-          setMessages((prev) =>
-            prev.map((msg) =>
+          setSessions((prev) => {
+            const prevSession = prev[currentId] ?? {
+              messages: [],
+              selectedNotes: [],
+            };
+            const updated = prevSession.messages.map((msg) =>
               msg.id === aiMessageId
                 ? { ...msg, content: msg.content + chunk }
                 : msg
-            )
-          );
+            );
+            return {
+              ...prev,
+              [currentId]: { ...prevSession, messages: updated },
+            };
+          });
         },
         onResponseStart: () => {
           setIsLoading(false);
@@ -540,11 +647,28 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     searchResults,
   ]);
 
+  /**
+   * 选择单个笔记并追加到当前会话
+   * 去重：按文件路径去重
+   */
   const onSelectNote = (note: NoteContext) => {
-    setSelectedNotes((prev: any) => {
-      const exists = prev.some((p: any) => p.path === note.file?.path);
+    if (!currentId) return;
+    setSessions((prev) => {
+      const prevSession = prev[currentId] ?? {
+        messages: [],
+        selectedNotes: [],
+      };
+      const exists = prevSession.selectedNotes.some(
+        (p: any) => p.path === note.file?.path
+      );
       if (exists) return prev;
-      return [...prev, note]; // 保存完整的 NoteContext 对象
+      return {
+        ...prev,
+        [currentId]: {
+          ...prevSession,
+          selectedNotes: [...prevSession.selectedNotes, note],
+        },
+      };
     });
 
     // 清除输入框中的 @ 符号和搜索关键字，替换为选中的笔记标题
@@ -570,18 +694,32 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     }
   };
 
+  /**
+   * 批量选择笔记并合并到当前会话
+   * 边界处理：按路径去重，保持稳定顺序
+   */
   const onSelectAllFiles = (notes: NoteContext[]) => {
-    setSelectedNotes((prev) => {
-      const existingPaths = new Set(prev.map((p) => p.file?.path || p.path));
-      const merged = [...prev];
+    if (!currentId) return;
+    setSessions((prev) => {
+      const prevSession = prev[currentId] ?? {
+        messages: [],
+        selectedNotes: [],
+      };
+      const existingPaths = new Set(
+        prevSession.selectedNotes.map((p) => p.file?.path || p.path)
+      );
+      const merged = [...prevSession.selectedNotes];
       for (const note of notes) {
         const path = note.file?.path;
         if (path && !existingPaths.has(path)) {
-          merged.push(note); // 保存完整的 NoteContext 对象
+          merged.push(note);
           existingPaths.add(path);
         }
       }
-      return merged;
+      return {
+        ...prev,
+        [currentId]: { ...prevSession, selectedNotes: merged },
+      };
     });
 
     // 清除输入框中的 @ 符号
@@ -597,16 +735,31 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       }, 0);
     }
   };
+  /**
+   * 从当前会话删除指定笔记
+   * 删除条件：按 `file.path` 或 `path` 匹配
+   */
   const onDeleteNote = (note: NoteContext) => {
-    setSelectedNotes(
-      selectedNotes.filter(
+    if (!currentId) return;
+    setSessions((prev) => {
+      const prevSession = prev[currentId] ?? {
+        messages: [],
+        selectedNotes: [],
+      };
+      const filtered = prevSession.selectedNotes.filter(
         (n) => (n.file?.path || n.path) !== (note.file?.path || note.path)
-      )
-    );
+      );
+      return {
+        ...prev,
+        [currentId]: { ...prevSession, selectedNotes: filtered },
+      };
+    });
   };
 
+  const messageListRefs = useRef<Record<string, ChatMessageHandle | null>>({});
   const { ScrollToBottomRender } = useScrollToBottom(() => {
-    messageListRef.current?.scrollToBottom?.();
+    if (!currentId) return;
+    messageListRefs.current[currentId]?.scrollToBottom?.();
   });
 
   /**
@@ -655,15 +808,15 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       {/* 全局初始化 Loading */}
       {isInitializing && <Loading />}
       {/* 信息历史 */}
-      {historyRender({ app })}
-      {/* 消息区域 */}
+      <HistoryPanel app={app} />
+      {/* 消息区域：仅中间聊天区域切换，顶部面板与底部输入固定 */}
       <ChatMessage
-        ref={messageListRef}
-        messages={messages}
+        ref={(inst) => currentId && (messageListRefs.current[currentId] = inst)}
+        messages={sessions[currentId]?.messages ?? []}
         app={app}
         isLoading={isLoading}
         onNearBottomChange={(near) => setShowScrollBtn(!near)}
-        currentId={currentId} // 传递currentId用于滚动位置管理
+        currentId={currentId}
         onRegenerateMessage={handleRegenerateMessage}
         onInsertSuggestion={handleInsertSuggestion}
         suggestions={settings.suggestionTemplates}
@@ -687,9 +840,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       {/* 输入区域 */}
       <div className={styles.inputArea}>
         <ScrollToBottomRender disabled={isStreaming} isShow={showScrollBtn} />
-        {selectedNotes.length > 0 && (
+        {currentSelectedNotes.length > 0 && (
           <SelectedFiles
-            nodes={selectedNotes}
+            nodes={currentSelectedNotes}
             onDeleteNote={onDeleteNote}
             noteContextService={noteContextService}
           />
@@ -710,3 +863,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     </div>
   );
 };
+const pendingHideHistoryRef = useRef(false);
+useEffect(() => {
+  if (currentId) pendingHideHistoryRef.current = true;
+}, [currentId]);

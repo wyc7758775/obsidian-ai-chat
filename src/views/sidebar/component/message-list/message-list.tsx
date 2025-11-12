@@ -45,6 +45,8 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
     ref
   ) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const containersRef = useRef<Record<string, Message[]>>({});
+    const shownIdsRef = useRef<Set<string>>(new Set());
     const {
       endRef: messagesEndRef,
       isNearBottom,
@@ -81,7 +83,16 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       });
     };
 
-    // 保存当前滚动位置到缓存
+    // 同步当前会话的消息到本地容器映射
+    useEffect(() => {
+      if (!currentId) return;
+      containersRef.current[currentId] = messages ?? [];
+      if (!shownIdsRef.current.has(currentId)) {
+        shownIdsRef.current.add(currentId);
+      }
+    }, [currentId, messages]);
+
+    // 保存当前滚动位置到缓存（仅针对激活容器）
     useEffect(() => {
       const el = containerRef.current;
       if (!el || !currentId) return;
@@ -94,18 +105,19 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       return () => el.removeEventListener("scroll", saveScrollPosition);
     }, [currentId]);
 
-    // 恢复滚动位置
+    // 恢复滚动位置（仅针对激活容器），无缓存时默认滚动到底部
     useEffect(() => {
       const el = containerRef.current;
       if (!el || !currentId) return;
 
       const savedPosition = scrollPositionCache.get(currentId);
-      if (savedPosition !== undefined) {
-        // 使用 requestAnimationFrame 确保 DOM 已更新
-        requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (savedPosition !== undefined) {
           el.scrollTop = savedPosition;
-        });
-      }
+        } else {
+          scrollToBottom();
+        }
+      });
     }, [currentId, messages]);
 
     // 监听滚动并向父组件报告是否接近底部（或不可滚动）
@@ -125,8 +137,6 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       }),
       [isNearBottom, scrollToBottom]
     );
-
-    // 滚动到底部动画由父组件通过 ref 暴露的 scrollToBottom 触发
 
     const messageList = (messages: Message[]) => {
       const messageItem = (message: Message, index: number) => {
@@ -219,12 +229,35 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       return messageEmptyRender(suggestions, onInsertSuggestion);
     };
 
+    const allIds = Object.keys(containersRef.current).length
+      ? Object.keys(containersRef.current)
+      : currentId
+      ? [currentId]
+      : [];
+
     return (
-      <div className={styles.messagesContainer} ref={containerRef}>
-        {messageList(messages)}
-        {messageEmpty(messages)}
-        <div ref={messagesEndRef}></div>
-      </div>
+      <>
+        {allIds.map((sid) => {
+          const isActive = sid === currentId;
+          const msgs = isActive ? messages : containersRef.current[sid] ?? [];
+          const everShown = shownIdsRef.current.has(sid);
+          return (
+            <div
+              key={sid}
+              className={styles.messagesContainer}
+              style={{
+                display: isActive ? "block" : "none",
+                animation: isActive && everShown ? "none" : undefined,
+              }}
+              ref={isActive ? containerRef : null}
+            >
+              {messageList(msgs)}
+              {messageEmpty(msgs)}
+              {isActive && <div ref={messagesEndRef}></div>}
+            </div>
+          );
+        })}
+      </>
     );
   }
 );

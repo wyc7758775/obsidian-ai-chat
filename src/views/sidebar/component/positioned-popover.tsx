@@ -1,4 +1,5 @@
-import React, { forwardRef } from "react";
+import { forwardRef } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import styles from "../css/positioned-popover.module.css";
 
 export interface PositionedPopoverProps {
@@ -11,9 +12,9 @@ export interface PositionedPopoverProps {
   /** 自定义 CSS 类名 */
   className?: string;
   /** 自定义样式 */
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   /** 子组件 */
-  children: React.ReactNode;
+  children: ReactNode;
   /** z-index 层级，默认为 1000 */
   zIndex?: number;
 }
@@ -27,9 +28,9 @@ export const PositionedPopover = forwardRef<
   HTMLDivElement,
   PositionedPopoverProps
 >(({ visible, x, y, className, style, children, zIndex = 1000 }, ref) => {
-  if (!visible) return;
+  if (!visible) return null;
 
-  const defaultStyle: React.CSSProperties = {
+  const defaultStyle: CSSProperties = {
     position: "absolute",
     left: `${x}px`,
     top: `${y}px`,

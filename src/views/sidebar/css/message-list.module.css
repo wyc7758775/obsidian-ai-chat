@@ -1,12 +1,14 @@
 /* 消息容器 */
 .messagesContainer {
 	flex: 1;
-	overflow-y: auto;
+	overflow-y: overlay;
+	overflow-x: hidden;
 	padding: var(--chat-padding);
 	display: flex;
 	flex-direction: column;
-	gap: 8px; /* 调整消息间距 */
+	gap: 12px;
 	padding-top: 12px;
+	box-shadow: inset 0 1px 0 var(--background-modifier-border), inset 0 -1px 0 var(--background-modifier-border);
 	
 	/* 容器进入动画 */
 	animation: messagesContainerFadeIn 0.25s ease-in-out;
@@ -25,7 +27,7 @@
 }
 /* 滚动条 */
 .messagesContainer::-webkit-scrollbar {
-	width: 4px;
+	width: 3px;
 }
 .messagesContainer::-webkit-scrollbar-track {
 	background: transparent;
@@ -52,9 +54,8 @@
 }
 
 /* 问答对之间的间距 */
-.messageWrapper:has(.assistantMessage) {
-    margin-bottom: 12px;
-}
+.userMessage { margin: 6px 0; }
+.assistantMessage { margin: 6px 0; }
 
 /* 用户消息进入动画 */
 .messageWrapper:has(.userMessage) {

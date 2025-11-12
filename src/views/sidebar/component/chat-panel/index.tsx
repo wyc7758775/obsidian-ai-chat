@@ -95,6 +95,17 @@ export const useHistory = () => {
       };
     }, [showHistoryAndRoles]);
 
+    // 监听聊天容器初始化完成事件，完成后关闭历史弹窗
+    useEffect(() => {
+      const onChatInitialized = () => {
+        setShowHistoryAndRoles((prev) => (prev === "history" ? null : prev));
+      };
+      window.addEventListener("yoran-chat-initialized", onChatInitialized);
+      return () => {
+        window.removeEventListener("yoran-chat-initialized", onChatInitialized);
+      };
+    }, []);
+
     const {
       renderRoleList,
       selectedRole,
@@ -160,6 +171,10 @@ export const useHistory = () => {
     // 为新增对话按钮添加防抖
     const handleAdd = debounce(handleAddCore, 500);
 
+    /**
+     * 切换历史项并更新当前会话
+     * 成功切换后关闭历史弹窗，避免遮挡聊天区域
+     */
     const handleUpdateHistoryItem = (item: HistoryItem) => {
       setCurrentId(item.id);
       setHistoryItems(item);
@@ -171,6 +186,7 @@ export const useHistory = () => {
       } else {
         setSelectedRole(null);
       }
+      setShowHistoryAndRoles(null);
     };
 
     useEffect(() => {
