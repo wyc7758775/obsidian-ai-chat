@@ -120,13 +120,13 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       });
     }, [currentId, messages]);
 
-    // 监听滚动并向父组件报告是否接近底部（或不可滚动）
+    // 监听滚动并向父组件报告是否需要显示“滚到底部”按钮
     useEffect(() => {
       const el = containerRef.current;
       if (!el) return;
       const hasScroll = el.scrollHeight > el.clientHeight;
-      const near = isNearBottom || !hasScroll;
-      onNearBottomChange?.(near);
+      const shouldShow = hasScroll && !isNearBottom;
+      onNearBottomChange?.(shouldShow);
     }, [isNearBottom, onNearBottomChange]);
 
     useImperativeHandle(

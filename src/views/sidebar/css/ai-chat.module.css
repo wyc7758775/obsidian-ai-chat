@@ -77,21 +77,24 @@
 	display: flex;
 }
 .show {
-	animation: scrollToBottomBtnFadeIn 0.3s ease-in-out;
+    animation: scrollToBottomBtnFadeIn 0.3s ease-in-out;
+    opacity: 1;
+    pointer-events: auto;
 }
 .hide {
-	animation: scrollToBottomBtnFadeOut 0.3s ease-in-out forwards;
+    animation: scrollToBottomBtnFadeOut 0.3s ease-in-out;
+    opacity: 0;
+    pointer-events: none;
 }
 @keyframes scrollToBottomBtnFadeOut {
-	0% {
-		opacity: 1;
-		transform: translateY(0);
-	}
-	100% {
-		opacity: 0;
-		display: none;
-		transform: translateY(10px);
-	}
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
 }
 @keyframes scrollToBottomBtnFadeIn {
 	0% {

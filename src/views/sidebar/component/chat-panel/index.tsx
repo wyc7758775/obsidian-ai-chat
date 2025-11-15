@@ -95,16 +95,6 @@ export const useHistory = () => {
       };
     }, [showHistoryAndRoles]);
 
-    // 监听聊天容器初始化完成事件，完成后关闭历史弹窗
-    useEffect(() => {
-      const onChatInitialized = () => {
-        setShowHistoryAndRoles((prev) => (prev === "history" ? null : prev));
-      };
-      window.addEventListener("yoran-chat-initialized", onChatInitialized);
-      return () => {
-        window.removeEventListener("yoran-chat-initialized", onChatInitialized);
-      };
-    }, []);
 
     const {
       renderRoleList,

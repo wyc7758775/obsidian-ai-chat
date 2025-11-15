@@ -48,12 +48,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   // 使用 useMemo 确保 service 实例的稳定性
   const noteContextService = useMemo(() => new NoteContextService(app), [app]);
 
-  const {
-    historyRender: HistoryPanel,
-    currentId,
-    selectedRole,
-    forceHistoryUpdate,
-  } = useHistory();
+  const { historyRender, currentId, selectedRole, forceHistoryUpdate } =
+    useHistory();
   const { upsertHistoryItem, getHistoryItemById, fileStorageService } =
     useContext(app);
 
@@ -112,14 +108,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         console.error("IndexedDB load failed:", e);
       } finally {
         setIsInitializing(false);
-        if (pendingHideHistoryRef.current) {
-          try {
-            window.dispatchEvent(new Event("yoran-chat-initialized"));
-          } catch (_e) {
-            void 0;
-          }
-          pendingHideHistoryRef.current = false;
-        }
       }
     })();
   }, [currentId, getHistoryItemById, fileStorageService, sessions]);
@@ -571,6 +559,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       const atResult = checkAtSymbolBefore(value, currentPosition);
 
       if (!atResult.found) {
+        setShowFileSelector(false);
         setSearchResults([]);
         return;
       }
@@ -808,14 +797,14 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       {/* 全局初始化 Loading */}
       {isInitializing && <Loading />}
       {/* 信息历史 */}
-      <HistoryPanel app={app} />
+      {historyRender({ app })}
       {/* 消息区域：仅中间聊天区域切换，顶部面板与底部输入固定 */}
       <ChatMessage
         ref={(inst) => currentId && (messageListRefs.current[currentId] = inst)}
         messages={sessions[currentId]?.messages ?? []}
         app={app}
         isLoading={isLoading}
-        onNearBottomChange={(near) => setShowScrollBtn(!near)}
+        onNearBottomChange={(shouldShow) => setShowScrollBtn(shouldShow)}
         currentId={currentId}
         onRegenerateMessage={handleRegenerateMessage}
         onInsertSuggestion={handleInsertSuggestion}
@@ -863,7 +852,3 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     </div>
   );
 };
-const pendingHideHistoryRef = useRef(false);
-useEffect(() => {
-  if (currentId) pendingHideHistoryRef.current = true;
-}, [currentId]);

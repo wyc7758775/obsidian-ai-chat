@@ -1,7 +1,7 @@
 /* 消息容器 */
 .messagesContainer {
 	flex: 1;
-	overflow-y: overlay;
+	overflow-y: auto;
 	overflow-x: hidden;
 	padding: var(--chat-padding);
 	display: flex;
