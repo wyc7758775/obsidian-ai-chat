@@ -125,9 +125,10 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       const el = containerRef.current;
       if (!el) return;
       const hasScroll = el.scrollHeight > el.clientHeight;
+
       const shouldShow = hasScroll && !isNearBottom;
       onNearBottomChange?.(shouldShow);
-    }, [isNearBottom, onNearBottomChange]);
+    }, [isNearBottom]);
 
     useImperativeHandle(
       ref,
@@ -253,7 +254,7 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
             >
               {messageList(msgs)}
               {messageEmpty(msgs)}
-              {isActive && <div ref={messagesEndRef}></div>}
+              <div ref={isActive ? messagesEndRef : null}></div>
             </div>
           );
         })}

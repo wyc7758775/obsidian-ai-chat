@@ -1,5 +1,11 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 
+// 在视区到底部时，持续将列表滚动到底部
+// 使用示例：
+// const { endRef } = useScrollToBottom([messages]);
+// ...
+// <div ref={endRef}></div>
+
 type Options = {
   // 可选：传入滚动容器的 ref（默认使用视口）
   containerRef?: React.RefObject<HTMLElement>;
@@ -8,12 +14,6 @@ type Options = {
   // 滚动行为：smooth/auto
   behavior?: ScrollBehavior;
 };
-
-// 在视区到底部时，持续将列表滚动到底部
-// 使用示例：
-// const { endRef } = useScrollToBottom([messages]);
-// ...
-// <div ref={endRef}></div>
 export const useScrollToBottom = (
   triggerDeps: any[] = [],
   options: Options = {}
@@ -62,11 +62,11 @@ export const useScrollToBottom = (
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
+        console.log("组织爆炸行为。", entry.isIntersecting);
         setIsNearBottom(entry.isIntersecting);
       },
       {
         root: containerRef?.current ?? null,
-        // 将 root 的底边下扩 nearBottomPx，使得接近底部就算"相交"
         rootMargin: `0px 0px ${nearBottomPx}px 0px`,
         threshold: 0,
       }
@@ -77,7 +77,7 @@ export const useScrollToBottom = (
     return () => {
       observer.disconnect();
     };
-  }, [containerRef, nearBottomPx]);
+  }, [containerRef, nearBottomPx, ...triggerDeps]);
 
   // 额外的滚动事件监听，作为兜底（确保在容器内准确计算"接近底部"）
   // 同时检测用户主动滚动
