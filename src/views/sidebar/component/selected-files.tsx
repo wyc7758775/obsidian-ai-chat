@@ -44,7 +44,7 @@ export const SelectedFiles = ({
                 <DeleteIcon variant="small" />
               </span>
               <div className={styles.fileName}>
-                {note.title || note.name || note.file?.basename || "未知文件"}
+                {note.title || note.name || (note.file && 'basename' in note.file ? note.file.basename : undefined) || "未知文件"}
               </div>
               <div className={styles.filePath}>
                 {note.path || note.file?.path || "未知路径"}

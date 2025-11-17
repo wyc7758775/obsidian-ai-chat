@@ -18,7 +18,7 @@ import {
 import { NoteSelector } from "./component/note-selector";
 import { SelectedFiles } from "./component/selected-files";
 import { ChatInput } from "./chat/chat-input";
-import { PositionedPopover } from "./component/positioned-popover";
+import { PositionedPopover, usePositionedPopover } from "./component/hooks/use-positioned-popover";
 import { Loading } from "./component/loading";
 import { useCaretPosition } from "./hooks/use-caret-position";
 
@@ -293,9 +293,10 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     adjustTextareaHeight();
   };
 
-  const blurCallBack = useCallback(() => {
-    setShowFileSelector(false);
-  }, []);
+  // 延后声明，避免 TDZ - 将在 usePositionedPopover 之后声明
+  // const blurCallBack = useCallback(() => {
+  //   closeFileSelector();
+  // }, [closeFileSelector]);
 
   const handleCancelStream = () => {
     cancelToken.current.cancelled = true;
@@ -435,207 +436,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     });
   };
 
-  const [filePosition, setFilePosition] = useState({ x: 0, y: 0 });
-  const [showFileSelector, setShowFileSelector] = useState(false);
-  // 关键字
-  const [searchResults, setSearchResults] = useState<any[]>([]); // 搜索结果
-
-  // ✅ 文件选择器的 ref，用于获取实际高度
-  const fileSelectorRef = useRef<HTMLDivElement>(null);
-
-  const getFileSelectorHeight = useCallback(() => {
-    if (fileSelectorRef.current) {
-      return fileSelectorRef.current.clientHeight;
-    }
-    return 200;
-  }, []);
-
-  const getDivCursorScreenPosition = useCaretPosition(textareaRef);
-
-  // 获取 div 的光标位置
-  const getDivCursorPosition = useCallback(() => {
-    if (!textareaRef.current) return 0;
-
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return 0;
-
-    const range = selection.getRangeAt(0);
-    const preCareRange = range.cloneRange();
-    preCareRange.selectNodeContents(textareaRef.current);
-    preCareRange.setEnd(range.endContainer, range.endOffset);
-    return preCareRange.toString().length;
-  }, [textareaRef]);
-
-  const setDivCursorPosition = useCallback((position: number) => {
-    if (!textareaRef.current) return;
-
-    const div = textareaRef.current;
-    const textNodes: Text[] = [];
-
-    // 收集所有文本节点
-    const walker = document.createTreeWalker(div, NodeFilter.SHOW_TEXT, null);
-
-    let node;
-    while ((node = walker.nextNode())) {
-      textNodes.push(node as Text);
-    }
-
-    let currentPosition = 0;
-    for (const textNode of textNodes) {
-      const nodeLength = textNode.textContent?.length || 0;
-      if (currentPosition + nodeLength >= position) {
-        const range = document.createRange();
-        const selection = window.getSelection();
-        range.setStart(textNode, position - currentPosition);
-        range.collapse(true);
-        selection?.removeAllRanges();
-        selection?.addRange(range);
-        break;
-      }
-      currentPosition += nodeLength;
-    }
-  }, []);
-
-  // 检查光标前是否有@符号（跳过空格）
-  const checkAtSymbolBefore = (
-    text: string,
-    position: number
-  ): { found: boolean; atIndex: number; searchKeyword: string } => {
-    // 从当前位置向前查找最近的@符号
-    let atIndex = -1;
-
-    // 向前搜索@符号，但不能跨越空格
-    for (let i = position - 1; i >= 0; i--) {
-      const char = text[i];
-
-      if (char === "@") {
-        atIndex = i;
-        break;
-      } else if (char === " " || char === "\n" || char === "\t") {
-        // 遇到空白字符，停止搜索
-        break;
-      }
-    }
-
-    if (atIndex === -1) {
-      return { found: false, atIndex: -1, searchKeyword: "" };
-    }
-
-    // 检查@符号前面的字符
-    const charBeforeAt = atIndex > 0 ? text[atIndex - 1] : null;
-
-    // @符号前面必须是空格、换行或者文本开头
-    const isValidPrefix =
-      charBeforeAt === null ||
-      charBeforeAt === " " ||
-      charBeforeAt === "\n" ||
-      charBeforeAt === "\t";
-
-    if (!isValidPrefix) {
-      return { found: false, atIndex: -1, searchKeyword: "" };
-    }
-
-    // 提取@符号后面的搜索关键字（从@符号后到当前光标位置）
-    const searchKeyword = text.slice(atIndex + 1, position);
-
-    // 确保搜索关键字中没有换行符（通常@提及不跨行）
-    if (searchKeyword.includes("\n")) {
-      return { found: false, atIndex: -1, searchKeyword: "" };
-    }
-
-    return { found: true, atIndex, searchKeyword };
-  };
-
-  // ✅ 监听输入框变化，精确获取光标位置
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLDivElement>) => {
-      const value = e.target.innerText; // e.target.value;
-
-      setInputValue(value);
-      adjustTextareaHeight();
-
-      const currentPosition = getDivCursorPosition();
-
-      const atResult = checkAtSymbolBefore(value, currentPosition);
-
-      if (!atResult.found) {
-        setShowFileSelector(false);
-        setSearchResults([]);
-        return;
-      }
-
-      // 提取@后面的搜索关键字
-      const atIndex = value.lastIndexOf("@", currentPosition - 1);
-      const searchKeyword = value.slice(atIndex + 1, currentPosition);
-
-      setShowFileSelector(true);
-      // 根据搜索关键字异步搜索笔记
-      if (searchKeyword.trim() !== "") {
-        noteContextService
-          .searchNotes(searchKeyword)
-          .then((files) => {
-            const searchNotes = files.map((file) => ({
-              title: file.basename,
-              file: file,
-              icon: "📄",
-            }));
-            setSearchResults(searchNotes);
-          })
-          .catch((error) => {
-            console.error("搜索笔记失败:", error);
-            setSearchResults([]);
-          });
-        return;
-      }
-
-      // 关键字为空时，显示当前打开的笔记
-      const openNotes = noteContextService.getOpenNotes();
-      setSearchResults(openNotes);
-    },
-    [getDivCursorPosition]
-  );
-
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  // ✅ 当文件选择器显示时，重新计算位置以使用准确的高度
-  useEffect(() => {
-    if (
-      !chatContainerRef.current ||
-      !fileSelectorRef.current ||
-      !textareaRef.current
-    )
-      return;
-
-    requestAnimationFrame(() => {
-      const selectorHeight = getFileSelectorHeight();
-      const cursorPos = getDivCursorScreenPosition();
-      if (typeof cursorPos.relativeY === "number" && cursorPos.relativeY > 0) {
-        const popoverWidth = fileSelectorRef.current?.offsetWidth ?? 250;
-        const containerRect =
-          chatContainerRef.current?.getBoundingClientRect() ?? { width: 0 };
-        const containerRectWidthPadding = containerRect.width + PADDING;
-
-        let targetX = cursorPos.relativeX ?? 0;
-
-        // 防止右侧溢出：x + 弹窗宽度 ≤ 容器宽度
-        if (targetX + popoverWidth > containerRectWidthPadding) {
-          targetX = containerRectWidthPadding - popoverWidth;
-        }
-        // 防止左侧溢出：x ≥ 0
-        if (targetX < 0) targetX = 0;
-
-        setFilePosition({
-          x: targetX,
-          y: cursorPos.absoluteY - selectorHeight - 60,
-        });
-      }
-    });
-  }, [
-    showFileSelector,
-    getFileSelectorHeight,
-    getDivCursorScreenPosition,
-    searchResults,
-  ]);
-
   /**
    * 选择单个笔记并追加到当前会话
    * 去重：按文件路径去重
@@ -659,28 +459,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         },
       };
     });
-
-    // 清除输入框中的 @ 符号和搜索关键字，替换为选中的笔记标题
-    const textarea = textareaRef.current;
-    if (textarea) {
-      const value = textarea.textContent || "";
-      const cursorPos = getDivCursorPosition();
-
-      // 找到@符号的位置
-      const atIndex = value.lastIndexOf("@", cursorPos - 1);
-      if (atIndex !== -1) {
-        // 替换从@符号到光标位置的内容为笔记标题
-        const newValue =
-          value.slice(0, atIndex) + `@${note.title} ` + value.slice(cursorPos);
-        textarea.textContent = newValue;
-        setInputValue(newValue);
-
-        // 设置新的光标位置（在插入的笔记标题后面）
-        setTimeout(() => {
-          setDivCursorPosition(atIndex + Number(note.title?.length) + 2);
-        }, 0);
-      }
-    }
   };
 
   /**
@@ -710,20 +488,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         [currentId]: { ...prevSession, selectedNotes: merged },
       };
     });
-
-    // 清除输入框中的 @ 符号
-    const textarea = textareaRef.current;
-    if (textarea) {
-      const value = textarea.textContent || "";
-      const cursorPos = getDivCursorPosition();
-      const newValue = value.slice(0, cursorPos - 1) + value.slice(cursorPos);
-      setInputValue(newValue);
-      // 设置新的光标位置
-      setTimeout(() => {
-        setDivCursorPosition(cursorPos - 1);
-      }, 0);
-    }
   };
+
   /**
    * 从当前会话删除指定笔记
    * 删除条件：按 `file.path` 或 `path` 匹配
@@ -744,6 +510,46 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       };
     });
   };
+
+  const {
+    visible: showFileSelector,
+    x: filePositionX,
+    y: filePositionY,
+    searchResults,
+    popoverRef: fileSelectorRef,
+    close: closeFileSelector,
+    getDivCursorPosition,
+    handleInput,
+    handlers: popoverHandlers,
+  } = usePositionedPopover({
+    textareaRef,
+    currentId,
+    noteContextService,
+    currentSelectedNotes,
+    onSelectNote,
+    onSelectAllFiles,
+    onDeleteNote,
+    setInputValue,
+  });
+
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  /** 处理输入变化，更新状态并触发 @ 符号检测 */
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLDivElement>) => {
+    const newValue = e.target.textContent || "";
+    console.log('[chat.tsx] Input changed, new value:', newValue);  // 调试输入变化
+    setInputValue(newValue);
+    // 触发 @ 符号检测和搜索
+    handleInput();
+  }, [setInputValue, handleInput]);
+
+  // 延后声明，避免 TDZ
+  const blurCallBack = useCallback(() => {
+    // 延迟关闭，给用户时间进行弹窗交互
+    setTimeout(() => {
+      closeFileSelector();
+    }, 300);
+  }, [closeFileSelector]);
 
   const messageListRefs = useRef<Record<string, ChatMessageHandle | null>>({});
   const { ScrollToBottomRender } = useScrollToBottom(() => {
@@ -768,8 +574,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
       setTimeout(() => {
         try {
-          setDivCursorPosition(text.length);
-        } catch (_) {
+          // 使用 hook 暴露的光标设置方法
+          // 这里暂时用 DOM 兜底，后续可再封装
           const range = document.createRange();
           const selection = window.getSelection();
           const lastChild = textarea.lastChild;
@@ -781,11 +587,13 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           }
           selection?.removeAllRanges();
           selection?.addRange(range);
+        } catch (_) {
+          /* ignore */
         }
         textarea.focus();
       }, 0);
     },
-    [adjustTextareaHeight, setDivCursorPosition]
+    [adjustTextareaHeight]
   );
 
   return (
@@ -815,15 +623,16 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         ref={fileSelectorRef}
         className={styles.fileSelector}
         visible={showFileSelector}
-        x={filePosition.x}
-        y={filePosition.y}
+        x={filePositionX}
+        y={filePositionY}
         zIndex={1000}
       >
         <NoteSelector
           searchResults={searchResults}
           noteContextService={noteContextService}
-          onSelectAllFiles={onSelectAllFiles}
-          onSelectNote={onSelectNote}
+          onSelectAllFiles={popoverHandlers.handleSelectAllFiles}
+          onSelectNote={popoverHandlers.handleSelectNote}
+          onClose={closeFileSelector}
         />
       </PositionedPopover>
       {/* 输入区域 */}

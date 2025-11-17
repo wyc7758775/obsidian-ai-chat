@@ -42,9 +42,14 @@ export const ChatInput = ({
         ref={textareaRef}
         contentEditable
         suppressContentEditableWarning={true}
-        onInput={handleInputChange}
+        onInput={(e) => {
+          handleInputChange(e);
+        }}
         onKeyDown={handleKeyPress}
-        onBlur={blurCallBack}
+        onBlur={() => {
+          // 触发外部 blur 回调，延迟处理已在父组件中实现
+          blurCallBack?.();
+        }}
         className={styles.inputDiv + " " + styles.inputField}
       />
       {isStreaming ? (

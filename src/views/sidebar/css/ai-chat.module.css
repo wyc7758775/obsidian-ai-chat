@@ -22,7 +22,7 @@
 	}
 }
 .fileSelector {
-	position: absolute;
+	position: absolute; /* 原始逻辑：相对于聊天容器定位 */
 	background-color: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
@@ -32,10 +32,6 @@
 	max-width: 320px;
 	overflow: hidden;
 	backdrop-filter: blur(10px);
-	
-	/* 文件选择器进入动画 */
-	animation: fileSelectorSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-	transform-origin: top;
 }
 
 /* 文件选择器进入动画 */

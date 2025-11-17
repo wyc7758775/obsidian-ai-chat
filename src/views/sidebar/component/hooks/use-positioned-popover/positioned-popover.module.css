@@ -1,0 +1,11 @@
+.popover {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px var(--background-modifier-box-shadow);
+  padding: 8px;
+  max-height: 320px;
+  overflow: auto;
+  min-width: 250px;
+  /* 移除position和z-index，由JS控制 */
+}

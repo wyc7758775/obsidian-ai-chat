@@ -13,6 +13,7 @@ export interface FileSelectorProps {
   // 回调函数
   onSelectAllFiles: (notes: NoteContext[]) => void;
   onSelectNote: (note: NoteContext) => void;
+  onClose?: () => void;
 }
 
 export const NoteSelector: React.FC<FileSelectorProps> = ({
@@ -20,6 +21,7 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
   noteContextService,
   onSelectAllFiles,
   onSelectNote,
+  onClose,
 }) => {
   const notes = (
     searchResults.length > 0 ? searchResults : noteContextService.getOpenNotes()
@@ -39,11 +41,32 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
 
   return (
     <>
-      <div className={styles.mentionAll} onMouseDown={handleSelectAllFiles}>
-        <div className={styles.mentionAllIcon}>
-          <BookIcon />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div className={styles.mentionAll} onMouseDown={handleSelectAllFiles}>
+          <div className={styles.mentionAllIcon}>
+            <BookIcon />
+          </div>
+          <span className={styles.mentionAllText}>当前所有活动文件</span>
         </div>
-        <span className={styles.mentionAllText}>当前所有活动文件</span>
+        {onClose && (
+          <button 
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              cursor: 'pointer',
+              fontSize: '16px',
+              padding: '4px 8px'
+            }}
+            title="关闭"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* 分组标题 */}
