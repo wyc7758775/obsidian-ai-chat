@@ -41,7 +41,14 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "8px",
+        }}
+      >
         <div className={styles.mentionAll} onMouseDown={handleSelectAllFiles}>
           <div className={styles.mentionAllIcon}>
             <BookIcon />
@@ -49,18 +56,18 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
           <span className={styles.mentionAllText}>当前所有活动文件</span>
         </div>
         {onClose && (
-          <button 
+          <button
             onMouseDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               onClose();
             }}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              cursor: 'pointer',
-              fontSize: '16px',
-              padding: '4px 8px'
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "16px",
+              padding: "4px 8px",
             }}
             title="关闭"
           >

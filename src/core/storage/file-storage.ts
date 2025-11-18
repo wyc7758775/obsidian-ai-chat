@@ -1,4 +1,4 @@
-import { App, TFile } from "obsidian";
+import { App, TFile, TFolder } from "obsidian";
 import { HistoryItem, NoteReference } from "../../views/sidebar/type";
 import { NoteContext } from "../fs-context/note-context";
 
@@ -382,12 +382,23 @@ export class FileStorageService {
     const file = noteContext.file;
     if (!file) return null;
 
-    return {
-      path: file.path,
-      title: noteContext.title || file.basename,
-      mtime: file.stat.mtime,
-      ctime: file.stat.ctime,
-    };
+    if (file instanceof TFile) {
+      return {
+        path: file.path,
+        title: noteContext.title || file.basename,
+        mtime: file.stat.mtime,
+        ctime: file.stat.ctime,
+      };
+    }
+
+    if (file instanceof TFolder) {
+      return {
+        path: file.path,
+        title: noteContext.title || file.name,
+      };
+    }
+
+    return null;
   }
 
   /**
@@ -401,7 +412,9 @@ export class FileStorageService {
     const results: NoteContext[] = [];
 
     for (const ref of noteRefs) {
-      const file = this.getTFileByPath(ref.path);
+      const abstract = this.app.vault.getAbstractFileByPath(ref.path);
+      const file = abstract instanceof TFile ? abstract : null;
+      const folder = abstract instanceof TFolder ? abstract : null;
       if (file) {
         try {
           // 验证文件时间戳（如果有的话）
@@ -438,8 +451,19 @@ export class FileStorageService {
             links: [],
           });
         }
+      } else if (folder) {
+        // 还原为文件夹选择的上下文（仅用于展示，不读取内容）
+        results.push({
+          file: folder,
+          title: ref.title || folder.name,
+          path: folder.path,
+          iconType: "folder",
+          content: "",
+          tags: [],
+          links: [],
+        });
       } else {
-        console.warn(`文件不存在: ${ref.path}`);
+        console.warn(`文件或文件夹不存在: ${ref.path}`);
       }
     }
 

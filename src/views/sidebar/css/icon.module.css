@@ -7,20 +7,21 @@
   align-items: center;
   justify-content: center;
   /* 静态图标颜色更浅，提高柔和度与层次感 */
-  color: var(--text-faint);
+  color: var(--text-normal);
   width: 16px;
   height: 16px;
 }
 .actionBtn {
 	composes: buttonMedium from './global-buttons.module.css';
-	color: var(--text-faint);
+	color: var(--text-normal);
   background-color: transparent;
 }
 
 .actionBtn:hover {
-	/* 悬停时提升可读性与对比度 */
-	color: var(--text-on-accent);
-  background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+  background: linear-gradient(135deg, var(--background-secondary) 0%, var(--background-primary-alt) 100%);
+  border-color: var(--background-modifier-border-hover);
+  transform: none;
 }
 
 /* 按下态透明度，与按钮激活风格一致 */
@@ -31,7 +32,7 @@
 /* 特殊的图标按钮变体 */
 .actionBtnSmall {
   composes: buttonSmall from './global-buttons.module.css';
-  color: var(--text-faint);
+  color: var(--text-normal);
   background-color: transparent;
 }
 
@@ -41,17 +42,17 @@
   width: 22px;
   height: 22px;
   padding: 4px;
-  color: var(--text-faint);
+  color: var(--text-normal);
 }
 
 .actionBtnLarge {
 	composes: buttonLarge from './global-buttons.module.css';
-	color: var(--text-faint);
+	color: var(--text-normal);
 }
 
 /* 带动画效果的图标按钮 */
 .actionBtnAnimated {
-	composes: actionBtn buttonWiggle from './global-buttons.module.css';
+	composes: actionBtn from './global-buttons.module.css';
 }
 
 .actionBtnPulse {

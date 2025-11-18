@@ -81,12 +81,12 @@
   display: none;
   position: absolute;
   text-align: center;
-  top: -4px;
-  right: -4px;
+  top: -6px;
+  right: -6px;
   transition: all 0.2s ease;
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border: 1px solid var(--background-modifier-border);
   padding: 2px;
 }
@@ -98,4 +98,5 @@
 }
 .fileClose:hover {
   background-color: var(--background-modifier-hover);
+  border-color: var(--background-modifier-border-hover);
 }

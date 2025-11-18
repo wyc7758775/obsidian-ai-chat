@@ -42,7 +42,7 @@ export const ChatInput = ({
         ref={textareaRef}
         contentEditable
         suppressContentEditableWarning={true}
-        onInput={(e) => {
+        onInput={(e: React.ChangeEvent<HTMLDivElement>) => {
           handleInputChange(e);
         }}
         onKeyDown={handleKeyPress}
@@ -55,7 +55,7 @@ export const ChatInput = ({
       {isStreaming ? (
         <button
           onClick={handleCancelStream}
-          className={styles.cancelBtn}
+          className={styles.cancelBtn + " " + styles.mr8}
           title="停止生成"
         >
           ⏸
@@ -63,7 +63,7 @@ export const ChatInput = ({
       ) : (
         <button
           onClick={handleSend}
-          className={styles.sendBtn}
+          className={styles.sendBtn + " " + styles.mr8}
           disabled={!inputValue.trim()}
           title="发送消息"
         >

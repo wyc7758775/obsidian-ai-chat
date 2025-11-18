@@ -1,5 +1,5 @@
 import { NoteContext, NoteContextService } from "../../../core/fs-context/note-context";
-import { DeleteIcon, FileIcon } from "./icon";
+import { DeleteIcon, FileIcon, FolderIcon } from "./icon";
 import styles from "../css/selected-files.module.css";
 
 export const SelectedFiles = ({
@@ -18,6 +18,7 @@ export const SelectedFiles = ({
    * - 特殊情况：删除按钮点击需阻止事件冒泡避免触发打开。
    */
   const handleOpen = async (note: NoteContext) => {
+    if (note.iconType === "folder") return;
     await noteContextService.openNote(note);
   };
   return (
@@ -30,7 +31,7 @@ export const SelectedFiles = ({
             onClick={() => handleOpen(note)}
           >
             <div className={styles.fileIconContainer}>
-              <FileIcon />
+              {note.iconType === "folder" ? <FolderIcon /> : <FileIcon />}
             </div>
             <div className={styles.fileItemContent}>
               <span

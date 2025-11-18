@@ -62,7 +62,6 @@ export const useScrollToBottom = (
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
-        console.log("组织爆炸行为。", entry.isIntersecting);
         setIsNearBottom(entry.isIntersecting);
       },
       {

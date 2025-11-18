@@ -23,7 +23,6 @@
 	}
 }
 
-
 .inputWrapper:focus-within {
 	border-color: var(--interactive-accent);
 	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -63,8 +62,6 @@
   transform: scale(0.9);
 }
 
-
-
 .inputField {
 	flex: 1;
 	border: none;
@@ -93,20 +90,8 @@
 
 
 .sendBtn {
-	/* 全局缩小 2px：发送按钮更紧凑 */
-	width: 30px;
-	height: 30px;
-	border: 1px solid var(--interactive-accent);
-	border-radius: 50%;
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-	font-size: 14px;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: all 0.2s ease;
-	margin: 2px;
+    composes: buttonSmall buttonSecondary from './global-buttons.module.css';
+    font-size: 14px;
 }
 
 /* 光泽动画效果 */
@@ -126,12 +111,6 @@
 	animation: sendBtnPulse 3s infinite;
 }
 
-.sendBtn:hover:not(:disabled) {
-	background: var(--interactive-accent-hover);
-	transform: translateY(-1px);
-	box-shadow: 0 2px 8px rgba(var(--interactive-accent-rgb), 0.3);
-}
-
 .sendBtn:active:not(:disabled) {
 	transform: translateY(0);
 }
@@ -141,36 +120,23 @@
 	cursor: not-allowed;
 }
 
-
-
 /* 取消按钮样式 */
 .cancelBtn {
-	/* 全局缩小 2px：取消按钮更紧凑 */
-	width: 30px;
-	height: 30px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 50%;
-	background: var(--background-secondary);
-	color: var(--text-normal);
-	font-size: 14px;
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: all 0.2s ease;
-	margin: 2px;
+    composes: buttonSmall buttonSecondary from './global-buttons.module.css';
+    font-size: 14px;
 }
-
-
-
-.cancelBtn:hover {
-	background: var(--background-modifier-error);
-	color: var(--text-on-accent);
-	border-color: var(--background-modifier-error);
-	transform: translateY(-1px);
-	box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+.mr8 {
+	margin-right: 8px;
 }
 
 .cancelBtn:active {
 	transform: translateY(0);
+}
+.sendBtn:hover,
+.cancelBtn:hover {
+    background: linear-gradient(135deg, var(--background-secondary) 0%, var(--background-primary-alt) 100%);
+    border-color: var(--background-modifier-border-hover);
+    color: var(--text-normal);
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }

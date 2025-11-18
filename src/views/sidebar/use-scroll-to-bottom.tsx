@@ -7,15 +7,15 @@ export const useScrollToBottom = <T extends () => void>(onClickBack: T) => {
 
   const ScrollToBottomRender = ({
     disabled,
-    isShow,
+    visibly,
   }: {
     disabled: boolean;
-    isShow: boolean;
+    visibly: boolean;
   }) => {
     return (
       <div
         className={`${styles.scrollToBottomBtnContainer} ${
-          isShow ? styles.show : styles.hide
+          visibly ? styles.show : styles.hide
         }`}
       >
         <button

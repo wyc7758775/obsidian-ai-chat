@@ -247,7 +247,6 @@ export function usePositionedPopover({
             title: f.basename || f.name || "未知文件",
             name: f.basename || f.name || "未知文件",
             file: f,
-            icon: "📄",
             iconType: "file" as const,
           }));
           setSearchResults(notes);

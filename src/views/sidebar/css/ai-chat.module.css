@@ -21,18 +21,6 @@
 		transform: translateX(0);
 	}
 }
-.fileSelector {
-	position: absolute; /* 原始逻辑：相对于聊天容器定位 */
-	background-color: var(--background-primary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-	z-index: 99999;
-	min-width: 280px;
-	max-width: 320px;
-	overflow: hidden;
-	backdrop-filter: blur(10px);
-}
 
 /* 文件选择器进入动画 */
 @keyframes fileSelectorSlideIn {

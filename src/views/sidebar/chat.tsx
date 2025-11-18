@@ -18,9 +18,11 @@ import {
 import { NoteSelector } from "./component/note-selector";
 import { SelectedFiles } from "./component/selected-files";
 import { ChatInput } from "./chat/chat-input";
-import { PositionedPopover, usePositionedPopover } from "./component/hooks/use-positioned-popover";
+import {
+  PositionedPopover,
+  usePositionedPopover,
+} from "./component/hooks/use-positioned-popover";
 import { Loading } from "./component/loading";
-import { useCaretPosition } from "./hooks/use-caret-position";
 
 import { Message, ChatComponentProps, NoteReference } from "./type";
 import { useHistory } from "./component/chat-panel/index";
@@ -28,7 +30,6 @@ import { useContext } from "./hooks/use-context";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
 import { useSend } from "./hooks/use-send";
 
-const PADDING = 12;
 export const ChatComponent: React.FC<ChatComponentProps> = ({
   onSendMessage,
   settings,
@@ -48,8 +49,12 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   // 使用 useMemo 确保 service 实例的稳定性
   const noteContextService = useMemo(() => new NoteContextService(app), [app]);
 
-  const { historyRender, currentId, selectedRole, forceHistoryUpdate } =
-    useHistory();
+  const {
+    historyRender: HistoryRender,
+    currentId,
+    selectedRole,
+    forceHistoryUpdate,
+  } = useHistory();
   const { upsertHistoryItem, getHistoryItemById, fileStorageService } =
     useContext(app);
 
@@ -178,14 +183,34 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
    * 边界处理：当无选中笔记时返回空数组
    */
   const getNotePrompts = async () => {
-    const notePrompts = [];
+    const notePrompts: string[] = [];
+    const addedPaths = new Set<string>();
+
     for (let i = 0; i < currentSelectedNotes.length; i++) {
-      const context = await noteContextService.getNoteContent(
-        currentSelectedNotes[i] as any
-      );
-      notePrompts.push(
-        typeof context === "string" ? context : context?.content ?? ""
-      );
+      const note = currentSelectedNotes[i];
+
+      if (note.iconType === "folder" && note.file && "path" in note.file) {
+        const folderPath = (note.file as any).path;
+        const folderMap = await noteContextService.getNotesByFolder();
+        const files = folderMap.get(folderPath) || [];
+        for (const f of files) {
+          if (addedPaths.has(f.path)) continue;
+          const ctx = await noteContextService.getNoteContent(f);
+          const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
+          notePrompts.push(content);
+          addedPaths.add(f.path);
+        }
+        continue;
+      }
+
+      const ctx = await noteContextService.getNoteContent(note as any);
+      const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
+      const p =
+        (ctx && typeof ctx !== "string" ? ctx.path : note.path) ||
+        note.file?.path;
+      if (p && addedPaths.has(p)) continue;
+      notePrompts.push(content);
+      if (p) addedPaths.add(p);
     }
     return notePrompts;
   };
@@ -366,15 +391,32 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       };
     });
 
-    // 准备笔记提示（使用当前选中的笔记）
-    const notePrompts = [];
+    // 准备笔记提示（支持文件夹：读取该文件夹下的所有笔记）
+    const notePrompts: string[] = [];
+    const addedPaths = new Set<string>();
     for (let i = 0; i < currentSelectedNotes.length; i++) {
-      const context = await noteContextService.getNoteContent(
-        currentSelectedNotes[i] as any
-      );
-      notePrompts.push(
-        typeof context === "string" ? context : context?.content ?? ""
-      );
+      const note = currentSelectedNotes[i];
+      if (note.iconType === "folder" && note.file && "path" in note.file) {
+        const folderPath = (note.file as any).path;
+        const folderMap = await noteContextService.getNotesByFolder();
+        const files = folderMap.get(folderPath) || [];
+        for (const f of files) {
+          if (addedPaths.has(f.path)) continue;
+          const ctx = await noteContextService.getNoteContent(f);
+          const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
+          notePrompts.push(content);
+          addedPaths.add(f.path);
+        }
+        continue;
+      }
+      const ctx = await noteContextService.getNoteContent(note as any);
+      const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
+      const p =
+        (ctx && typeof ctx !== "string" ? ctx.path : note.path) ||
+        note.file?.path;
+      if (p && addedPaths.has(p)) continue;
+      notePrompts.push(content);
+      if (p) addedPaths.add(p);
     }
 
     // 获取当前历史记录的系统消息
@@ -518,7 +560,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     searchResults,
     popoverRef: fileSelectorRef,
     close: closeFileSelector,
-    getDivCursorPosition,
     handleInput,
     handlers: popoverHandlers,
   } = usePositionedPopover({
@@ -535,13 +576,14 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   /** 处理输入变化，更新状态并触发 @ 符号检测 */
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLDivElement>) => {
-    const newValue = e.target.textContent || "";
-    console.log('[chat.tsx] Input changed, new value:', newValue);  // 调试输入变化
-    setInputValue(newValue);
-    // 触发 @ 符号检测和搜索
-    handleInput();
-  }, [setInputValue, handleInput]);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLDivElement>) => {
+      const newValue = e.target.textContent || "";
+      setInputValue(newValue);
+      handleInput();
+    },
+    [setInputValue, handleInput]
+  );
 
   // 延后声明，避免 TDZ
   const blurCallBack = useCallback(() => {
@@ -605,7 +647,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       {/* 全局初始化 Loading */}
       {isInitializing && <Loading />}
       {/* 信息历史 */}
-      {historyRender({ app })}
+      {HistoryRender({ app })}
       {/* 消息区域：仅中间聊天区域切换，顶部面板与底部输入固定 */}
       <ChatMessage
         ref={(inst) => currentId && (messageListRefs.current[currentId] = inst)}
@@ -637,7 +679,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       </PositionedPopover>
       {/* 输入区域 */}
       <div className={styles.inputArea}>
-        <ScrollToBottomRender disabled={isStreaming} isShow={showScrollBtn} />
+        <ScrollToBottomRender disabled={isStreaming} visibly={showScrollBtn} />
         {currentSelectedNotes.length > 0 && (
           <SelectedFiles
             nodes={currentSelectedNotes}
