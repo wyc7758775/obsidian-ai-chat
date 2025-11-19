@@ -5,7 +5,12 @@ export { RoleModal } from "./role-modal";
 
 import type { RoleItem } from "../../../../core/storage/role-storage";
 import styles from "./css/styles.module.css";
-import { PersonIcon, EditIcon, AddSmallIcon, CloseIcon } from "../icon";
+import {
+  PersonIcon,
+  EditIcon,
+  AddSmallIcon,
+  CloseIcon,
+} from "../../../../ui/icon";
 
 export const useRoles = (app: App) => {
   const { fetchRoles, upsertRole, deleteRoleByName } = useContext(app);

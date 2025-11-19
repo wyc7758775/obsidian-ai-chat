@@ -22,12 +22,12 @@ import {
   PositionedPopover,
   usePositionedPopover,
 } from "./component/hooks/use-positioned-popover";
-import { Loading } from "./component/loading";
+import { Loading } from "../../ui/loading";
 
 import { Message, ChatComponentProps, NoteReference } from "./type";
 import { useHistory } from "./component/chat-panel/index";
 import { useContext } from "./hooks/use-context";
-import { useScrollToBottom } from "./use-scroll-to-bottom";
+import { useScrollToBottom } from "./component/hooks/use-scroll-to-bottom";
 import { useSend } from "./hooks/use-send";
 
 export const ChatComponent: React.FC<ChatComponentProps> = ({
@@ -57,6 +57,11 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   } = useHistory();
   const { upsertHistoryItem, getHistoryItemById, fileStorageService } =
     useContext(app);
+
+  const currentIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    currentIdRef.current = currentId ?? null;
+  }, [currentId]);
 
   const currentSession = useMemo(() => {
     if (!currentId || !sessions[currentId])
@@ -566,7 +571,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     textareaRef,
     currentId,
     noteContextService,
-    currentSelectedNotes,
     onSelectNote,
     onSelectAllFiles,
     onDeleteNote,
@@ -594,10 +598,55 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   }, [closeFileSelector]);
 
   const messageListRefs = useRef<Record<string, ChatMessageHandle | null>>({});
-  const { ScrollToBottomRender } = useScrollToBottom(() => {
-    if (!currentId) return;
-    messageListRefs.current[currentId]?.scrollToBottom?.();
-  });
+  /**
+   * 回到底部按钮点击回调
+   * 输入有效性：`currentIdRef.current` 必须存在
+   * 特殊情况：若消息列表实例不存在则直接返回
+   */
+  const handleScrollToBottomClick = () => {
+    const id = currentIdRef.current;
+    if (!id) return;
+    messageListRefs.current[id]?.scrollToBottom?.();
+  };
+  const { ScrollToBottomRender } = useScrollToBottom(handleScrollToBottomClick);
+
+  /**
+   * 控制“回到底部”按钮显隐的抖动消除（双窗口迟滞法）
+   * 输入参数：`shouldShow` 为目标显隐状态
+   * 特殊情况：显示采用 150ms 延迟，隐藏采用 300ms 延迟，降低闪烁
+   */
+  const showTimerRef = useRef<number | null>(null);
+  const hideTimerRef = useRef<number | null>(null);
+  const handleNearBottomChange = useCallback((shouldShow: boolean) => {
+    if (shouldShow) {
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+      if (showTimerRef.current) clearTimeout(showTimerRef.current);
+      showTimerRef.current = window.setTimeout(() => {
+        setShowScrollBtn(true);
+      }, 150);
+    } else {
+      if (showTimerRef.current) {
+        clearTimeout(showTimerRef.current);
+        showTimerRef.current = null;
+      }
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = window.setTimeout(() => {
+        setShowScrollBtn(false);
+      }, 300);
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (showTimerRef.current) clearTimeout(showTimerRef.current);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      showTimerRef.current = null;
+      hideTimerRef.current = null;
+    };
+  }, []);
 
   /**
    * 将建议文本插入到输入框：
@@ -642,6 +691,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     <div
       className={styles.container}
       ref={chatContainerRef}
+      data-chat-container="true"
       style={{ overflowY: isInitializing ? "hidden" : "auto" }}
     >
       {/* 全局初始化 Loading */}
@@ -654,7 +704,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         messages={sessions[currentId]?.messages ?? []}
         app={app}
         isLoading={isLoading}
-        onNearBottomChange={(shouldShow) => setShowScrollBtn(shouldShow)}
+        onNearBottomChange={handleNearBottomChange}
         currentId={currentId}
         onRegenerateMessage={handleRegenerateMessage}
         onInsertSuggestion={handleInsertSuggestion}
@@ -663,11 +713,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       {/* 文件选择器 */}
       <PositionedPopover
         ref={fileSelectorRef}
-        className={styles.fileSelector}
         visible={showFileSelector}
         x={filePositionX}
         y={filePositionY}
-        zIndex={1000}
       >
         <NoteSelector
           searchResults={searchResults}

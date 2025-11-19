@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "../css/loading.module.css";
+import styles from "../views/sidebar/css/loading.module.css";
 
 export const Loading: React.FC = () => {
   return (

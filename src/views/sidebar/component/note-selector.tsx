@@ -3,8 +3,9 @@ import {
   NoteContextService,
   NoteContext,
 } from "../../../core/fs-context/note-context";
-import { BookIcon, FolderIcon } from "./icon";
+import { BookIcon, FolderIcon } from "../../../ui/icon";
 import styles from "../css/note-selector.module.css";
+import { EllipsisTooltip } from "../../../ui/ellipsis-tooltip";
 
 export interface FileSelectorProps {
   // 数据
@@ -16,6 +17,12 @@ export interface FileSelectorProps {
   onClose?: () => void;
 }
 
+/**
+ * 选择笔记弹出层（函数级注释）
+ * - 说明：展示“当前所有活动文件”入口与打开笔记列表，支持选择。
+ * - 输入有效性：当 `searchResults` 为空时，回退到 `noteContextService.getOpenNotes()`；回调均需存在。
+ * - 特殊情况：选择事件用 `onMouseDown` 处理失焦顺序，避免点击后弹层提前失焦。
+ */
 export const NoteSelector: React.FC<FileSelectorProps> = ({
   searchResults,
   noteContextService,
@@ -41,39 +48,13 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "8px",
-        }}
-      >
+      <div className={styles.selectorHeader}>
         <div className={styles.mentionAll} onMouseDown={handleSelectAllFiles}>
           <div className={styles.mentionAllIcon}>
             <BookIcon />
           </div>
           <span className={styles.mentionAllText}>当前所有活动文件</span>
         </div>
-        {onClose && (
-          <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onClose();
-            }}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "16px",
-              padding: "4px 8px",
-            }}
-            title="关闭"
-          >
-            ✕
-          </button>
-        )}
       </div>
 
       {/* 分组标题 */}
@@ -93,7 +74,9 @@ export const NoteSelector: React.FC<FileSelectorProps> = ({
               <div className={styles.mentionAllIcon}>
                 {note.iconType === "folder" ? <FolderIcon /> : <BookIcon />}
               </div>
-              <span className={styles.fileTitle}>{note.title}</span>
+              <EllipsisTooltip content={note.title || ""}>
+                <span className={styles.fileTitle}>{note.title}</span>
+              </EllipsisTooltip>
             </div>
           ))
         ) : (

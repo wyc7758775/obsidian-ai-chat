@@ -1,5 +1,5 @@
 import type { ReactNode, MouseEvent, HTMLAttributes } from "react";
-import styles from "../css/icon.module.css";
+import styles from "../views/sidebar/css/icon.module.css";
 
 /**
  * 纯展示用 SVG 容器，无点击事件、无 cursor、无 hover 效果。

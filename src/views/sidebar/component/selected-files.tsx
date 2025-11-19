@@ -1,5 +1,8 @@
-import { NoteContext, NoteContextService } from "../../../core/fs-context/note-context";
-import { DeleteIcon, FileIcon, FolderIcon } from "./icon";
+import {
+  NoteContext,
+  NoteContextService,
+} from "../../../core/fs-context/note-context";
+import { DeleteIcon, FileIcon, FolderIcon } from "../../../ui/icon";
 import styles from "../css/selected-files.module.css";
 
 export const SelectedFiles = ({
@@ -42,10 +45,15 @@ export const SelectedFiles = ({
                   onDeleteNote(note);
                 }}
               >
-                <DeleteIcon variant="small" />
+                <DeleteIcon variant="large" />
               </span>
               <div className={styles.fileName}>
-                {note.title || note.name || (note.file && 'basename' in note.file ? note.file.basename : undefined) || "未知文件"}
+                {note.title ||
+                  note.name ||
+                  (note.file && "basename" in note.file
+                    ? note.file.basename
+                    : undefined) ||
+                  "未知文件"}
               </div>
               <div className={styles.filePath}>
                 {note.path || note.file?.path || "未知路径"}

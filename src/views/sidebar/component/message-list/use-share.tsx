@@ -1,4 +1,4 @@
-import { useMarkdownRenderer } from "../use-markdown-renderer";
+import { useMarkdownRenderer } from "../hooks/use-markdown-renderer";
 import ReactMarkdown from "react-markdown";
 import ShareCard from "./share-card";
 

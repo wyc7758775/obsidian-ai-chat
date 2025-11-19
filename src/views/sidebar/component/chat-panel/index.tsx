@@ -7,7 +7,7 @@ import {
   HistoryExpandIcon,
   CatEmptyIcon,
   RoleExpandIcon,
-} from "../icon";
+} from "../../../../ui/icon";
 import styles from "./css/styles.module.css";
 import { HistoryItem } from "../../type";
 import { useContext } from "../../hooks/use-context";
@@ -94,7 +94,6 @@ export const useHistory = () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }, [showHistoryAndRoles]);
-
 
     const {
       renderRoleList,

@@ -1,0 +1,27 @@
+.ellipsisAnchor {
+  position: relative;
+  display: inline-flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 99999;
+  transform: translateY(0);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  padding: 8px 10px;
+  pointer-events: none;
+}
+
+.tooltipContent {
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  font-size: 13px;
+  line-height: 1.5;
+}

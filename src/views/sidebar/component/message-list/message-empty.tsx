@@ -1,4 +1,4 @@
-import { AddSmallIcon } from "../icon";
+import { AddSmallIcon } from "../../../../ui/icon";
 import { CatLogo } from "./cat-logo";
 import styles from "../../css/message-list.module.css";
 

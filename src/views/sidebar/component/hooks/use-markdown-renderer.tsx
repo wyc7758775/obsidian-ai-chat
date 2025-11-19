@@ -1,7 +1,7 @@
 import React from "react";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import styles from "../css/message-list.module.css";
+import styles from "../../css/message-list.module.css";
 
 // 工具：提取 React children 的纯文本
 function toText(node: React.ReactNode): string {

@@ -61,34 +61,14 @@
 	display: flex;
 }
 .show {
-    animation: scrollToBottomBtnFadeIn 0.3s ease-in-out;
-    opacity: 1;
-    pointer-events: auto;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.15s ease-in-out;
 }
 .hide {
-    animation: scrollToBottomBtnFadeOut 0.3s ease-in-out;
-    opacity: 0;
-    pointer-events: none;
-}
-@keyframes scrollToBottomBtnFadeOut {
-    0% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    100% {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-}
-@keyframes scrollToBottomBtnFadeIn {
-	0% {
-		opacity: 0;
-		transform: translateY(10px);
-	}
-	100% {
-		opacity: 1;
-		transform: translateY(0);
-	}
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-in-out;
 }
 .scrollToBottomBtn {
   width: 26px;

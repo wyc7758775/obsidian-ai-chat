@@ -81,14 +81,16 @@
   display: none;
   position: absolute;
   text-align: center;
-  top: -6px;
-  right: -6px;
+  top: -8px;
+  right: -8px;
   transition: all 0.2s ease;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border: 1px solid var(--background-modifier-border);
-  padding: 2px;
+  padding: 0;
+  cursor: pointer;
+  box-sizing: border-box;
 }
 
 .fileItem:hover .fileClose {

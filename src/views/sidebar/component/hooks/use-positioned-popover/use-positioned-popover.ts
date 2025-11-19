@@ -27,8 +27,6 @@ export interface UsePositionedPopoverParams {
   currentId: string | undefined;
   /** 笔记上下文服务实例 */
   noteContextService: NoteContextService;
-  /** 选中笔记的当前列表（用于去重） */
-  currentSelectedNotes: NoteContext[];
   /** 选中单个笔记的回调 */
   onSelectNote: (note: NoteContext) => void;
   /** 批量选中笔记的回调 */
@@ -70,7 +68,6 @@ export function usePositionedPopover({
   textareaRef,
   currentId,
   noteContextService,
-  currentSelectedNotes,
   onSelectNote,
   onSelectAllFiles,
   onDeleteNote,
@@ -189,13 +186,13 @@ export function usePositionedPopover({
     const selectorHeight = getPopoverHeight();
     const popoverWidth = popoverEl.offsetWidth || 250;
 
-    // 获取聊天容器位置 - 使用实际的容器类名
-    const container = el.closest(".container") || document.body;
+    // 获取聊天容器：优先使用稳定的 data 属性，避免 CSS Modules 类名失效
+    const container = el.closest("[data-chat-container]") || document.body;
     const containerRect = container.getBoundingClientRect();
     const containerRectWidthPadding = containerRect.width + PADDING;
 
     // X坐标计算（原始逻辑）：使用相对容器的relativeX
-    let targetX = cursorPos.relativeX;
+    let targetX = cursorPos.relativeX + 8;
     // 右侧防溢出
     if (targetX + popoverWidth > containerRectWidthPadding) {
       targetX = containerRectWidthPadding - popoverWidth;
@@ -205,8 +202,8 @@ export function usePositionedPopover({
       targetX = 0;
     }
 
-    // Y坐标计算（原始逻辑）：弹窗在光标上方，预留60安全距离
-    const targetY = cursorPos.absoluteY - selectorHeight - 60;
+    // Y坐标计算（原始逻辑）：弹窗在光标上方，预留30安全距离
+    const targetY = cursorPos.absoluteY - selectorHeight - 50;
 
     setX(targetX);
     setY(targetY);

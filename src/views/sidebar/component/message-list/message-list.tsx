@@ -2,9 +2,14 @@ import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { App } from "obsidian";
 import { Message } from "../../type";
 import { NoteContextService } from "../../../../core/fs-context/note-context";
-import { CopyIcon, GenerateIcon, RegenerateIcon, ShareIcon } from "../icon";
+import {
+  CopyIcon,
+  GenerateIcon,
+  RegenerateIcon,
+  ShareIcon,
+} from "../../../../ui/icon";
 import styles from "../../css/message-list.module.css";
-import { useMarkdownRenderer } from "../use-markdown-renderer";
+import { useMarkdownRenderer } from "../hooks/use-markdown-renderer";
 import { useScrollToBottom } from "./use-scroll-to-bottom";
 import { useShare } from "./use-share";
 import { messageEmptyRender } from "./message-empty";
