@@ -1,8 +1,8 @@
 import { Notice, ItemView, WorkspaceLeaf } from "obsidian";
 import React from "react";
 import { createRoot, Root } from "react-dom/client";
-import { ChatComponent } from "./chat";
-import { yoranChatSettings, VIEW_TYPE_YORAN_SIDEBAR } from "../../main";
+import { ChatComponent } from "./views/sidebar";
+import { yoranChatSettings, VIEW_TYPE_YORAN_SIDEBAR } from "./main";
 
 // 创建自定义侧边栏视图
 export class YoranSidebarView extends ItemView {
@@ -27,7 +27,6 @@ export class YoranSidebarView extends ItemView {
   }
 
   async onOpen() {
-    // If root exists, we've already initialized. Do nothing.
     if (this.root) {
       return;
     }

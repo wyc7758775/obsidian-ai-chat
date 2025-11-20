@@ -1,6 +1,6 @@
-# MCP Chat Yoran for Kimi2
+# Obsidian AI Chat Agent
 
-一个基于 MCP (Model Context Protocol) 和 React 的 Obsidian 聊天插件，提供智能对话和文档交互功能。
+一个基于 Obsidian 大模型聊天插件，提供智能对话和文档交互功能。
 
 ## ✨ 功能特性
 
@@ -8,8 +8,6 @@
 - 🔄 **MCP 协议支持**：集成 Model Context Protocol 实现智能对话
 - 📱 **侧边栏集成**：可拖拽的侧边栏聊天面板
 - 🎨 **主题适配**：完美适配 Obsidian 的明暗主题
-- ⚡ **热重载开发**：支持开发时的实时预览
-- 🛠️ **快捷工具**：内置多种实用工具按钮
 - 📝 **文本选择交互**：支持选中文本直接发送到聊天
 
 ## TODO 
@@ -85,7 +83,7 @@
   - [ ] 语音转文字
 
 ### 🎛️ 用户配置
-- [ ] **AI 模型设置**
+- [x] **AI 模型设置**
   - [x] API 配置界面
   - [x] 自定义提示词
 
@@ -97,7 +95,7 @@
 
 ### 📖 用户文档
 - [ ] **使用指南**
-  - [ ] 快速开始教程
+  - [x] 快速开始教程
   - [ ] 功能详细说明
   - [ ] 常见问题解答
   - [ ] 最佳实践指南
@@ -113,8 +111,6 @@
 ### 安装依赖
 
 ```bash
-npm install
-# 或使用 pnpm
 pnpm install
 ```
 
@@ -122,10 +118,10 @@ pnpm install
 
 ```bash
 # 启动开发模式（文件监听 + 自动构建）
-npm run dev
+pnpm dev
 
 # 构建生产版本
-npm run build
+pnpm build
 ```
 
 ### 安装到 Obsidian
@@ -134,7 +130,7 @@ npm run build
 
 ```bash
 # 构建项目
-npm run build
+pnpm build
 
 # 创建符号链接到你的 vault
 ln -s $(pwd)/mcp-chat-yoran /path/to/your/vault/.obsidian/plugins/mcp-chat-yoran
@@ -156,7 +152,7 @@ cp -r mcp-chat-yoran /path/to/your/vault/.obsidian/plugins/mcp-chat-yoran
 ## 🏗️ 项目结构
 
 ```
-obsidian-sample-plugin/
+obsidian-ai-chat-agent/
 ├── src/                          # 源代码目录
 │   ├── main.ts                   # 插件主入口
 │   └── sidebar/                  # 侧边栏组件

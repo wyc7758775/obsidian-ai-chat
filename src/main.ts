@@ -1,14 +1,14 @@
 import { Editor, MarkdownView, Plugin, View, WorkspaceLeaf } from "obsidian";
 import "highlight.js/styles/github.css";
 import { SettingTab } from "./core/setting/plugin-setting";
-import { YoranSidebarView } from "./views/sidebar/sidebar-view";
+import { YoranSidebarView } from "./sidebar-view";
 
 // 定义视图类型常量
 export const VIEW_TYPE_YORAN_SIDEBAR = "yoran-sidebar-view";
 // 插件文件夹名（用于在 Vault 中创建专属数据目录）。
 // 说明：使用 manifest.json 中的 name 更贴近“插件名”，但为了文件夹安全性，
 // 由存储服务进行清洗（转小写、空格转连字符、移除特殊字符）。
-export const PLUGIN_FOLDER_NAME = "MCP Chat Yoran for kimi2";
+export const PLUGIN_FOLDER_NAME = "Obisidian AI Agent by Yoran";
 
 export interface yoranChatSettings {
   appKey: string;
@@ -51,7 +51,6 @@ export default class yoranChat extends Plugin {
       this.initLeaf();
     });
 
-    // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new SettingTab(this.app, this));
 
     // TODO: 测试 command 替换文章 的效果
