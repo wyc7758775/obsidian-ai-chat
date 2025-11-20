@@ -17,7 +17,7 @@ import {
 } from "./component/message-list/message-list";
 import { NoteSelector } from "./component/note-selector";
 import { SelectedFiles } from "./component/selected-files";
-import { ChatInput } from "./chat/chat-input";
+import { ChatInput } from "./component/chat-input/chat-input";
 import {
   PositionedPopover,
   usePositionedPopover,
