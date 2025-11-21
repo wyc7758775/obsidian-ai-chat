@@ -90,7 +90,7 @@
 
 
 .sendBtn {
-    composes: buttonSmall buttonSecondary from './global-buttons.module.css';
+    composes: buttonSmall buttonSecondary from '../../css/global-buttons.module.css';
     font-size: 14px;
 }
 
@@ -122,7 +122,7 @@
 
 /* 取消按钮样式 */
 .cancelBtn {
-    composes: buttonSmall buttonSecondary from './global-buttons.module.css';
+    composes: buttonSmall buttonSecondary from '../../css/global-buttons.module.css';
     font-size: 14px;
 }
 .mr8 {

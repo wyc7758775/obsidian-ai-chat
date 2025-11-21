@@ -1,5 +1,5 @@
 import { RefObject, useEffect, useState } from "react";
-import styles from "../css/chat-input.module.css";
+import styles from "./chat-input.module.css";
 
 const PLACEHOLDER = " 询问一个问题... (按下@ 选择笔记)";
 export const ChatInput = ({
