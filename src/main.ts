@@ -1,7 +1,7 @@
 import { Editor, MarkdownView, Plugin, View, WorkspaceLeaf } from "obsidian";
 import "highlight.js/styles/github.css";
 import { SettingTab } from "./core/setting/plugin-setting";
-import { YoranSidebarView } from "./views/sidebar/sidebar-view";
+import { YoranSidebarView } from "./sidebar-view";
 
 // 定义视图类型常量
 export const VIEW_TYPE_YORAN_SIDEBAR = "yoran-sidebar-view";
