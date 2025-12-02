@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import { useMachine } from "@xstate/react";
 import styles from "./css/ai-chat.module.css";
 import { sendChatMessage } from "../../core/ai/openai";
 import {
@@ -29,6 +30,7 @@ import { useHistory } from "./component/chat-panel/index";
 import { useContext } from "./hooks/use-context";
 import { useScrollToBottom } from "./component/hooks/use-scroll-to-bottom";
 import { useSend } from "./hooks/use-send";
+import { chatMachine } from "./machines/chatMachine";
 
 export const ChatComponent: React.FC<ChatComponentProps> = ({
   onSendMessage,
@@ -687,6 +689,11 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     [adjustTextareaHeight]
   );
 
+  const [state, send] = useMachine(chatMachine);
+  const handleRetry = () => {
+    send({ type: "SEND_MESSAGE" });
+  };
+
   return (
     <div
       className={styles.container}
@@ -725,6 +732,11 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           onClose={closeFileSelector}
         />
       </PositionedPopover>
+      <button onClick={handleRetry}>测试</button>
+      <h2>当前状态：</h2>
+      {state.matches("loading") && <p>发送中...</p>}
+      {state.matches("streaming") && <p>AI正在输入...</p>}
+      {state.matches("idle") && <p>等待用户输入...</p>}
       {/* 输入区域 */}
       <div className={styles.inputArea}>
         <ScrollToBottomRender disabled={isStreaming} visibly={showScrollBtn} />
