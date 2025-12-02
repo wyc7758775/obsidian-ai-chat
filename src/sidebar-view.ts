@@ -1,8 +1,8 @@
 import { Notice, ItemView, WorkspaceLeaf } from "obsidian";
 import React from "react";
 import { createRoot, Root } from "react-dom/client";
-import { ChatComponent } from "./chat";
-import { yoranChatSettings, VIEW_TYPE_YORAN_SIDEBAR } from "../../main";
+import { ChatComponent } from "./views/sidebar";
+import { yoranChatSettings, VIEW_TYPE_YORAN_SIDEBAR } from "./main";
 
 // 创建自定义侧边栏视图
 export class YoranSidebarView extends ItemView {
@@ -55,7 +55,6 @@ export class YoranSidebarView extends ItemView {
   // 添加接收选中文本的方法
   public receiveSelectedText(text: string): void {
     // 这里可以通过 React 的状态管理来更新组件
-    console.log("接收到选中文本:", text);
     new Notice(`接收到选中文本: ${text.substring(0, 50)}...`);
   }
 
