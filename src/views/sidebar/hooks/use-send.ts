@@ -3,11 +3,12 @@ import { Message } from "../type";
 
 export const useSend = ({
   textareaRef,
+  isStreaming,
 }: {
   textareaRef: React.RefObject<HTMLDivElement>;
+  isStreaming: boolean;
 }) => {
   const [inputValue, setInputValue] = useState<string>("");
-  const [isStreaming, setIsStreaming] = useState<boolean>(false);
 
   const adjustTextareaHeight = useCallback(() => {
     if (!textareaRef.current) return;
@@ -67,7 +68,6 @@ export const useSend = ({
     if (!inputValue.trim()) return;
     if (isStreaming) return;
 
-    setIsStreaming(true); // 在发送时立即设置为 streaming 状态
     clearInput();
 
     return {
@@ -84,8 +84,6 @@ export const useSend = ({
     }
   };
   return {
-    isStreaming,
-    setIsStreaming,
     onSend,
     keyPressSend,
     inputValue,

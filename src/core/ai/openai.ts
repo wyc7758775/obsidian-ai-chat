@@ -162,7 +162,6 @@ export const handleStreamResponse = async (
 
     for await (const part of stream) {
       if (cancelToken?.cancelled) {
-
         break;
       }
 

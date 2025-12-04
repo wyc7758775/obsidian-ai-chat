@@ -1,36 +1,35 @@
 import { createMachine } from "xstate";
 
-// 定义状态机
 export const chatMachine = createMachine({
   id: "chat",
   initial: "idle",
   states: {
     idle: {
       on: {
-        SEND_MESSAGE: "loading",
+        ENABLE_CLICK: "clickable",
       },
     },
-    loading: {
+    clickable: {
       on: {
-        SUCCESS: "success",
-        ERROR: "error",
+        DISABLE_CLICK: "idle",
         STREAM_START: "streaming", // 流式响应开始
       },
     },
     streaming: {
       on: {
-        STREAM_UPDATE: "streaming", // 流式数据更新
+        INIT: "idle",
         STREAM_END: "success",
+        ERROR: "error",
       },
     },
     success: {
       on: {
-        SEND_MESSAGE: "loading",
+        INIT: "idle",
       },
     },
     error: {
       on: {
-        RETRY: "loading",
+        INIT: "idle",
       },
     },
   },
