@@ -18,13 +18,7 @@ export const chatMachine = createMachine({
     streaming: {
       on: {
         INIT: "idle",
-        STREAM_END: "success",
         ERROR: "error",
-      },
-    },
-    success: {
-      on: {
-        INIT: "idle",
       },
     },
     error: {
