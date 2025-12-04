@@ -56,7 +56,12 @@ export const ChatInput = ({
         onInput={(e: React.ChangeEvent<HTMLDivElement>) => {
           handleInputChange(e);
         }}
-        onKeyDown={handleKeyPress}
+        onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            chatSend({ type: "STREAM_START" });
+          }
+          handleKeyPress(e);
+        }}
         onBlur={() => {
           blurCallBack?.();
         }}
