@@ -25,12 +25,13 @@ import {
 } from "./component/hooks/use-positioned-popover";
 import { Loading } from "../../ui/loading";
 
-import { Message, ChatComponentProps, NoteReference } from "./type";
 import { useHistory } from "./component/chat-panel/index";
 import { useContext } from "./hooks/use-context";
 import { useScrollToBottom } from "./component/hooks/use-scroll-to-bottom";
 import { useSend } from "./hooks/use-send";
+import { Message, ChatComponentProps, NoteReference } from "./type";
 import { chatMachine } from "./machines/chatMachine";
+import { ChatStateProvider } from "./machines/chatStateContext";
 
 export const ChatComponent: React.FC<ChatComponentProps> = ({
   onSendMessage,
@@ -47,6 +48,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
   const textareaRef = useRef<HTMLDivElement>(null);
   const cancelToken = useRef({ cancelled: false });
+
+  const [state, send] = useMachine(chatMachine);
 
   // 使用 useMemo 确保 service 实例的稳定性
   const noteContextService = useMemo(() => new NoteContextService(app), [app]);
@@ -225,13 +228,12 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const {
     onSend,
     keyPressSend,
-    isStreaming,
-    setIsStreaming,
     inputValue,
     setInputValue,
     adjustTextareaHeight,
   } = useSend({
     textareaRef,
+    isStreaming: state.matches("streaming"),
   });
   // 已在顶部声明 messagesChanged，这里移除重复声明
   /**
@@ -297,12 +299,12 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         },
         onComplete: () => {
           setIsLoading(false);
-          setIsStreaming(false); // 在接收完成后设置为非 streaming 状态
+          send({ type: "STREAM_END" });
         },
         onError: (error: any) => {
           console.error("Stream error:", error);
           setIsLoading(false);
-          setIsStreaming(false); // 在出错时也需要设置为非 streaming 状态
+          send({ type: "ERROR" });
           setSessions((prev) => {
             const prevSession = prev[currentId] ?? {
               messages: [],
@@ -325,14 +327,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     adjustTextareaHeight();
   };
 
-  // 延后声明，避免 TDZ - 将在 usePositionedPopover 之后声明
-  // const blurCallBack = useCallback(() => {
-  //   closeFileSelector();
-  // }, [closeFileSelector]);
-
   const handleCancelStream = () => {
     cancelToken.current.cancelled = true;
-    setIsStreaming(false);
     setIsLoading(false);
   };
 
@@ -478,7 +474,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         },
         onComplete: () => {
           cancelToken.current.cancelled = false;
-          setIsStreaming(false);
+          send({ type: "STREAM_END" });
         },
       },
       cancelToken: cancelToken.current,
@@ -689,77 +685,73 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     [adjustTextareaHeight]
   );
 
-  const [state, send] = useMachine(chatMachine);
-  const handleRetry = () => {
-    send({ type: "SEND_MESSAGE" });
-  };
-
   return (
-    <div
-      className={styles.container}
-      ref={chatContainerRef}
-      data-chat-container="true"
-      style={{ overflowY: isInitializing ? "hidden" : "auto" }}
-    >
-      {/* 全局初始化 Loading */}
-      {isInitializing && <Loading />}
-      {/* 信息历史 */}
-      {HistoryRender({ app })}
-      {/* 消息区域：仅中间聊天区域切换，顶部面板与底部输入固定 */}
-      <ChatMessage
-        ref={(inst) => currentId && (messageListRefs.current[currentId] = inst)}
-        messages={sessions[currentId]?.messages ?? []}
-        app={app}
-        isLoading={isLoading}
-        onNearBottomChange={handleNearBottomChange}
-        currentId={currentId}
-        onRegenerateMessage={handleRegenerateMessage}
-        onInsertSuggestion={handleInsertSuggestion}
-        suggestions={settings.suggestionTemplates}
-      />
-      {/* 文件选择器 */}
-      <PositionedPopover
-        ref={fileSelectorRef}
-        visible={showFileSelector}
-        x={filePositionX}
-        y={filePositionY}
+    <ChatStateProvider value={[state, send]}>
+      <div
+        className={styles.container}
+        ref={chatContainerRef}
+        data-chat-container="true"
+        style={{ overflowY: isInitializing ? "hidden" : "auto" }}
       >
-        <NoteSelector
-          searchResults={searchResults}
-          noteContextService={noteContextService}
-          onSelectAllFiles={popoverHandlers.handleSelectAllFiles}
-          onSelectNote={popoverHandlers.handleSelectNote}
-          onClose={closeFileSelector}
+        {/* 全局初始化 Loading */}
+        {isInitializing && <Loading />}
+        {/* 信息历史 */}
+        {HistoryRender({ app })}
+        {/* 消息区域：仅中间聊天区域切换，顶部面板与底部输入固定 */}
+        <ChatMessage
+          ref={(inst) =>
+            currentId && (messageListRefs.current[currentId] = inst)
+          }
+          messages={sessions[currentId]?.messages ?? []}
+          app={app}
+          isLoading={isLoading}
+          onNearBottomChange={handleNearBottomChange}
+          currentId={currentId}
+          onRegenerateMessage={handleRegenerateMessage}
+          onInsertSuggestion={handleInsertSuggestion}
+          suggestions={settings.suggestionTemplates}
         />
-      </PositionedPopover>
-      <button onClick={handleRetry}>测试</button>
-      <h2>当前状态：</h2>
-      {state.matches("loading") && <p>发送中...</p>}
-      {state.matches("streaming") && <p>AI正在输入...</p>}
-      {state.matches("idle") && <p>等待用户输入...</p>}
-      {/* 输入区域 */}
-      <div className={styles.inputArea}>
-        <ScrollToBottomRender disabled={isStreaming} visibly={showScrollBtn} />
-        {currentSelectedNotes.length > 0 && (
-          <SelectedFiles
-            nodes={currentSelectedNotes}
-            onDeleteNote={onDeleteNote}
+        {/* 文件选择器 */}
+        <PositionedPopover
+          ref={fileSelectorRef}
+          visible={showFileSelector}
+          x={filePositionX}
+          y={filePositionY}
+        >
+          <NoteSelector
+            searchResults={searchResults}
             noteContextService={noteContextService}
+            onSelectAllFiles={popoverHandlers.handleSelectAllFiles}
+            onSelectNote={popoverHandlers.handleSelectNote}
+            onClose={closeFileSelector}
           />
-        )}
-        {
-          <ChatInput
-            textareaRef={textareaRef}
-            handleInputChange={handleInputChange}
-            handleKeyPress={(e) => keyPressSend(e, handleSend)}
-            handleSend={handleSend}
-            blurCallBack={blurCallBack}
-            handleCancelStream={handleCancelStream}
-            inputValue={inputValue}
-            isStreaming={isStreaming}
+        </PositionedPopover>
+        {/* 输入区域 */}
+        <div className={styles.inputArea}>
+          <ScrollToBottomRender
+            disabled={state.matches("streaming")}
+            visibly={showScrollBtn}
           />
-        }
+          {currentSelectedNotes.length > 0 && (
+            <SelectedFiles
+              nodes={currentSelectedNotes}
+              onDeleteNote={onDeleteNote}
+              noteContextService={noteContextService}
+            />
+          )}
+          {
+            <ChatInput
+              textareaRef={textareaRef}
+              handleInputChange={handleInputChange}
+              handleKeyPress={(e) => keyPressSend(e, handleSend)}
+              handleSend={handleSend}
+              blurCallBack={blurCallBack}
+              handleCancelStream={handleCancelStream}
+              inputValue={inputValue}
+            />
+          }
+        </div>
       </div>
-    </div>
+    </ChatStateProvider>
   );
 };
