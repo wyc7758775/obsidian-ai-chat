@@ -299,9 +299,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         },
         onComplete: () => {
           setIsLoading(false);
-          send({ type: "STREAM_END" });
+          send({ type: "INIT" });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
           console.error("Stream error:", error);
           setIsLoading(false);
           send({ type: "ERROR" });
