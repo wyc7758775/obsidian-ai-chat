@@ -332,13 +332,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     setIsLoading(false);
   };
 
-  /**
-   * 重新生成指定 AI 消息
-   * 输入参数有效性：`messageIndex` 应为当前会话消息范围内的索引
-   * 特殊情况：
-   * - 目标消息非 AI 类型则中断
-   * - 找不到对应用户消息则中断
-   */
+  // TODO: 重新生成指定 AI 消息有非常大的 BUG：只重新生成最后一条是没有问题，但是如果重新生成倒数第二条，会导致倒数第一条也被删除
   const handleRegenerateMessage = async (messageIndex: number) => {
     const targetMessage = currentMessages[messageIndex];
 
@@ -705,8 +699,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
           messages={sessions[currentId]?.messages ?? []}
           app={app}
           isLoading={isLoading}
-          onNearBottomChange={handleNearBottomChange}
           currentId={currentId}
+          onNearBottomChange={handleNearBottomChange}
           onRegenerateMessage={handleRegenerateMessage}
           onInsertSuggestion={handleInsertSuggestion}
           suggestions={settings.suggestionTemplates}
