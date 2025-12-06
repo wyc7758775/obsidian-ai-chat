@@ -63,11 +63,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const { upsertHistoryItem, getHistoryItemById, fileStorageService } =
     useContext(app);
 
-  const currentIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    currentIdRef.current = currentId ?? null;
-  }, [currentId]);
-
   const currentSession = useMemo(() => {
     if (!currentId || !sessions[currentId])
       return { messages: [], selectedNotes: [] };
@@ -108,7 +103,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         let noteContexts: NoteContext[] = [];
         if (item.noteSelected && item.noteSelected.length > 0) {
           noteContexts = await fileStorageService.convertToNoteContexts(
-            item.noteSelected
+            item.noteSelected,
           );
         }
         setSessions((prev) => ({
@@ -133,7 +128,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
     const noteSelectedReferences: NoteReference[] = (currentSelectedNotes || [])
       .map((noteContext) =>
-        fileStorageService.convertToNoteReference(noteContext)
+        fileStorageService.convertToNoteReference(noteContext),
       )
       .filter((ref): ref is NoteReference => ref !== null);
 
@@ -206,7 +201,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         for (const f of files) {
           if (addedPaths.has(f.path)) continue;
           const ctx = await noteContextService.getNoteContent(f);
-          const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
+          const content = typeof ctx === "string" ? ctx : (ctx?.content ?? "");
           notePrompts.push(content);
           addedPaths.add(f.path);
         }
@@ -214,7 +209,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       }
 
       const ctx = await noteContextService.getNoteContent(note as any);
-      const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
+      const content = typeof ctx === "string" ? ctx : (ctx?.content ?? "");
       const p =
         (ctx && typeof ctx !== "string" ? ctx.path : note.path) ||
         note.file?.path;
@@ -225,6 +220,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     return notePrompts;
   };
 
+  // TODO： 这个 hook 的作用意义不明和sendChatMessage有冲突
   const {
     onSend,
     keyPressSend,
@@ -235,12 +231,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     textareaRef,
     isStreaming: state.matches("streaming"),
   });
-  // 已在顶部声明 messagesChanged，这里移除重复声明
-  /**
-   * 发送消息并创建 AI 回复占位
-   * 输入参数有效性：需要有效 `currentId`
-   * 特殊情况处理：当 `onSend()` 校验失败或 `currentId` 为空时中断
-   */
+
   const handleSend = async () => {
     if (!onSend()) return;
 
@@ -289,7 +280,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             const updated = prevSession.messages.map((msg) =>
               msg.id === aiParams.id
                 ? { ...msg, content: msg.content + chunk }
-                : msg
+                : msg,
             );
             return {
               ...prev,
@@ -313,7 +304,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             const updated = prevSession.messages.map((msg) =>
               msg.id === aiParams.id
                 ? { ...msg, content: `Error: ${error.message}` }
-                : msg
+                : msg,
             );
             return {
               ...prev,
@@ -400,14 +391,14 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         for (const f of files) {
           if (addedPaths.has(f.path)) continue;
           const ctx = await noteContextService.getNoteContent(f);
-          const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
+          const content = typeof ctx === "string" ? ctx : (ctx?.content ?? "");
           notePrompts.push(content);
           addedPaths.add(f.path);
         }
         continue;
       }
       const ctx = await noteContextService.getNoteContent(note as any);
-      const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
+      const content = typeof ctx === "string" ? ctx : (ctx?.content ?? "");
       const p =
         (ctx && typeof ctx !== "string" ? ctx.path : note.path) ||
         note.file?.path;
@@ -455,7 +446,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             const updated = prevSession.messages.map((msg) =>
               msg.id === aiMessageId
                 ? { ...msg, content: msg.content + chunk }
-                : msg
+                : msg,
             );
             return {
               ...prev,
@@ -479,6 +470,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
    * 选择单个笔记并追加到当前会话
    * 去重：按文件路径去重
    */
+  // TODO: 处理文件可以 hook 化
   const onSelectNote = (note: NoteContext) => {
     if (!currentId) return;
     setSessions((prev) => {
@@ -487,7 +479,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         selectedNotes: [],
       };
       const exists = prevSession.selectedNotes.some(
-        (p: any) => p.path === note.file?.path
+        (p: any) => p.path === note.file?.path,
       );
       if (exists) return prev;
       return {
@@ -504,6 +496,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
    * 批量选择笔记并合并到当前会话
    * 边界处理：按路径去重，保持稳定顺序
    */
+  // TODO: 处理文件可以 hook 化
   const onSelectAllFiles = (notes: NoteContext[]) => {
     if (!currentId) return;
     setSessions((prev) => {
@@ -512,7 +505,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         selectedNotes: [],
       };
       const existingPaths = new Set(
-        prevSession.selectedNotes.map((p) => p.file?.path || p.path)
+        prevSession.selectedNotes.map((p) => p.file?.path || p.path),
       );
       const merged = [...prevSession.selectedNotes];
       for (const note of notes) {
@@ -533,6 +526,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
    * 从当前会话删除指定笔记
    * 删除条件：按 `file.path` 或 `path` 匹配
    */
+  // TODO: 处理文件可以 hook 化
   const onDeleteNote = (note: NoteContext) => {
     if (!currentId) return;
     setSessions((prev) => {
@@ -541,7 +535,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         selectedNotes: [],
       };
       const filtered = prevSession.selectedNotes.filter(
-        (n) => (n.file?.path || n.path) !== (note.file?.path || note.path)
+        (n) => (n.file?.path || n.path) !== (note.file?.path || note.path),
       );
       return {
         ...prev,
@@ -550,6 +544,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     });
   };
 
+  // TODO：参数太多了，要不拆分多个 hook，要不对参数进行分组，refs: {}, context: {}， callbacks: {}
   const {
     visible: showFileSelector,
     x: filePositionX,
@@ -578,7 +573,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       setInputValue(newValue);
       handleInput();
     },
-    [setInputValue, handleInput]
+    [setInputValue, handleInput],
   );
 
   // 延后声明，避免 TDZ
@@ -592,13 +587,10 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   const messageListRefs = useRef<Record<string, ChatMessageHandle | null>>({});
   /**
    * 回到底部按钮点击回调
-   * 输入有效性：`currentIdRef.current` 必须存在
-   * 特殊情况：若消息列表实例不存在则直接返回
    */
   const handleScrollToBottomClick = () => {
-    const id = currentIdRef.current;
-    if (!id) return;
-    messageListRefs.current[id]?.scrollToBottom?.();
+    if (!currentId) return;
+    messageListRefs.current[currentId]?.scrollToBottom?.();
   };
   const { ScrollToBottomRender } = useScrollToBottom(handleScrollToBottomClick);
 
@@ -676,7 +668,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         textarea.focus();
       }, 0);
     },
-    [adjustTextareaHeight]
+    [adjustTextareaHeight],
   );
 
   return (
@@ -690,6 +682,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         {/* 全局初始化 Loading */}
         {isInitializing && <Loading />}
         {/* 信息历史 */}
+        {/* TODO: 组件名已经不够贴切了 */}
         {HistoryRender({ app })}
         {/* 消息区域：仅中间聊天区域切换，顶部面板与底部输入固定 */}
         <ChatMessage
