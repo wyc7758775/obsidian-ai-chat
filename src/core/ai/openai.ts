@@ -39,7 +39,7 @@ const buildMessages = (
   inputValue: string,
   notePrompts?: string[],
   contextMessages?: Array<ChatMessage>,
-  systemMessage?: string
+  systemMessage?: string,
 ): ChatMessage[] => {
   const messages: ChatMessage[] = [];
 
@@ -78,7 +78,7 @@ const buildMessages = (
     const managedArticleMessages = manageArticleContent(
       notePrompts,
       maxArticleTokens,
-      inputValue
+      inputValue,
     );
     messages.push(...managedArticleMessages);
   }
@@ -89,7 +89,7 @@ const buildMessages = (
     const managedContextMessages = manageContextMessages(
       contextMessages,
       maxContextTokens,
-      hasArticleContent
+      hasArticleContent,
     );
     messages.push(...managedContextMessages);
   }
@@ -146,7 +146,7 @@ export const handleStreamResponse = async (
   settings: yoranChatSettings,
   messages: ChatMessage[],
   callBacks: CallBacks,
-  cancelToken?: { cancelled: boolean }
+  cancelToken?: { cancelled: boolean },
 ) => {
   try {
     callBacks.onStart?.();
@@ -210,6 +210,8 @@ const validateAPIConfig = (settings: yoranChatSettings): string[] => {
 /**
  * 主要的 OpenAI API 调用函数
  */
+// TODO: 函数命名不够公共，业务
+// TODO: 存在业务变量在这里面进行拼接的情况
 export const sendChatMessage = async ({
   settings,
   inputValue,
@@ -233,7 +235,7 @@ export const sendChatMessage = async ({
     inputValue,
     notePrompts,
     contextMessages,
-    systemMessage
+    systemMessage,
   );
 
   return handleStreamResponse(
@@ -241,6 +243,6 @@ export const sendChatMessage = async ({
     settings,
     messages,
     callBacks,
-    cancelToken
+    cancelToken,
   );
 };

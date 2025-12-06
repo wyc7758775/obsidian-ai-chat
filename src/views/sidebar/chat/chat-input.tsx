@@ -4,6 +4,16 @@ import { useChatState } from "../machines/chatStateContext";
 
 const PLACEHOLDER = " 询问一个问题... (按下@ 选择笔记)";
 
+type Props = {
+  textareaRef: RefObject<HTMLDivElement>;
+  inputValue: string;
+  handleInputChange: (e: React.ChangeEvent<HTMLDivElement>) => void;
+  handleKeyPress: (e: React.KeyboardEvent<HTMLDivElement>) => void;
+  handleSend: () => void;
+  handleCancelStream: () => void;
+  blurCallBack?: () => void;
+};
+
 export const ChatInput = ({
   textareaRef,
   inputValue,
@@ -12,15 +22,7 @@ export const ChatInput = ({
   handleSend,
   handleCancelStream,
   blurCallBack,
-}: {
-  textareaRef: RefObject<HTMLDivElement>;
-  inputValue: string;
-  handleInputChange: (e: React.ChangeEvent<HTMLDivElement>) => void;
-  handleKeyPress: (e: React.KeyboardEvent<HTMLDivElement>) => void;
-  handleSend: () => void;
-  handleCancelStream: () => void;
-  blurCallBack?: () => void;
-}) => {
+}: Props) => {
   const [chatState, chatSend] = useChatState();
   const [showPlaceholder, setShowPlaceholder] = useState(true);
   useEffect(() => {
