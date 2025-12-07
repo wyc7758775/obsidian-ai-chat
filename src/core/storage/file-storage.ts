@@ -2,6 +2,7 @@ import { App, TFile, TFolder } from "obsidian";
 import { HistoryItem, NoteReference } from "../../views/sidebar/type";
 import { NoteContext } from "../fs-context/note-context";
 
+// TODO：1. 文件格式改为 MD 来存储； 2. 每一个历史就给一个 MD（copited 就是这么做的）
 /**
  * 基于文件系统的历史记录存储服务
  * 将数据存储在插件目录下的JSON文件中，支持跨设备同步
@@ -93,7 +94,7 @@ export class FileStorageService {
     } catch (error) {
       console.error(
         "[FileStorage] Failed to load chat history from file:",
-        error
+        error,
       );
       // 如果加载失败，初始化为空缓存
       this.cache.clear();
@@ -129,13 +130,13 @@ export class FileStorageService {
         throw new Error(
           `Data integrity check failed: expected ${
             Object.keys(data).length
-          } items, but file contains ${savedItemCount} items`
+          } items, but file contains ${savedItemCount} items`,
         );
       }
     } catch (error) {
       console.error(
         "[FileStorage] Failed to save chat history to file:",
-        error
+        error,
       );
       throw error;
     }
@@ -224,7 +225,7 @@ export class FileStorageService {
 
       if (verificationExists) {
         console.error(
-          `[FileStorage] CRITICAL ERROR: Item ${id} still exists after deletion!`
+          `[FileStorage] CRITICAL ERROR: Item ${id} still exists after deletion!`,
         );
         throw new Error(`Item ${id} was not properly deleted from file`);
       }
@@ -407,7 +408,7 @@ export class FileStorageService {
    * 使用时间戳验证文件是否为预期的文件
    */
   async convertToNoteContexts(
-    noteRefs: NoteReference[]
+    noteRefs: NoteReference[],
   ): Promise<NoteContext[]> {
     const results: NoteContext[] = [];
 
@@ -420,7 +421,7 @@ export class FileStorageService {
           // 验证文件时间戳（如果有的话）
           if (ref.ctime && file.stat.ctime !== ref.ctime) {
             console.warn(
-              `文件创建时间不匹配: ${ref.path}, 期望: ${ref.ctime}, 实际: ${file.stat.ctime}`
+              `文件创建时间不匹配: ${ref.path}, 期望: ${ref.ctime}, 实际: ${file.stat.ctime}`,
             );
             // 继续处理，但记录警告
           }

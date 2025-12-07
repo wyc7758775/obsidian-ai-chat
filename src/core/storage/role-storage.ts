@@ -5,6 +5,7 @@ export interface RoleItem {
   systemPrompt: string;
 }
 
+// TODO: json 改为 md 格式作为存储。
 /**
  * 角色存储服务：在与 chat-history.json 同级创建 chat-roles.json，用于保存角色名称与系统提示语。
  * 仅保存轻量字段：name 与 systemPrompt。
@@ -43,7 +44,10 @@ export class RoleStorageService {
           systemPrompt: "你是一个温柔可靠的助手，专注于写作优化与总结。",
         },
       ];
-      await adapter.write(this.rolesFile, JSON.stringify(defaultRoles, null, 2));
+      await adapter.write(
+        this.rolesFile,
+        JSON.stringify(defaultRoles, null, 2),
+      );
     }
     // 内容校验：空或损坏则重置为默认角色
     try {
