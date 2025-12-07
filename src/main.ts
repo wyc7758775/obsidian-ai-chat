@@ -7,7 +7,6 @@ import { YoranSidebarView } from "./sidebar-view";
 export const VIEW_TYPE_YORAN_SIDEBAR = "yoran-sidebar-view";
 // 插件文件夹名（用于在 Vault 中创建专属数据目录）。
 // 说明：使用 manifest.json 中的 name 更贴近“插件名”，但为了文件夹安全性，
-// 由存储服务进行清洗（转小写、空格转连字符、移除特殊字符）。
 export const PLUGIN_FOLDER_NAME = "MCP Chat Yoran for kimi2";
 
 export interface yoranChatSettings {
@@ -19,6 +18,10 @@ export interface yoranChatSettings {
   suggestionTemplates?: string[]; // 空状态建议提示词，最多10条
 }
 
+// TODO: 添加其他可选的大模型以及自定义大模型配置，不是当前下拉选择框类类型的选择器
+// TODO: 建议的选项当前是固定的，需要重新设计，方向是通过当前用户之前的属于和现在已经有的上下文给出 5 个推荐的提示词
+// TODO: 国际化
+// TODO：CSS 样式不要放在统一的 css 文件夹当中
 const DEFAULT_SETTINGS: yoranChatSettings = {
   appKey: "come on",
   apiBaseURL: "https://ark.cn-beijing.volces.com/api/v3",
@@ -44,7 +47,7 @@ export default class yoranChat extends Plugin {
     this.registerView(
       VIEW_TYPE_YORAN_SIDEBAR,
       (leaf: WorkspaceLeaf) =>
-        (this.view = new YoranSidebarView(leaf, this.settings))
+        (this.view = new YoranSidebarView(leaf, this.settings)),
     );
 
     this.app.workspace.onLayoutReady(() => {
@@ -63,7 +66,7 @@ export default class yoranChat extends Plugin {
       },
     });
 
-    // TODO: 监听选中文本变化 出现 AI相关功能
+    // TODO: 监听选中文本变化 出现 AI相关功能,一个悬浮菜单
     this.registerDomEvent(document, "selectionchange", () => {
       const selection = window.getSelection();
       if (selection && selection.toString().trim()) {
