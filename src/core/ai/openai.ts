@@ -1,8 +1,8 @@
 import OpenAI from "openai";
 import { yoranChatSettings } from "src/main";
 import { ChatMessage, formatErrorMessage } from "./utils/token-utils";
-import { manageContextMessages } from "./managers/context-manager";
-import { manageArticleContent } from "./managers/article-manager";
+export { manageContextMessages } from "./managers/context-manager";
+export { manageArticleContent } from "./managers/article-manager";
 
 type CallBacks = {
   onStart?: () => void;
@@ -22,86 +22,11 @@ type CallBacks = {
  */
 export interface OpenaiParams {
   settings: yoranChatSettings;
-  inputValue: string;
-  notePrompts?: string[];
-  contextMessages?: Array<ChatMessage>;
+  messages: ChatMessage[];
   callBacks: CallBacks;
   cancelToken?: { cancelled: boolean };
   systemMessage?: string; // 自定义系统消息，优先级高于settings.systemPrompt
 }
-
-/**
- * 构建消息数组
- * 将系统提示、笔记上下文、历史对话和用户输入组合成完整的消息数组
- */
-const buildMessages = (
-  settings: yoranChatSettings,
-  inputValue: string,
-  notePrompts?: string[],
-  contextMessages?: Array<ChatMessage>,
-  systemMessage?: string,
-): ChatMessage[] => {
-  const messages: ChatMessage[] = [];
-
-  // 添加系统提示（合并基础系统提示和自定义系统消息）
-  const systemMessages: string[] = [];
-
-  // 首先添加基础系统提示
-  if (settings.systemPrompt) {
-    systemMessages.push(settings.systemPrompt);
-  }
-
-  // 然后添加自定义系统消息
-  if (systemMessage) {
-    systemMessages.push(systemMessage);
-  }
-
-  // 如果有系统消息，合并后添加到消息数组
-  if (systemMessages.length > 0) {
-    messages.push({
-      role: "system",
-      content: systemMessages.join("\n\n"),
-    });
-  }
-
-  // 计算token分配策略
-  const totalTokens = settings.maxContextTokens;
-  const articleTokenRatio = 0.65; // 文章内容占65%
-  const contextTokenRatio = 0.25; // 历史对话占25%
-  // 剩余10%留给系统消息和用户输入
-
-  const maxArticleTokens = Math.floor(totalTokens * articleTokenRatio);
-  const maxContextTokens = Math.floor(totalTokens * contextTokenRatio);
-
-  // 添加笔记上下文（智能管理文章内容）
-  if (notePrompts?.length) {
-    const managedArticleMessages = manageArticleContent(
-      notePrompts,
-      maxArticleTokens,
-      inputValue,
-    );
-    messages.push(...managedArticleMessages);
-  }
-
-  // 添加历史对话（智能管理上下文长度）
-  if (contextMessages?.length) {
-    const hasArticleContent = Boolean(notePrompts?.length);
-    const managedContextMessages = manageContextMessages(
-      contextMessages,
-      maxContextTokens,
-      hasArticleContent,
-    );
-    messages.push(...managedContextMessages);
-  }
-
-  // 添加用户输入
-  messages.push({
-    role: "user",
-    content: inputValue,
-  });
-
-  return messages;
-};
 
 /**
  * 创建 OpenAI 客户端实例
@@ -149,6 +74,7 @@ export const handleStreamResponse = async (
   cancelToken?: { cancelled: boolean },
 ) => {
   try {
+    const { maxContextTokens } = settings;
     callBacks.onStart?.();
 
     const stream = await openai.chat.completions.create({
@@ -156,7 +82,7 @@ export const handleStreamResponse = async (
       model: settings.model,
       stream: true,
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: maxContextTokens,
     });
     callBacks.onResponseStart?.();
 
@@ -210,33 +136,23 @@ const validateAPIConfig = (settings: yoranChatSettings): string[] => {
 /**
  * 主要的 OpenAI API 调用函数
  */
-// TODO: 函数命名不够公共，业务
-// TODO: 存在业务变量在这里面进行拼接的情况
-export const sendChatMessage = async ({
+export const streamChatCompletion = async ({
   settings,
-  inputValue,
-  notePrompts,
-  contextMessages,
+  messages,
   callBacks,
   cancelToken,
-  systemMessage,
 }: OpenaiParams) => {
   const errorText = validateAPIConfig(settings);
+
   if (errorText && errorText.length) {
     for (const err of errorText) {
       callBacks.onError?.(new Error(err));
     }
+
     return;
   }
+
   const openai = createOpenAIClient(settings);
-  // 使用 buildMessages 函数构建消息数组
-  const messages = buildMessages(
-    settings,
-    inputValue,
-    notePrompts,
-    contextMessages,
-    systemMessage,
-  );
 
   return handleStreamResponse(
     openai,
