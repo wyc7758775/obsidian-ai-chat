@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useMachine } from "@xstate/react";
 import styles from "./css/ai-chat.module.css";
-import { sendChatMessage } from "../../core/ai/openai";
+import { streamChatCompletion } from "../../core/ai/openai";
 import {
   NoteContextService,
   NoteContext,
@@ -28,7 +28,7 @@ import { Loading } from "../../ui/loading";
 import { useHistory } from "./component/chat-panel/index";
 import { useContext } from "./hooks/use-context";
 import { useScrollToBottom } from "./component/hooks/use-scroll-to-bottom";
-import { useSend } from "./hooks/use-send";
+import { useSend, constructMessage } from "./hooks/use-send";
 import { Message, ChatComponentProps, NoteReference } from "./type";
 import { chatMachine } from "./machines/chatMachine";
 import { ChatStateProvider } from "./machines/chatStateContext";
@@ -261,15 +261,20 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       selectedRole?.systemPrompt ?? (await getCurrentSystemMessage());
 
     setIsLoading(true);
-    sendChatMessage({
+    const notePrompts = await getNotePrompts();
+    const messages = constructMessage(
       settings,
       inputValue,
-      notePrompts: await getNotePrompts(),
-      contextMessages: currentMessages.map((msg) => ({
+      notePrompts,
+      currentMessages.map((msg) => ({
         role: msg.type === "user" ? "user" : "assistant",
         content: msg.content,
       })),
-      systemMessage, // 传递当前历史记录的系统消息
+      systemMessage,
+    );
+    streamChatCompletion({
+      settings,
+      messages,
       callBacks: {
         onChunk: (chunk: string) => {
           setSessions((prev) => {
@@ -427,14 +432,19 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
     // 重新发送AI请求
     setIsLoading(true);
-    sendChatMessage({
+    const messages = constructMessage(
       settings,
-      inputValue: userMessage.content, // 使用原始用户消息内容
+      userMessage.content,
       notePrompts,
-      contextMessages: newMessages.map((msg) => ({
+      currentMessages.map((msg) => ({
         role: msg.type === "user" ? "user" : "assistant",
         content: msg.content,
       })),
+      systemMessage,
+    );
+    streamChatCompletion({
+      settings,
+      messages,
       systemMessage,
       callBacks: {
         onChunk: (chunk: string) => {
@@ -647,26 +657,19 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       setInputValue(text);
       adjustTextareaHeight();
 
-      setTimeout(() => {
-        try {
-          // 使用 hook 暴露的光标设置方法
-          // 这里暂时用 DOM 兜底，后续可再封装
-          const range = document.createRange();
-          const selection = window.getSelection();
-          const lastChild = textarea.lastChild;
-          if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
-            range.setStart(lastChild, (lastChild.textContent || "").length);
-          } else {
-            range.selectNodeContents(textarea);
-            range.collapse(false);
-          }
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-        } catch (_) {
-          /* ignore */
-        }
-        textarea.focus();
-      }, 0);
+      // TODO: 这里暂时用 DOM 兜底，后续可再封装
+      const range = document.createRange();
+      const selection = window.getSelection();
+      const lastChild = textarea.lastChild;
+      if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
+        range.setStart(lastChild, (lastChild.textContent || "").length);
+      } else {
+        range.selectNodeContents(textarea);
+        range.collapse(false);
+      }
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      textarea.focus();
     },
     [adjustTextareaHeight],
   );
