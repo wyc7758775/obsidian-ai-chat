@@ -329,6 +329,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   };
 
   // TODO: 重新生成指定 AI 消息有非常大的 BUG：只重新生成最后一条是没有问题，但是如果重新生成倒数第二条，会导致倒数第一条也被删除
+  // TODO: 优化这里的逻辑，现在就是一坨
   const handleRegenerateMessage = async (messageIndex: number) => {
     const targetMessage = currentMessages[messageIndex];
 
