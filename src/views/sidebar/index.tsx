@@ -336,18 +336,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     }
     return index;
   };
-  const handleRegenerateMessage = async (messageIndex: number) => {
-    const targetMessage = currentMessages[messageIndex];
-
-    // 只能重新生成AI消息
-    if (targetMessage.type !== "assistant") return;
-    if (userMessageIndex(messageIndex) < 0) return; // 没有找到对应的用户消息
-
-    const userMessage = currentMessages[userMessageIndex(messageIndex)];
-
+  const removeMessagesAfterIndex = (messageIndex: number) => {
     // 删除从AI消息开始到最后的所有消息
     const newMessages = currentMessages.slice(0, messageIndex);
-    if (!currentId) return;
 
     setSessions((prev) => {
       const prevSession = prev[currentId] ?? {
@@ -359,9 +350,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         [currentId]: { ...prevSession, messages: newMessages },
       };
     });
-    setMessagesChanged(true);
-
-    // 创建新的AI消息
+  };
+  const createMessage = (): string => {
     const aiMessageId = Date.now().toString();
     const aiMessage: Message = {
       id: aiMessageId,
@@ -381,16 +371,26 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         },
       };
     });
-
-    // 准备笔记提示（支持文件夹：读取该文件夹下的所有笔记）
+    return aiMessageId;
+  };
+  /**
+   * 收集选中的笔记内容作为AI提示上下文
+   * 支持文件夹选择：读取文件夹内所有文件内容
+   * @returns 去重后的笔记内容数组
+   */
+  const collectNotePrompts = async (): Promise<string[]> => {
     const notePrompts: string[] = [];
     const addedPaths = new Set<string>();
+
     for (let i = 0; i < currentSelectedNotes.length; i++) {
       const note = currentSelectedNotes[i];
+
+      // 处理文件夹选择
       if (note.iconType === "folder" && note.file && "path" in note.file) {
         const folderPath = (note.file as any).path;
         const folderMap = await noteContextService.getNotesByFolder();
         const files = folderMap.get(folderPath) || [];
+
         for (const f of files) {
           if (addedPaths.has(f.path)) continue;
           const ctx = await noteContextService.getNoteContent(f);
@@ -400,6 +400,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         }
         continue;
       }
+
+      // 处理单个笔记选择
       const ctx = await noteContextService.getNoteContent(note as any);
       const content = typeof ctx === "string" ? ctx : (ctx?.content ?? "");
       const p =
@@ -410,26 +412,24 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       if (p) addedPaths.add(p);
     }
 
-    // 获取当前历史记录的系统消息
-    const getCurrentSystemMessage = async () => {
-      if (!currentId) return undefined;
-      try {
-        const currentItem = await getHistoryItemById(currentId);
-        return currentItem?.systemMessage;
-      } catch (e) {
-        console.error("Failed to get system message:", e);
-        return undefined;
-      }
-    };
+    return notePrompts;
+  };
 
-    /**
-     * 构建重新生成的系统提示：优先使用当前选择的角色。
-     */
-    const systemMessage =
-      selectedRole?.systemPrompt ?? (await getCurrentSystemMessage());
+  const handleRegenerateMessage = async (messageIndex: number) => {
+    if (!currentId) return;
 
-    // 重新发送AI请求
-    setIsLoading(true);
+    const targetMessage = currentMessages[messageIndex];
+    // 只能重新生成AI消息
+    if (targetMessage.type !== "assistant") return;
+    if (userMessageIndex(messageIndex) < 0) return; // 没有找到对应的用户消息
+
+    removeMessagesAfterIndex(messageIndex);
+    setMessagesChanged(true);
+    const aiMessageId = createMessage();
+
+    // 准备笔记提示（支持文件夹：读取该文件夹下的所有笔记）
+    const notePrompts = await collectNotePrompts();
+    const userMessage = currentMessages[userMessageIndex(messageIndex)];
     const messages = constructMessage(
       settings,
       userMessage.content,
@@ -438,12 +438,13 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         role: msg.type === "user" ? "user" : "assistant",
         content: msg.content,
       })),
-      systemMessage,
+      selectedRole?.systemPrompt ?? "",
     );
+
+    setIsLoading(true);
     streamChatCompletion({
       settings,
       messages,
-      systemMessage,
       callBacks: {
         onChunk: (chunk: string) => {
           setSessions((prev) => {
