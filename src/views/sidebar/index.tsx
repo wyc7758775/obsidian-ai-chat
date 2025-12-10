@@ -328,30 +328,27 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     setIsLoading(false);
   };
 
-  // TODO: 重新生成指定 AI 消息有非常大的 BUG：只重新生成最后一条是没有问题，但是如果重新生成倒数第二条，会导致倒数第一条也被删除
-  // TODO: 优化这里的逻辑，现在就是一坨
+  // 存在历史问题，AI 没有返回数据，所以遍历当前 message 中直到获取到当前重复刷新的 user 的提示词
+  const userMessageIndex = (messageIndex: number): number => {
+    let index: number = messageIndex - 1;
+    while (index >= 0 && currentMessages[index].type !== "user") {
+      index--;
+    }
+    return index;
+  };
   const handleRegenerateMessage = async (messageIndex: number) => {
     const targetMessage = currentMessages[messageIndex];
 
     // 只能重新生成AI消息
     if (targetMessage.type !== "assistant") return;
+    if (userMessageIndex(messageIndex) < 0) return; // 没有找到对应的用户消息
 
-    // 找到对应的用户消息（通常是前一条消息）
-    let userMessageIndex = messageIndex - 1;
-    while (
-      userMessageIndex >= 0 &&
-      currentMessages[userMessageIndex].type !== "user"
-    ) {
-      userMessageIndex--;
-    }
-
-    if (userMessageIndex < 0) return; // 没有找到对应的用户消息
-
-    const userMessage = currentMessages[userMessageIndex];
+    const userMessage = currentMessages[userMessageIndex(messageIndex)];
 
     // 删除从AI消息开始到最后的所有消息
     const newMessages = currentMessages.slice(0, messageIndex);
     if (!currentId) return;
+
     setSessions((prev) => {
       const prevSession = prev[currentId] ?? {
         messages: [],
