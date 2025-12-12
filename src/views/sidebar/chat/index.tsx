@@ -1,1 +1,1 @@
-export { ChatComponent } from "../chat";
+export { ChatInput } from "./chat-input";
