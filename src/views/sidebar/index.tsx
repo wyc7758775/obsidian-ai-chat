@@ -18,7 +18,7 @@ import {
 } from "./component/message-list/message-list";
 import { NoteSelector } from "./component/note-selector";
 import { SelectedFiles } from "./component/selected-files";
-import { ChatInput } from "./chat/chat-input";
+import { ChatInput } from "./chat";
 import {
   PositionedPopover,
   usePositionedPopover,
@@ -103,7 +103,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         let noteContexts: NoteContext[] = [];
         if (item.noteSelected && item.noteSelected.length > 0) {
           noteContexts = await fileStorageService.convertToNoteContexts(
-            item.noteSelected,
+            item.noteSelected
           );
         }
         setSessions((prev) => ({
@@ -128,7 +128,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
     const noteSelectedReferences: NoteReference[] = (currentSelectedNotes || [])
       .map((noteContext) =>
-        fileStorageService.convertToNoteReference(noteContext),
+        fileStorageService.convertToNoteReference(noteContext)
       )
       .filter((ref): ref is NoteReference => ref !== null);
 
@@ -201,7 +201,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         for (const f of files) {
           if (addedPaths.has(f.path)) continue;
           const ctx = await noteContextService.getNoteContent(f);
-          const content = typeof ctx === "string" ? ctx : (ctx?.content ?? "");
+          const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
           notePrompts.push(content);
           addedPaths.add(f.path);
         }
@@ -209,7 +209,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       }
 
       const ctx = await noteContextService.getNoteContent(note as any);
-      const content = typeof ctx === "string" ? ctx : (ctx?.content ?? "");
+      const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
       const p =
         (ctx && typeof ctx !== "string" ? ctx.path : note.path) ||
         note.file?.path;
@@ -270,7 +270,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         role: msg.type === "user" ? "user" : "assistant",
         content: msg.content,
       })),
-      systemMessage,
+      systemMessage
     );
     streamChatCompletion({
       settings,
@@ -285,7 +285,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             const updated = prevSession.messages.map((msg) =>
               msg.id === aiParams.id
                 ? { ...msg, content: msg.content + chunk }
-                : msg,
+                : msg
             );
             return {
               ...prev,
@@ -309,7 +309,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             const updated = prevSession.messages.map((msg) =>
               msg.id === aiParams.id
                 ? { ...msg, content: `Error: ${error.message}` }
-                : msg,
+                : msg
             );
             return {
               ...prev,
@@ -394,7 +394,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         for (const f of files) {
           if (addedPaths.has(f.path)) continue;
           const ctx = await noteContextService.getNoteContent(f);
-          const content = typeof ctx === "string" ? ctx : (ctx?.content ?? "");
+          const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
           notePrompts.push(content);
           addedPaths.add(f.path);
         }
@@ -403,7 +403,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
       // 处理单个笔记选择
       const ctx = await noteContextService.getNoteContent(note as any);
-      const content = typeof ctx === "string" ? ctx : (ctx?.content ?? "");
+      const content = typeof ctx === "string" ? ctx : ctx?.content ?? "";
       const p =
         (ctx && typeof ctx !== "string" ? ctx.path : note.path) ||
         note.file?.path;
@@ -438,7 +438,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         role: msg.type === "user" ? "user" : "assistant",
         content: msg.content,
       })),
-      selectedRole?.systemPrompt ?? "",
+      selectedRole?.systemPrompt ?? ""
     );
 
     setIsLoading(true);
@@ -455,7 +455,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
             const updated = prevSession.messages.map((msg) =>
               msg.id === aiMessageId
                 ? { ...msg, content: msg.content + chunk }
-                : msg,
+                : msg
             );
             return {
               ...prev,
@@ -488,7 +488,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         selectedNotes: [],
       };
       const exists = prevSession.selectedNotes.some(
-        (p: any) => p.path === note.file?.path,
+        (p: any) => p.path === note.file?.path
       );
       if (exists) return prev;
       return {
@@ -514,7 +514,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         selectedNotes: [],
       };
       const existingPaths = new Set(
-        prevSession.selectedNotes.map((p) => p.file?.path || p.path),
+        prevSession.selectedNotes.map((p) => p.file?.path || p.path)
       );
       const merged = [...prevSession.selectedNotes];
       for (const note of notes) {
@@ -544,7 +544,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         selectedNotes: [],
       };
       const filtered = prevSession.selectedNotes.filter(
-        (n) => (n.file?.path || n.path) !== (note.file?.path || note.path),
+        (n) => (n.file?.path || n.path) !== (note.file?.path || note.path)
       );
       return {
         ...prev,
@@ -582,7 +582,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       setInputValue(newValue);
       handleInput();
     },
-    [setInputValue, handleInput],
+    [setInputValue, handleInput]
   );
 
   // 延后声明，避免 TDZ
@@ -670,7 +670,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       selection?.addRange(range);
       textarea.focus();
     },
-    [adjustTextareaHeight],
+    [adjustTextareaHeight]
   );
 
   return (
