@@ -108,7 +108,7 @@ export const constructMessage = (
   inputValue: string,
   notePrompts?: string[],
   contextMessages?: Array<ChatMessage>,
-  systemMessage?: string,
+  systemMessage?: string
 ): ChatMessage[] => {
   const messages: ChatMessage[] = [];
 
@@ -147,7 +147,7 @@ export const constructMessage = (
     const managedArticleMessages = manageArticleContent(
       notePrompts,
       maxArticleTokens,
-      inputValue,
+      inputValue
     );
     messages.push(...managedArticleMessages);
   }
@@ -158,7 +158,7 @@ export const constructMessage = (
     const managedContextMessages = manageContextMessages(
       contextMessages,
       maxContextTokens,
-      hasArticleContent,
+      hasArticleContent
     );
     messages.push(...managedContextMessages);
   }

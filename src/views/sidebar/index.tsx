@@ -601,7 +601,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     if (!currentId) return;
     messageListRefs.current[currentId]?.scrollToBottom?.();
   };
-  const { ScrollToBottomRender } = useScrollToBottom(handleScrollToBottomClick);
+  const { ScrollToBottom } = useScrollToBottom({
+    onClick: handleScrollToBottomClick,
+  });
 
   /**
    * 控制“回到底部”按钮显隐的抖动消除（双窗口迟滞法）
@@ -717,7 +719,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         </PositionedPopover>
         {/* 输入区域 */}
         <div className={styles.inputArea}>
-          <ScrollToBottomRender
+          <ScrollToBottom
             disabled={state.matches("streaming")}
             visibly={showScrollBtn}
           />

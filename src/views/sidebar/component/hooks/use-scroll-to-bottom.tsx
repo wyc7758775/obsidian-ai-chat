@@ -13,13 +13,16 @@ import { useMemo } from "react";
  * 输入参数：`onClickBack` 点击按钮回调函数。
  * 边界处理：按钮禁用时不可交互；渲染组件引用稳定，避免因输入导致的重复卸载/挂载。
  */
-export const useScrollToBottom = <T extends () => void>(onClickBack: T) => {
+// UI 样式
+// 状态：disabled 禁用状态，visibly 可见状态
+// 事件：disabled === false && visibly === true 时点击按钮触发回调
+export const useScrollToBottom = ({ onClick }: { onClick: () => void }) => {
   const handleClick = () => {
-    onClickBack();
+    onClick();
   };
 
   type BtnProps = { disabled: boolean; visibly: boolean };
-  const ScrollToBottomRender = useMemo(() => {
+  const ScrollToBottom = useMemo(() => {
     return ({ disabled, visibly }: BtnProps) => (
       <div
         className={`${styles.scrollToBottomBtnContainer} ${
@@ -40,6 +43,6 @@ export const useScrollToBottom = <T extends () => void>(onClickBack: T) => {
   }, [handleClick]);
 
   return {
-    ScrollToBottomRender,
+    ScrollToBottom,
   };
 };
