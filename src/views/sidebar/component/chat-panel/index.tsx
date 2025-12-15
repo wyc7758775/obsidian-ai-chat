@@ -11,27 +11,27 @@ import { HistoryItem } from "../../type";
 import { useContext } from "../../hooks/use-context";
 import { debounce } from "../../../../utils";
 import { RoleModal, useRoles } from "./roles";
-import { useWaterfallLayout } from "./use-waterfall-layout";
+import { WaterfallWrapper } from "./use-waterfall-layout";
 import { useHistoryCard } from "./history-card";
+import { useShowModal } from "./use-show-modal";
 
 export type ChatMessageProps = {
   app: App;
 };
 
-/**
- * 面板类型（联合类型）
- * - 说明：使用字面量联合类型更直接，避免到处使用魔法字符串。
- * - 边界：仅允许 'history'、'roles' 或 null；null 表示不展示任何面板。
- */
+// null 表示不展示任何面板
 type ShowPanel = "history" | "roles" | null;
 
+// TODO：i18n
 export const useHistory = () => {
-  const [historyItems, setHistoryItems] = useState<HistoryItem>(
-    {} as HistoryItem,
-  );
+  const [historyItems, setHistoryItems] = useState<HistoryItem>();
   const [currentId, setCurrentId] = useState<string>("");
   // 用于强制刷新历史记录列表的触发器
   const [updater, setUpdater] = useState(0);
+
+  const [showHistoryAndRoles, setShowHistoryAndRoles] =
+    useState<ShowPanel>(null);
+  const { modalRef, handleExpand } = useShowModal();
 
   /**
    * 强制刷新历史记录列表
@@ -50,49 +50,31 @@ export const useHistory = () => {
       upsertHistoryItem,
     } = useContext(app);
     const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
-    const [showHistoryAndRoles, setShowHistoryAndRoles] =
-      useState<ShowPanel>(null);
 
-    const handleExpand = (e?: ReactMouseEvent<HTMLDivElement>) => {
-      const nextKey =
-        (e?.currentTarget as HTMLElement)?.dataset?.key ?? "roles";
-      setShowHistoryAndRoles((prev) =>
-        prev === nextKey ? null : (nextKey as ShowPanel),
-      );
-    };
+    // const historyAndRolesRef = useRef<HTMLDivElement>(null);
+    // useEffect(() => {
+    //   const handleClickOutside = (event: MouseEvent) => {
+    //     if (
+    //       historyAndRolesRef.current &&
+    //       !historyAndRolesRef.current.contains(event.target as Node)
+    //     ) {
+    //       const el = event.target as Element | null;
+    //       const keyAttr = el?.getAttribute?.("data-key");
+    //       if (keyAttr && keyAttr === showHistoryAndRoles) return;
+    //       setShowHistoryAndRoles(null);
+    //     }
+    //   };
 
-    const handleHistoryExpand = (e?: ReactMouseEvent<HTMLDivElement>) => {
-      const nextKey =
-        (e?.currentTarget as HTMLElement)?.dataset?.key ?? "history";
-      setShowHistoryAndRoles((prev) =>
-        prev === nextKey ? null : (nextKey as ShowPanel),
-      );
-    };
+    //   if (showHistoryAndRoles) {
+    //     document.addEventListener("mousedown", handleClickOutside);
+    //   } else {
+    //     document.removeEventListener("mousedown", handleClickOutside);
+    //   }
 
-    const historyAndRolesRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          historyAndRolesRef.current &&
-          !historyAndRolesRef.current.contains(event.target as Node)
-        ) {
-          const el = event.target as Element | null;
-          const keyAttr = el?.getAttribute?.("data-key");
-          if (keyAttr && keyAttr === showHistoryAndRoles) return;
-          setShowHistoryAndRoles(null);
-        }
-      };
-
-      if (showHistoryAndRoles) {
-        document.addEventListener("mousedown", handleClickOutside);
-      } else {
-        document.removeEventListener("mousedown", handleClickOutside);
-      }
-
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [showHistoryAndRoles]);
+    //   return () => {
+    //     document.removeEventListener("mousedown", handleClickOutside);
+    //   };
+    // }, [showHistoryAndRoles]);
 
     const {
       renderRoleList,
@@ -107,11 +89,7 @@ export const useHistory = () => {
       handleCancelRole,
     } = useRoles(app);
 
-    const { containerRef, cardRefs, containerHeight } = useWaterfallLayout({
-      active: showHistoryAndRoles === "history",
-      itemsCount: historyList.length,
-    });
-
+    const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
     /**
      * 新增对话逻辑：
      * - 若当前对话的消息为空，则不允许创建新的对话，并弹出提示。
@@ -288,7 +266,7 @@ export const useHistory = () => {
               <HistoryExpandIcon
                 data-key="history"
                 active={showHistoryAndRoles === "history"}
-                onClick={handleHistoryExpand}
+                onClick={handleExpand}
               />
               <AddChatIcon onClick={handleAdd} />
             </div>
@@ -299,7 +277,7 @@ export const useHistory = () => {
           </div>
           {showHistoryAndRoles && (
             <div
-              ref={historyAndRolesRef}
+              ref={modalRef}
               className={`${styles.historyAndRolesContainer}
               ${
                 showHistoryAndRoles === "history"
@@ -312,16 +290,9 @@ export const useHistory = () => {
               {showHistoryAndRoles === "roles" && renderRoleList()}
               {/* 历史记录卡片 */}
               {showHistoryAndRoles === "history" && (
-                <div
-                  ref={containerRef}
-                  className={styles.historyExpandList}
-                  style={{
-                    height:
-                      containerHeight > 0
-                        ? `${containerHeight + 30}px`
-                        : "30vh",
-                    maxHeight: "50vh", // 最大高度限制，防止过高
-                  }}
+                <WaterfallWrapper
+                  itemsCount={historyList.length}
+                  cardRefs={cardRefs}
                 >
                   {historyList.map((item: HistoryItem, index: number) => (
                     <HistoryCard
@@ -331,7 +302,7 @@ export const useHistory = () => {
                       isActive={item.id === currentId}
                     />
                   ))}
-                </div>
+                </WaterfallWrapper>
               )}
             </div>
           )}
