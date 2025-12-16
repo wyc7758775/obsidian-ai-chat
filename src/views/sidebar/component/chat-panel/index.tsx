@@ -1,6 +1,5 @@
 import { App, Notice } from "obsidian";
 import { useState, useEffect, useRef } from "react";
-import type { MouseEvent as ReactMouseEvent } from "react";
 import {
   AddChatIcon,
   HistoryExpandIcon,
@@ -19,9 +18,6 @@ export type ChatMessageProps = {
   app: App;
 };
 
-// null 表示不展示任何面板
-type ShowPanel = "history" | "roles" | null;
-
 // TODO：i18n
 export const useHistory = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem>();
@@ -29,9 +25,12 @@ export const useHistory = () => {
   // 用于强制刷新历史记录列表的触发器
   const [updater, setUpdater] = useState(0);
 
-  const [showHistoryAndRoles, setShowHistoryAndRoles] =
-    useState<ShowPanel>(null);
-  const { modalRef, handleExpand } = useShowModal();
+  const {
+    modalRef,
+    handleExpand,
+    setShowHistoryAndRoles,
+    showHistoryAndRoles,
+  } = useShowModal();
 
   /**
    * 强制刷新历史记录列表
@@ -50,31 +49,6 @@ export const useHistory = () => {
       upsertHistoryItem,
     } = useContext(app);
     const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
-
-    // const historyAndRolesRef = useRef<HTMLDivElement>(null);
-    // useEffect(() => {
-    //   const handleClickOutside = (event: MouseEvent) => {
-    //     if (
-    //       historyAndRolesRef.current &&
-    //       !historyAndRolesRef.current.contains(event.target as Node)
-    //     ) {
-    //       const el = event.target as Element | null;
-    //       const keyAttr = el?.getAttribute?.("data-key");
-    //       if (keyAttr && keyAttr === showHistoryAndRoles) return;
-    //       setShowHistoryAndRoles(null);
-    //     }
-    //   };
-
-    //   if (showHistoryAndRoles) {
-    //     document.addEventListener("mousedown", handleClickOutside);
-    //   } else {
-    //     document.removeEventListener("mousedown", handleClickOutside);
-    //   }
-
-    //   return () => {
-    //     document.removeEventListener("mousedown", handleClickOutside);
-    //   };
-    // }, [showHistoryAndRoles]);
 
     const {
       renderRoleList,
@@ -160,6 +134,7 @@ export const useHistory = () => {
         try {
           // 加载历史记录列表
           const items = await fetchHistoryList();
+          console.log("历史列表：", items);
           setHistoryList(items);
           /**
            * 首次加载逻辑（函数级注释）：
@@ -202,7 +177,7 @@ export const useHistory = () => {
     }, [fetchHistoryList, updater]);
 
     useEffect(() => {
-      if (!selectedRole || !historyItems.id) return;
+      if (!selectedRole || !historyItems?.id) return;
       const updatedHistoryItem = {
         ...historyItems,
         roleName: selectedRole.name,
@@ -297,6 +272,7 @@ export const useHistory = () => {
                   {historyList.map((item: HistoryItem, index: number) => (
                     <HistoryCard
                       ref={(el) => (cardRefs.current[index] = el)}
+                      key={item.id + index}
                       index={index}
                       item={item}
                       isActive={item.id === currentId}
