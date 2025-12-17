@@ -8,9 +8,8 @@ export const useShowModal = () => {
 
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const handleExpand = (e: any) => {
-    const nextKey = (e?.currentTarget as HTMLElement)?.dataset?.key;
-    console.log("点击展开", nextKey);
+  const handleExpand = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const nextKey = (e.currentTarget as HTMLElement)?.dataset?.key;
     setShowHistoryAndRoles((prev) =>
       prev === nextKey ? null : (nextKey as ShowPanel),
     );

@@ -1,7 +1,6 @@
 import { App, Notice } from "obsidian";
 import { useState, useEffect } from "react";
 import { useContext } from "../../hooks/use-context";
-export { RoleModal } from "./role-modal";
 
 import type { RoleItem } from "../../../../core/storage/role-storage";
 import styles from "./css/styles.module.css";

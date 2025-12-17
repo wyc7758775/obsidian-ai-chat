@@ -9,10 +9,11 @@ import styles from "./css/styles.module.css";
 import { HistoryItem } from "../../type";
 import { useContext } from "../../hooks/use-context";
 import { debounce } from "../../../../utils";
-import { RoleModal, useRoles } from "./roles";
 import { WaterfallWrapper } from "./use-waterfall-layout";
 import { useHistoryCard } from "./history-card";
 import { useShowModal } from "./use-show-modal";
+import { createRoleModal } from "./create-role-modal";
+import { useRoles } from "./roles";
 
 export type ChatMessageProps = {
   app: App;
@@ -62,6 +63,13 @@ export const useHistory = () => {
       handleSaveRole,
       handleCancelRole,
     } = useRoles(app);
+
+    const RoleModal = createRoleModal({
+      onNameChange: setRoleNameInput,
+      onPromptChange: setRolePromptInput,
+      onSave: handleSaveRole,
+      onCancel: handleCancelRole,
+    });
 
     const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
     /**
@@ -134,7 +142,6 @@ export const useHistory = () => {
         try {
           // 加载历史记录列表
           const items = await fetchHistoryList();
-          console.log("历史列表：", items);
           setHistoryList(items);
           /**
            * 首次加载逻辑（函数级注释）：
@@ -284,14 +291,7 @@ export const useHistory = () => {
           )}
         </div>
         {isRoleModalOpen && (
-          <RoleModal
-            roleName={roleNameInput}
-            rolePrompt={rolePromptInput}
-            onNameChange={setRoleNameInput}
-            onPromptChange={setRolePromptInput}
-            onSave={handleSaveRole}
-            onCancel={handleCancelRole}
-          />
+          <RoleModal roleName={roleNameInput} rolePrompt={rolePromptInput} />
         )}
       </>
     );
