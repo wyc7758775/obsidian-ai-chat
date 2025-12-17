@@ -59,7 +59,7 @@ export const IconWrapWithClick = ({
   label: string;
   color?: string;
   children: ReactNode;
-  onClick?: (e?: MouseEvent<HTMLDivElement>) => void;
+  onClick?: React.MouseEvent<HTMLButtonElement>;
   variant?: "default" | "tiny" | "small" | "large" | "pulse" | "wiggle";
   className?: string;
   active?: boolean;
@@ -98,7 +98,11 @@ export const IconWrapWithClick = ({
   );
 };
 
-export const ShareIcon = ({ onClick }: { onClick?: () => void }) => (
+export const ShareIcon = ({
+  onClick,
+}: {
+  onClick?: React.MouseEvent<HTMLButtonElement>;
+}) => (
   <IconWrapWithClick label="分享" onClick={onClick}>
     <svg
       width="1em"
@@ -415,7 +419,7 @@ export const RoleExpandIcon = ({
   active,
   ...rest
 }: {
-  onClick?: (e?: MouseEvent<HTMLDivElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   className?: string;
   active?: boolean;
 } & HTMLAttributes<HTMLDivElement>) => (
@@ -453,7 +457,7 @@ export const HistoryExpandIcon = ({
   active,
   ...rest
 }: {
-  onClick?: (e?: MouseEvent<HTMLDivElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   className?: string;
   active?: boolean;
 } & HTMLAttributes<HTMLDivElement>) => (
