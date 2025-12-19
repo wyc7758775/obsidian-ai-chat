@@ -3,15 +3,7 @@ import { useState, useEffect } from "react";
 import { useContext } from "../../hooks/use-context";
 
 import type { RoleItem } from "../../../../core/storage/role-storage";
-import styles from "./css/styles.module.css";
-import {
-  PersonIcon,
-  EditIcon,
-  AddSmallIcon,
-  CloseIcon,
-} from "../../../../ui/icon";
-// TODO: 做到这里
-// import { RoleList } from "./role-list";
+import { RoleList } from "./role-list";
 
 export const useRoles = (app: App) => {
   const { fetchRoles, upsertRole, deleteRoleByName } = useContext(app);
@@ -66,61 +58,38 @@ export const useRoles = (app: App) => {
   };
 
   const renderRoleList = () => {
-    const roleItem = (role: RoleItem, index: number) => {
-      const isActive = role.name === selectedRole?.name;
-
-      return (
-        <div
-          className={`${styles.historyFoldItem} ${
-            isActive ? styles.historyFoldItemActive : ""
-          }`}
-          key={index}
-          onClick={() => setSelectedRole(role)}
-        >
-          <PersonIcon />
-          <div className={styles.historyFoldText}>{role.name}</div>
-          <div className={styles.historyFoldActions}>
-            <EditIcon
-              onClick={(e?: React.MouseEvent) => {
-                e?.stopPropagation();
-                setRoleNameInput(role.name);
-                setRolePromptInput(role.systemPrompt);
-                setEditingRoleOriginalName(role.name);
-                setIsRoleModalOpen(true);
-              }}
-            />
-            <CloseIcon
-              onClick={async (e?: React.MouseEvent) => {
-                e?.stopPropagation();
-                await deleteRoleByName(role.name);
-                const roleList = await fetchRoles();
-                setRoles(roleList);
-                if (selectedRole?.name === role.name) {
-                  setSelectedRole(roleList[0] ?? null);
-                }
-              }}
-            />
-          </div>
-        </div>
-      );
+    const addRole = () => {
+      setRoleNameInput("");
+      setRolePromptInput("");
+      setEditingRoleOriginalName(null);
+      setIsRoleModalOpen(true);
     };
-
+    const editRole = (role: RoleItem) => {
+      setRoleNameInput(role.name);
+      setRolePromptInput(role.systemPrompt);
+      setEditingRoleOriginalName(role.name);
+      setIsRoleModalOpen(true);
+    };
+    const deleteRole = async (role: RoleItem) => {
+      await deleteRoleByName(role.name);
+      const roleList = await fetchRoles();
+      setRoles(roleList);
+      if (selectedRole?.name === role.name) {
+        setSelectedRole(roleList[0] ?? null);
+      }
+    };
+    const selectRole = (role: RoleItem) => {
+      setSelectedRole(role);
+    };
     return (
-      <div className={styles.historyFoldList}>
-        {roles.map((role: RoleItem, index: number) => roleItem(role, index))}
-        <div
-          className={styles.historyFoldItem}
-          onClick={() => {
-            setRoleNameInput("");
-            setRolePromptInput("");
-            setEditingRoleOriginalName(null);
-            setIsRoleModalOpen(true);
-          }}
-        >
-          <AddSmallIcon />
-          <div className={styles.historyFoldText}>新增角色</div>
-        </div>
-      </div>
+      <RoleList
+        roles={roles}
+        selectedRole={selectedRole}
+        addRole={addRole}
+        editRole={editRole}
+        deleteRole={deleteRole}
+        selectRole={selectRole}
+      />
     );
   };
 
