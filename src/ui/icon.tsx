@@ -59,7 +59,7 @@ export const IconWrapWithClick = ({
   label: string;
   color?: string;
   children: ReactNode;
-  onClick?: React.MouseEvent<HTMLButtonElement>;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   variant?: "default" | "tiny" | "small" | "large" | "pulse" | "wiggle";
   className?: string;
   active?: boolean;

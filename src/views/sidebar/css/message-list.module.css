@@ -1,132 +1,138 @@
 /* 消息容器 */
 .messagesContainer {
-	flex: 1;
-	overflow-y: auto;
-	overflow-x: hidden;
-	padding: var(--chat-padding);
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	padding-top: 12px;
-	box-shadow: inset 0 1px 0 var(--background-modifier-border), inset 0 -1px 0 var(--background-modifier-border);
-	
-	/* 容器进入动画 */
-	animation: messagesContainerFadeIn 0.25s ease-in-out;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--chat-padding);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  box-shadow:
+    inset 0 1px 0 var(--background-modifier-border),
+    inset 0 -1px 0 var(--background-modifier-border);
+
+  /* 容器进入动画 */
+  animation: messagesContainerFadeIn 0.25s ease-in-out;
 }
 
 /* 消息容器进入动画 */
 @keyframes messagesContainerFadeIn {
-	0% {
-		opacity: 0;
-		transform: translateY(5px);
-	}
-	100% {
-		opacity: 1;
-		transform: translateY(0);
-	}
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 /* 滚动条 */
 .messagesContainer::-webkit-scrollbar {
-	width: 3px;
+  width: 3px;
 }
 .messagesContainer::-webkit-scrollbar-track {
-	background: transparent;
+  background: transparent;
 }
 .messagesContainer::-webkit-scrollbar-thumb {
-	background: var(--scrollbar-thumb-bg);
-	border-radius: 2px;
+  background: var(--scrollbar-thumb-bg);
+  border-radius: 2px;
 }
 .messagesContainer::-webkit-scrollbar-thumb:hover {
-	background: var(--scrollbar-thumb-bg-hover);
+  background: var(--scrollbar-thumb-bg-hover);
 }
 /* 响应式设计 */
 @media (max-width: 400px) {
-	.messagesContainer {
-		padding: 12px;
-		gap: 10px; /* 移动端进一步减少间距 */
-	}
+  .messagesContainer {
+    padding: 12px;
+    gap: 10px; /* 移动端进一步减少间距 */
+  }
 }
 
 /* 消息包装器 */
 .messageWrapper {
-	display: flex;
-	width: 100%;
+  display: flex;
+  width: 100%;
 }
 
 /* 问答对之间的间距 */
-.userMessage { margin: 6px 0; }
-.assistantMessage { margin: 6px 0; }
+.userMessage {
+  margin: 6px 0;
+}
+.assistantMessage {
+  margin: 6px 0;
+}
 
 /* 用户消息进入动画 */
 .messageWrapper:has(.userMessage) {
-	animation: userMessageSlideIn 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  animation: userMessageSlideIn 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 /* 助手消息进入动画 */
 .messageWrapper:has(.assistantMessage) {
-	animation: assistantMessageSlideIn 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  animation: assistantMessageSlideIn 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 @keyframes userMessageSlideIn {
-	0% {
-		opacity: 0;
-		transform: translateX(100px) scale(0.9);
-	}
-	100% {
-		opacity: 1;
-		transform: translateX(0) scale(1);
-	}
+  0% {
+    opacity: 0;
+    transform: translateX(100px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 @keyframes assistantMessageSlideIn {
-	0% {
-		opacity: 0;
-		transform: translateX(-100px) scale(0.9);
-	}
-	100% {
-		opacity: 1;
-		transform: translateX(0) scale(1);
-	}
+  0% {
+    opacity: 0;
+    transform: translateX(-100px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 /* 用户消息样式 */
 .userMessage {
-	display: flex;
-	justify-content: flex-end;
-	max-width: 80%;
-	margin-left: auto;
+  display: flex;
+  justify-content: flex-end;
+  max-width: 80%;
+  margin-left: auto;
 }
 .userBubble {
-	border-radius: 12px;
-	padding: 10px 14px;
-	max-width: 100%;
-	position: relative;
-	background-color: var(--interactive-accent);
-	color: var(--text-on-accent);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 10px 14px;
+  max-width: 100%;
+  position: relative;
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .userBubble:active {
-	transform: translateY(0) scale(0.98);
-	transition: all 0.1s ease;
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s ease;
 }
 .userContent {
-	word-wrap: break-word;
-	line-height: 1.4;
-	user-select: text !important;
+  word-wrap: break-word;
+  line-height: 1.4;
+  user-select: text !important;
 }
 
 .assistantMessage {
-	display: flex;
-	flex-direction: column;
-	max-width: 100%;
-	padding: 12px 16px; /* 增加左右padding，减少上下padding */
-	align-items: flex-start;
-	width: 100%;
-	background-color: var(--background-secondary); /* 添加背景色区分 */
-	border-radius: 12px;
-	border: 1px solid var(--background-modifier-border);
-	position: relative;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  padding: 12px 16px; /* 增加左右padding，减少上下padding */
+  align-items: flex-start;
+  width: 100%;
+  background-color: var(--background-secondary); /* 添加背景色区分 */
+  border-radius: 12px;
+  border: 1px solid var(--background-modifier-border);
+  position: relative;
 }
 
 .assistantText {
@@ -155,19 +161,28 @@
 
 /* 添加背景动画效果 */
 .typing::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(var(--interactive-accent-rgb), 0.1), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--interactive-accent-rgb), 0.1),
+    transparent
+  );
   animation: shimmer 2s infinite;
 }
 
 @keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 .dot {
@@ -178,17 +193,23 @@
   animation: dotBounce 1.4s ease-in-out infinite;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.dot:nth-child(2) { animation-delay: 0.2s; }
-.dot:nth-child(3) { animation-delay: 0.4s; }
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
 
 @keyframes dotBounce {
-  0%, 80%, 100% { 
-    opacity: 0.4; 
-    transform: translateY(0) scale(0.8); 
+  0%,
+  80%,
+  100% {
+    opacity: 0.4;
+    transform: translateY(0) scale(0.8);
   }
-  40% { 
-    opacity: 1; 
-    transform: translateY(-6px) scale(1.2); 
+  40% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.2);
   }
 }
 
@@ -226,10 +247,10 @@
 
 /* Markdown 表格样式与防止撑开父级 */
 .assistantText table {
-  display: block;            /* 让表格在块级容器中可滚动 */
-  width: max-content;        /* 内容宽度优先，避免撑满父容器 */
+  display: block; /* 让表格在块级容器中可滚动 */
+  width: max-content; /* 内容宽度优先，避免撑满父容器 */
   max-width: 100%;
-  overflow-x: auto;          /* 横向滚动而不是溢出 */
+  overflow-x: auto; /* 横向滚动而不是溢出 */
   border-collapse: collapse;
   margin: 8px 0;
   background-color: var(--background-primary);
@@ -255,317 +276,367 @@
 }
 
 .messageActions {
-	display: flex;
-	gap: 6px;
-	align-items: center;
-	justify-content: flex-end;
-	margin-top: 4px;
-	opacity: 0.7;
-	transition: opacity 0.2s ease;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 4px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
 }
 
 .assistantMessage:hover .messageActions {
-	opacity: 1;
+  opacity: 1;
 }
 
 /* 占位符 - 可爱卡通场景 */
 .logo {
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 30px;
-	position: relative;
-	min-height: 300px;
-    /* 橘花猫配色 */
-    --bg-color: #fff6e9;
-    --body-color: #f6c489; /* 橘猫主体毛色 */
-    --ear-color: #ffd9df;  /* 耳朵内侧粉色 */
-    --outline-color: #3a2a1a; /* 深棕描边，更贴近毛发 */
-    --eye-color: #1f1f1f;   /* 眼睛更深 */
-    --nose-color: #3a2a1a;  /* 鼻子深棕 */
-    --heart-color: #ffd867; /* 胸前吊坠更温暖 */
-    --blush-color: #f5a3a3; /* 腮红更柔和 */
-    --shadow-color: rgba(0, 0, 0, 0.12);
-    --tabby-stripe: rgba(210, 120, 40, 0.28); /* 橘猫条纹 */
-    --tabby-light: #ffe2b3; /* 尾尖/高光浅色 */
-    --tabby-dark: #d27a2f;  /* 加深的条纹/尾部描边 */
-    filter: url(#pencilTexture);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  position: relative;
+  min-height: 300px;
+  /* 橘花猫配色 */
+  --bg-color: #fff6e9;
+  --body-color: #f6c489; /* 橘猫主体毛色 */
+  --ear-color: #ffd9df; /* 耳朵内侧粉色 */
+  --outline-color: #3a2a1a; /* 深棕描边，更贴近毛发 */
+  --eye-color: #1f1f1f; /* 眼睛更深 */
+  --nose-color: #3a2a1a; /* 鼻子深棕 */
+  --heart-color: #ffd867; /* 胸前吊坠更温暖 */
+  --blush-color: #f5a3a3; /* 腮红更柔和 */
+  --shadow-color: rgba(0, 0, 0, 0.12);
+  --tabby-stripe: rgba(210, 120, 40, 0.28); /* 橘猫条纹 */
+  --tabby-light: #ffe2b3; /* 尾尖/高光浅色 */
+  --tabby-dark: #d27a2f; /* 加深的条纹/尾部描边 */
+  filter: url(#pencilTexture);
 }
 
 .container {
-    width: 300px;
-    height: 300px;
-    position: relative;
-    animation: float 4s ease-in-out infinite;
+  width: 300px;
+  height: 300px;
+  position: relative;
+  animation: float 4s ease-in-out infinite;
 }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0) scale(0.8); }
-    50% { transform: translateY(-10px) scale(0.8); }
+  0%,
+  100% {
+    transform: translateY(0) scale(0.8);
+  }
+  50% {
+    transform: translateY(-10px) scale(0.8);
+  }
 }
 
 .cat {
-    width: 100%;
-    height: 100%;
-    position: relative;
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 .head {
-    width: 180px;
-    height: 160px;
-    background: var(--body-color);
-    border: 4px solid var(--outline-color);
-    border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
-    position: absolute;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2;
-    box-shadow: 0 5px 0 var(--shadow-color);
+  width: 180px;
+  height: 160px;
+  background: var(--body-color);
+  border: 4px solid var(--outline-color);
+  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  box-shadow: 0 5px 0 var(--shadow-color);
 }
 
 /* 橘花猫头部轻微条纹 */
 .head::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background-image: repeating-linear-gradient(
-      -20deg,
-      transparent 0 16px,
-      var(--tabby-stripe) 16px 28px
-    );
-    opacity: 0.35;
-    pointer-events: none;
-    z-index: 0;
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(
+    -20deg,
+    transparent 0 16px,
+    var(--tabby-stripe) 16px 28px
+  );
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .ear {
-    width: 50px;
-    height: 60px;
-    background: var(--body-color);
-    border: 4px solid var(--outline-color);
-    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-    position: absolute;
-    top: -20px;
-    overflow: hidden;
+  width: 50px;
+  height: 60px;
+  background: var(--body-color);
+  border: 4px solid var(--outline-color);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  position: absolute;
+  top: -20px;
+  overflow: hidden;
 }
 
 .ear::before {
-    content: '';
-    width: 30px;
-    height: 40px;
-    background: var(--ear-color);
-    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+  content: "";
+  width: 30px;
+  height: 40px;
+  background: var(--ear-color);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .ear.left {
-    left: 10px;
-    transform: rotate(-25deg);
+  left: 10px;
+  transform: rotate(-25deg);
 }
 
 .ear.right {
-    right: 10px;
-    animation: ear-twitch 3s ease-in-out infinite;
+  right: 10px;
+  animation: ear-twitch 3s ease-in-out infinite;
 }
 
 @keyframes ear-twitch {
-    0%, 100% { transform: rotate(25deg); }
-    50% { transform: rotate(20deg); }
+  0%,
+  100% {
+    transform: rotate(25deg);
+  }
+  50% {
+    transform: rotate(20deg);
+  }
 }
 
 .eye {
-    width: 28px;
-    height: 35px;
-    background: var(--eye-color);
-    border-radius: 50%;
-    position: absolute;
-    top: 65px;
-    animation: blink 4s infinite;
-    z-index: 3;
+  width: 28px;
+  height: 35px;
+  background: var(--eye-color);
+  border-radius: 50%;
+  position: absolute;
+  top: 65px;
+  animation: blink 4s infinite;
+  z-index: 3;
 }
 
-.eye.left { left: 40px; }
-.eye.right { right: 40px; }
+.eye.left {
+  left: 40px;
+}
+.eye.right {
+  right: 40px;
+}
 
 .eye::after {
-    content: '';
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: white;
-    border-radius: 50%;
-    top: 8px;
-    left: 8px;
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  top: 8px;
+  left: 8px;
 }
 
 @keyframes blink {
-    0%, 95%, 100% { transform: scaleY(1); }
-    97.5% { transform: scaleY(0.1); }
+  0%,
+  95%,
+  100% {
+    transform: scaleY(1);
+  }
+  97.5% {
+    transform: scaleY(0.1);
+  }
 }
 
 .nose {
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 10px solid var(--nose-color);
-    border-radius: 4px;
-    position: absolute;
-    top: 95px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 3;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid var(--nose-color);
+  border-radius: 4px;
+  position: absolute;
+  top: 95px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
 }
 
 .mouth {
-    width: 20px;
-    height: 10px;
-    border: 4px solid transparent;
-    border-bottom-color: var(--outline-color);
-    border-radius: 0 0 50% 50% / 0 0 100% 100%;
-    position: absolute;
-    top: 100px;
-    z-index: 3;
+  width: 20px;
+  height: 10px;
+  border: 4px solid transparent;
+  border-bottom-color: var(--outline-color);
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  position: absolute;
+  top: 100px;
+  z-index: 3;
 }
 
 .mouth.left {
-    left: 68px;
-    transform: rotate(20deg);
+  left: 68px;
+  transform: rotate(20deg);
 }
 
 .mouth.right {
-    right: 68px;
-    transform: rotate(-20deg);
+  right: 68px;
+  transform: rotate(-20deg);
 }
 
 .whisker {
-    width: 30px;
-    height: 2px;
-    background: var(--outline-color);
-    position: absolute;
-    top: 105px;
-    z-index: 3;
+  width: 30px;
+  height: 2px;
+  background: var(--outline-color);
+  position: absolute;
+  top: 105px;
+  z-index: 3;
 }
 
-.whisker.left1 { left: 5px; transform: rotate(10deg); }
-.whisker.left2 { left: 0; top: 115px; transform: rotate(0deg); }
-.whisker.right1 { right: 5px; transform: rotate(-10deg); }
-.whisker.right2 { right: 0; top: 115px; transform: rotate(0deg); }
+.whisker.left1 {
+  left: 5px;
+  transform: rotate(10deg);
+}
+.whisker.left2 {
+  left: 0;
+  top: 115px;
+  transform: rotate(0deg);
+}
+.whisker.right1 {
+  right: 5px;
+  transform: rotate(-10deg);
+}
+.whisker.right2 {
+  right: 0;
+  top: 115px;
+  transform: rotate(0deg);
+}
 
 .blush {
-    width: 25px;
-    height: 12px;
-    background: var(--blush-color);
-    border-radius: 50%;
-    position: absolute;
-    top: 95px;
-    z-index: 2;
+  width: 25px;
+  height: 12px;
+  background: var(--blush-color);
+  border-radius: 50%;
+  position: absolute;
+  top: 95px;
+  z-index: 2;
 }
 
-.blush.left { left: 25px; }
-.blush.right { right: 25px; }
+.blush.left {
+  left: 25px;
+}
+.blush.right {
+  right: 25px;
+}
 
 .body {
-    width: 160px;
-    height: 130px;
-    background: var(--body-color);
-    background-image: repeating-linear-gradient(
-      -20deg,
-      transparent 0 18px,
-      var(--tabby-stripe) 18px 30px
-    );
-    background-blend-mode: multiply;
-    border: 4px solid var(--outline-color);
-    border-radius: 50% 50% 30% 30% / 60% 60% 40% 40%;
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1;
+  width: 160px;
+  height: 130px;
+  background: var(--body-color);
+  background-image: repeating-linear-gradient(
+    -20deg,
+    transparent 0 18px,
+    var(--tabby-stripe) 18px 30px
+  );
+  background-blend-mode: multiply;
+  border: 4px solid var(--outline-color);
+  border-radius: 50% 50% 30% 30% / 60% 60% 40% 40%;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
 }
 
-.body::before, .body::after {
-    content: '';
-    position: absolute;
-    width: 35px;
-    height: 20px;
-    background: var(--body-color);
-    border: 4px solid var(--outline-color);
-    border-radius: 40% 40% 50% 50% / 100% 100% 50% 50%;
-    bottom: -10px;
-    z-index: 1;
+.body::before,
+.body::after {
+  content: "";
+  position: absolute;
+  width: 35px;
+  height: 20px;
+  background: var(--body-color);
+  border: 4px solid var(--outline-color);
+  border-radius: 40% 40% 50% 50% / 100% 100% 50% 50%;
+  bottom: -10px;
+  z-index: 1;
 }
 
 .body::before {
-    left: 30px;
+  left: 30px;
 }
 
 .body::after {
-    right: 30px;
+  right: 30px;
 }
 
 .heart {
-    width: 30px;
-    height: 30px;
-    background: var(--heart-color);
-    position: absolute;
-    top: 40px;
-    left: 50%;
-    transform: translateX(-50%) rotate(45deg);
-    border: 3px solid var(--outline-color);
+  width: 30px;
+  height: 30px;
+  background: var(--heart-color);
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  border: 3px solid var(--outline-color);
 }
 
-.heart::before, .heart::after {
-    content: '';
-    width: 30px;
-    height: 30px;
-    background: var(--heart-color);
-    border-radius: 50%;
-    position: absolute;
-    border: 3px solid var(--outline-color);
+.heart::before,
+.heart::after {
+  content: "";
+  width: 30px;
+  height: 30px;
+  background: var(--heart-color);
+  border-radius: 50%;
+  position: absolute;
+  border: 3px solid var(--outline-color);
 }
 
-.heart::before { top: -15px; left: -3px; }
-.heart::after { top: -3px; left: -15px; }
-
+.heart::before {
+  top: -15px;
+  left: -3px;
+}
+.heart::after {
+  top: -3px;
+  left: -15px;
+}
 
 .tail {
-    width: 90px;
-    height: 90px;
-    border: 3px solid var(--tabby-dark);
-    border-color: transparent transparent var(--tabby-dark) var(--tabby-dark);
-    border-radius: 50%;
-    position: absolute;
-    bottom: 12px;
-    left: 16px;
-    transform: rotate(58deg);
-    z-index: 0;
-    animation: tail-wag 3.2s ease-in-out infinite;
+  width: 90px;
+  height: 90px;
+  border: 3px solid var(--tabby-dark);
+  border-color: transparent transparent var(--tabby-dark) var(--tabby-dark);
+  border-radius: 50%;
+  position: absolute;
+  bottom: 12px;
+  left: 16px;
+  transform: rotate(58deg);
+  z-index: 0;
+  animation: tail-wag 3.2s ease-in-out infinite;
 }
 
 .tail::after {
-    content: '';
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    background: var(--tabby-light);
-    border: 3px solid var(--outline-color);
-    border-radius: 50%;
-    bottom: -2px;
-    left: -4px; /* 尾尖位置微调 */
-    box-shadow: 0 2px 0 var(--shadow-color);
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--tabby-light);
+  border: 3px solid var(--outline-color);
+  border-radius: 50%;
+  bottom: -2px;
+  left: -4px; /* 尾尖位置微调 */
+  box-shadow: 0 2px 0 var(--shadow-color);
 }
 
 @keyframes tail-wag {
-    0%, 100% { transform: rotate(58deg); }
-    50% { transform: rotate(48deg) translateX(6px); }
+  0%,
+  100% {
+    transform: rotate(58deg);
+  }
+  50% {
+    transform: rotate(48deg) translateX(6px);
+  }
 }
 
 /* 复制按钮容器与样式（适配主题，悬浮显示） */
@@ -587,7 +658,11 @@
   background: var(--background-secondary);
   color: var(--text-normal);
   opacity: 0;
-  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
   cursor: pointer;
   z-index: 10;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -629,13 +704,12 @@
   fill: currentColor;
 }
 
-/* 空状态：建议提示区域样式（朴素、干净，略带马赛克/像素风） */
 .emptyWrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding-top: 8px;
+  padding-top: 124px;
 }
 
 .suggestionsWrap {
@@ -666,4 +740,7 @@
   flex: 1; /* 占据左侧空间，将图标推到右侧 */
 }
 
-/* 使用最小尺寸的图标按钮（AddSmallIcon），无需额外按钮样式 */
+.catWrapper {
+  width: auto;
+  height: 248px;
+}
