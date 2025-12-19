@@ -1,5 +1,5 @@
 import { App, Notice } from "obsidian";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   AddChatIcon,
   HistoryExpandIcon,

@@ -1,10 +1,10 @@
 import { AddSmallIcon } from "../../../../ui/icon";
-import { CatLogo } from "./cat-logo";
 import styles from "../../css/message-list.module.css";
+import cat from "./cat.png";
 
 export const messageEmptyRender = (
   suggestions?: string[],
-  onInsertSuggestion?: (text: string) => void
+  onInsertSuggestion?: (text: string) => void,
 ) => {
   const defaultSuggestions: string[] = [
     "请帮我总结这篇笔记的重点并给出行动项",
@@ -20,7 +20,7 @@ export const messageEmptyRender = (
 
   return (
     <div className={styles.emptyWrap}>
-      <CatLogo />
+      <img className={styles.catWrapper} src={cat} alt="Image" />
       <div className={styles.suggestionsWrap} aria-label="建议提示">
         {suggestionsList.map((text: string, idx: number) => (
           <div className={styles.suggestionItem} key={idx}>
