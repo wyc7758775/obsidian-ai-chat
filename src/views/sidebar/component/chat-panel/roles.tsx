@@ -1,15 +1,18 @@
 import { App, Notice } from "obsidian";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useContext } from "../../hooks/use-context";
 
 import type { RoleItem } from "../../../../core/storage/role-storage";
 import { RoleList } from "./role-list";
 
-export const useRoles = (app: App) => {
+export const useRoles = (
+  app: App,
+  externalSelectedRole: RoleItem | null,
+  externalSetSelectedRole: (role: RoleItem | null) => void,
+) => {
   const { fetchRoles, upsertRole, deleteRoleByName } = useContext(app);
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
   const [roleNameInput, setRoleNameInput] = useState("");
   const [rolePromptInput, setRolePromptInput] = useState("");
   const [editingRoleOriginalName, setEditingRoleOriginalName] = useState<
@@ -20,14 +23,15 @@ export const useRoles = (app: App) => {
     const loadRoles = async () => {
       const roleList = await fetchRoles();
       setRoles(roleList);
-      if (!selectedRole) {
-        setSelectedRole(roleList[0] ?? null);
+      // 安全地检查 selectedRole，避免在初始化前访问
+      if (externalSelectedRole === null || externalSelectedRole === undefined) {
+        externalSetSelectedRole(roleList[0] ?? null);
       }
     };
     loadRoles();
   }, [fetchRoles]);
 
-  const handleSaveRole = async () => {
+  const handleSaveRole = useCallback(async () => {
     const name = roleNameInput.trim();
     const prompt = rolePromptInput.trim();
     if (!name || !prompt) {
@@ -42,7 +46,7 @@ export const useRoles = (app: App) => {
       await upsertRole(newRole);
       const roleList = await fetchRoles();
       setRoles(roleList);
-      setSelectedRole(newRole);
+      externalSetSelectedRole(newRole);
       setIsRoleModalOpen(false);
       setEditingRoleOriginalName(null);
       new Notice("角色已保存");
@@ -50,12 +54,19 @@ export const useRoles = (app: App) => {
       console.error("保存角色失败:", e);
       new Notice("保存角色失败");
     }
-  };
+  }, [
+    roleNameInput,
+    rolePromptInput,
+    editingRoleOriginalName,
+    deleteRoleByName,
+    upsertRole,
+    fetchRoles,
+  ]);
 
-  const handleCancelRole = () => {
+  const handleCancelRole = useCallback(() => {
     setIsRoleModalOpen(false);
     setEditingRoleOriginalName(null);
-  };
+  }, []);
 
   const renderRoleList = () => {
     const addRole = () => {
@@ -74,17 +85,18 @@ export const useRoles = (app: App) => {
       await deleteRoleByName(role.name);
       const roleList = await fetchRoles();
       setRoles(roleList);
-      if (selectedRole?.name === role.name) {
-        setSelectedRole(roleList[0] ?? null);
+      // 安全地检查 selectedRole
+      if (externalSelectedRole && externalSelectedRole.name === role.name) {
+        externalSetSelectedRole(roleList[0] ?? null);
       }
     };
     const selectRole = (role: RoleItem) => {
-      setSelectedRole(role);
+      externalSetSelectedRole(role);
     };
     return (
       <RoleList
         roles={roles}
-        selectedRole={selectedRole}
+        selectedRole={externalSelectedRole}
         addRole={addRole}
         editRole={editRole}
         deleteRole={deleteRole}
@@ -95,8 +107,6 @@ export const useRoles = (app: App) => {
 
   return {
     roles,
-    selectedRole,
-    setSelectedRole,
     isRoleModalOpen,
     setIsRoleModalOpen,
     editingRoleOriginalName,

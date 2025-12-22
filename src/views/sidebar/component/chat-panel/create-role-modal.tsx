@@ -13,22 +13,10 @@ export interface RoleModalCallbacks {
   onCancel: () => void;
 }
 
-export interface CreateRoleModalOptions extends RoleModalCallbacks {
-  /** 是否启用 ESC 键关闭（默认 true） */
-  enableEscapeKey?: boolean;
-  /** 是否启用背景点击关闭（默认 true） */
-  enableBackdropClick?: boolean;
-}
+export type CreateRoleModalOptions = RoleModalCallbacks;
 
 export const createRoleModal = (options: CreateRoleModalOptions) => {
-  const {
-    onNameChange,
-    onPromptChange,
-    onSave,
-    onCancel,
-    enableEscapeKey = true,
-    enableBackdropClick = true,
-  } = options;
+  const { onNameChange, onPromptChange, onSave, onCancel } = options;
 
   /**
    * 预配置的 RoleModal 组件
