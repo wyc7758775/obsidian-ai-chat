@@ -8,7 +8,7 @@ export const useShowModal = () => {
 
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const handleExpand = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleExpand = (e: React.MouseEvent<HTMLElement>) => {
     const nextKey = (e.currentTarget as HTMLElement)?.dataset?.key;
     setShowHistoryAndRoles((prev) =>
       prev === nextKey ? null : (nextKey as ShowPanel),

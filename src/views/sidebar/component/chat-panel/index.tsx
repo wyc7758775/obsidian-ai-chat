@@ -1,5 +1,5 @@
 import { App, Notice } from "obsidian";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   AddChatIcon,
   HistoryExpandIcon,
@@ -12,11 +12,14 @@ import { debounce } from "../../../../utils";
 import { WaterfallWrapper } from "./use-waterfall-layout";
 import { useHistoryCard } from "./history-card";
 import { useShowModal } from "./use-show-modal";
-import { createRoleModal } from "./create-role-modal";
 import { useRoles } from "./roles";
+import { RoleModal } from "./role-modal";
+import type { RoleItem } from "../../../../core/storage/role-storage";
 
 export type ChatMessageProps = {
   app: App;
+  selectedRole: RoleItem | null;
+  setSelectedRole: (role: RoleItem | null) => void;
 };
 
 // TODO：i18n
@@ -25,6 +28,10 @@ export const useHistory = () => {
   const [currentId, setCurrentId] = useState<string>("");
   // 用于强制刷新历史记录列表的触发器
   const [updater, setUpdater] = useState(0);
+  const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
+  // 确保 selectedRole 已初始化
+  const initializedSelectedRole =
+    selectedRole === undefined ? null : selectedRole;
 
   const {
     modalRef,
@@ -40,7 +47,7 @@ export const useHistory = () => {
     setUpdater((u) => u + 1);
   };
 
-  const HistoryRender: React.FC<ChatMessageProps> = ({ app }) => {
+  const HistoryRender: React.FC<{ app: App }> = ({ app }) => {
     const {
       addEmptyItem,
       fetchHistoryList,
@@ -53,8 +60,6 @@ export const useHistory = () => {
 
     const {
       renderRoleList,
-      selectedRole,
-      setSelectedRole,
       isRoleModalOpen,
       roleNameInput,
       setRoleNameInput,
@@ -62,14 +67,7 @@ export const useHistory = () => {
       setRolePromptInput,
       handleSaveRole,
       handleCancelRole,
-    } = useRoles(app);
-
-    const RoleModal = createRoleModal({
-      onNameChange: setRoleNameInput,
-      onPromptChange: setRolePromptInput,
-      onSave: handleSaveRole,
-      onCancel: handleCancelRole,
-    });
+    } = useRoles(app, initializedSelectedRole, setSelectedRole);
 
     const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
     /**
@@ -145,7 +143,7 @@ export const useHistory = () => {
           setHistoryList(items);
           /**
            * 首次加载逻辑（函数级注释）：
-           * - 若列表为空，自动创建一个“空会话”作为种子，避免 currentId 为空导致无法保存。
+           * - 若列表为空，自动创建一个"空会话"作为种子，避免 currentId 为空导致无法保存。
            * - 若 currentId 不存在或不在列表中，则切换到第一条记录。
            * 边界处理：
            * - items 为空：创建新记录并设置 currentId；
@@ -290,17 +288,33 @@ export const useHistory = () => {
             </div>
           )}
         </div>
-        {isRoleModalOpen && (
-          <RoleModal roleName={roleNameInput} rolePrompt={rolePromptInput} />
-        )}
+        <div style={{ display: isRoleModalOpen ? "block" : "none" }}>
+          <RoleModal
+            key="role-modal"
+            roleName={roleNameInput}
+            rolePrompt={rolePromptInput}
+            onNameChange={setRoleNameInput}
+            onPromptChange={setRolePromptInput}
+            onSave={() => {
+              if (!roleNameInput.trim()) {
+                new Notice("角色不能为空");
+                return;
+              }
+              handleSaveRole();
+            }}
+            onCancel={handleCancelRole}
+          />
+        </div>
       </>
     );
   };
+
   return {
     HistoryRender,
     historyItems,
     currentId,
     forceHistoryUpdate,
-    selectedRole: (HistoryRender as any).selectedRole, // This is a hack, but it works for now
+    selectedRole: initializedSelectedRole,
+    setSelectedRole,
   };
 };
