@@ -1,18 +1,16 @@
 import { useEffect, useState, useRef } from "react";
-
-type ShowPanel = "history" | "roles" | null;
+import { ActiveKey } from "./with-actions";
 
 export const useShowModal = () => {
-  const [showHistoryAndRoles, setShowHistoryAndRoles] =
-    useState<ShowPanel>(null);
+  const [showHistoryAndRoles, setShowHistoryAndRoles] = useState<ActiveKey>(
+    ActiveKey.NONE,
+  );
 
   const modalRef = useRef<HTMLDivElement>(null);
 
   const handleExpand = (e: React.MouseEvent<HTMLElement>) => {
     const nextKey = (e.currentTarget as HTMLElement)?.dataset?.key;
-    setShowHistoryAndRoles((prev) =>
-      prev === nextKey ? null : (nextKey as ShowPanel),
-    );
+    setShowHistoryAndRoles((prev) => (prev === nextKey ? null : nextKey));
   };
 
   useEffect(() => {

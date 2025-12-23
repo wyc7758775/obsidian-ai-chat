@@ -54,8 +54,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   // 使用 useMemo 确保 service 实例的稳定性
   const noteContextService = useMemo(() => new NoteContextService(app), [app]);
 
-  const { HistoryRender, currentId, selectedRole, forceHistoryUpdate } =
+  const { ChatPanel, currentId, selectedRole, forceHistoryUpdate } =
     useHistory();
+
   const { upsertHistoryItem, getHistoryItemById, fileStorageService } =
     useContext(app);
 
@@ -683,8 +684,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         {isInitializing && <Loading />}
         {/* 信息历史 */}
         {/* TODO: 组件名已经不够贴切了 */}
-        {HistoryRender({ app })}
-        {/*<HistoryRender app={app} />*/}
+        {ChatPanel({ app })}
         {/* 消息区域：仅中间聊天区域切换，顶部面板与底部输入固定 */}
         <ChatMessage
           ref={(inst) =>
