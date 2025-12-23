@@ -5,7 +5,7 @@
  */
 export const debounce = <F extends (...args: any[]) => void>(
   fn: F,
-  wait = 500
+  wait = 500,
 ) => {
   let timer: number | undefined;
   return (...args: Parameters<F>) => {
