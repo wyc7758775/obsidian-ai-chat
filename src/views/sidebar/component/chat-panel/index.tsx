@@ -1,10 +1,5 @@
 import { App, Notice } from "obsidian";
 import { useState, useEffect, useRef } from "react";
-import {
-  AddChatIcon,
-  HistoryExpandIcon,
-  RoleExpandIcon,
-} from "../../../../ui/icon";
 import styles from "./css/styles.module.css";
 import { HistoryItem } from "../../type";
 import { useContext } from "../../hooks/use-context";
@@ -15,6 +10,7 @@ import { useShowModal } from "./use-show-modal";
 import { useRoles } from "./roles";
 import { RoleModal } from "./role-modal";
 import type { RoleItem } from "../../../../core/storage/role-storage";
+import { WithActions, ActiveKey } from "./with-actions";
 
 export type ChatMessageProps = {
   app: App;
@@ -47,7 +43,7 @@ export const useHistory = () => {
     setUpdater((u) => u + 1);
   };
 
-  const HistoryRender: React.FC<{ app: App }> = ({ app }) => {
+  const ChatPanel: React.FC<{ app: App }> = ({ app }) => {
     const {
       addEmptyItem,
       fetchHistoryList,
@@ -132,51 +128,41 @@ export const useHistory = () => {
       } else {
         setSelectedRole(null);
       }
-      setShowHistoryAndRoles(null);
+      setShowHistoryAndRoles(ActiveKey.NONE);
     };
 
     useEffect(() => {
       (async () => {
-        try {
-          // 加载历史记录列表
-          const items = await fetchHistoryList();
-          setHistoryList(items);
-          /**
-           * 首次加载逻辑（函数级注释）：
-           * - 若列表为空，自动创建一个"空会话"作为种子，避免 currentId 为空导致无法保存。
-           * - 若 currentId 不存在或不在列表中，则切换到第一条记录。
-           * 边界处理：
-           * - items 为空：创建新记录并设置 currentId；
-           * - items 非空但找不到 currentId：切换到第一条；
-           */
-          if (!items || items.length === 0) {
-            // 创建种子会话，保证后续保存逻辑能写入文件
-            const seed = await addEmptyItem();
-            const seedItem = (await getHistoryItemById(seed.id)) ?? {
-              id: seed.id,
-              messages: [],
-            };
-            setHistoryList([seedItem]);
-            setCurrentId(seed.id);
-            handleUpdateHistoryItem(seedItem);
-          } else if (
-            !currentId ||
-            !items.some((item) => item.id === currentId)
-          ) {
-            const firstItem = items[0];
-            if (firstItem) {
-              handleUpdateHistoryItem(firstItem);
-            } else {
-              setCurrentId("");
-            }
-          } else {
-            const currentItem = items.find((it) => it.id === currentId);
-            if (currentItem) {
-              handleUpdateHistoryItem(currentItem);
-            }
+        // 加载历史记录列表
+        const items = await fetchHistoryList();
+        setHistoryList(items);
+        /**
+         * 首次加载逻辑（函数级注释）：
+         * - 若列表为空，自动创建一个"空会话"作为种子，避免 currentId 为空导致无法保存。
+         * - 若 currentId 不存在或不在列表中，则切换到第一条记录。
+         * 边界处理：
+         * - items 为空：创建新记录并设置 currentId；
+         * - items 非空但找不到 currentId：切换到第一条；
+         */
+        if (!items || items.length === 0) {
+          // 创建种子会话，保证后续保存逻辑能写入文件
+          const seed = await addEmptyItem();
+          const seedItem = (await getHistoryItemById(seed.id)) ?? {
+            id: seed.id,
+            messages: [],
+          };
+          setHistoryList([seedItem]);
+          setCurrentId(seed.id);
+          handleUpdateHistoryItem(seedItem);
+          return;
+        }
+        if (!currentId || !items.some((item) => item.id === currentId)) {
+          items[0] ? handleUpdateHistoryItem(items[0]) : setCurrentId("");
+        } else {
+          const currentItem = items.find((it) => it.id === currentId);
+          if (currentItem) {
+            handleUpdateHistoryItem(currentItem);
           }
-        } catch (e) {
-          // 忽略错误
         }
       })();
     }, [fetchHistoryList, updater]);
@@ -236,40 +222,27 @@ export const useHistory = () => {
     return (
       <>
         <div style={{ position: "relative", zIndex: 10 }}>
-          <div className={styles.historyWrap}>
-            <div className={styles.historyActions}>
-              <RoleExpandIcon
-                data-key="roles"
-                active={showHistoryAndRoles === "roles"}
-                onClick={handleExpand}
-              />
-              <HistoryExpandIcon
-                data-key="history"
-                active={showHistoryAndRoles === "history"}
-                onClick={handleExpand}
-              />
-              <AddChatIcon onClick={handleAdd} />
-            </div>
-            <div className={styles.currentRole}>
-              <span>Person: </span>
-              <span>{selectedRole ? selectedRole.name : "默认角色"}</span>
-            </div>
-          </div>
-          {showHistoryAndRoles && (
+          <WithActions
+            activeKey={showHistoryAndRoles}
+            currentRoleName={selectedRole?.name}
+            onAdd={handleAdd}
+            onExpand={handleExpand}
+          />
+          {showHistoryAndRoles !== ActiveKey.NONE && (
             <div
               ref={modalRef}
               className={`${styles.historyAndRolesContainer}
               ${
-                showHistoryAndRoles === "history"
+                showHistoryAndRoles === ActiveKey.HISTORY
                   ? styles.historyListPosition
                   : styles.rolesPosition
               }
                 `}
             >
               {/*  角色切换 */}
-              {showHistoryAndRoles === "roles" && renderRoleList()}
+              {showHistoryAndRoles === ActiveKey.ROLES && renderRoleList()}
               {/* 历史记录卡片 */}
-              {showHistoryAndRoles === "history" && (
+              {showHistoryAndRoles === ActiveKey.HISTORY && (
                 <WaterfallWrapper
                   itemsCount={historyList.length}
                   cardRefs={cardRefs}
@@ -295,13 +268,7 @@ export const useHistory = () => {
             rolePrompt={rolePromptInput}
             onNameChange={setRoleNameInput}
             onPromptChange={setRolePromptInput}
-            onSave={() => {
-              if (!roleNameInput.trim()) {
-                new Notice("角色不能为空");
-                return;
-              }
-              handleSaveRole();
-            }}
+            onSave={handleSaveRole}
             onCancel={handleCancelRole}
           />
         </div>
@@ -310,7 +277,7 @@ export const useHistory = () => {
   };
 
   return {
-    HistoryRender,
+    ChatPanel,
     historyItems,
     currentId,
     forceHistoryUpdate,

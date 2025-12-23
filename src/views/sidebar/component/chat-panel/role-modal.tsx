@@ -10,10 +10,6 @@ export interface RoleModalProps {
   onCancel: () => void;
 }
 
-/**
- * 角色新增/编辑弹窗组件：用于创建角色名称与系统提示语。
- * 使用现有的弹窗样式，保持与历史编辑一致的视觉风格。
- */
 export const RoleModal: React.FC<RoleModalProps> = ({
   roleName,
   rolePrompt,
