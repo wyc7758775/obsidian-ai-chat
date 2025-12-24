@@ -55,14 +55,12 @@ export const useHistory = () => {
     const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
 
     const {
+      initRoleName,
+      initRolePrompt,
       renderRoleList,
       isRoleModalOpen,
-      roleNameInput,
-      setRoleNameInput,
-      rolePromptInput,
-      setRolePromptInput,
-      handleSaveRole,
       handleCancelRole,
+      handleSuccessRole,
     } = useRoles(app, initializedSelectedRole, setSelectedRole);
 
     const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -231,13 +229,14 @@ export const useHistory = () => {
           {showHistoryAndRoles !== ActiveKey.NONE && (
             <div
               ref={modalRef}
-              className={`${styles.historyAndRolesContainer}
-              ${
-                showHistoryAndRoles === ActiveKey.HISTORY
-                  ? styles.historyListPosition
-                  : styles.rolesPosition
-              }
-                `}
+              className={`
+                ${styles.historyAndRolesContainer}
+                ${
+                  showHistoryAndRoles === ActiveKey.HISTORY
+                    ? styles.historyListPosition
+                    : styles.rolesPosition
+                }
+              `}
             >
               {/*  角色切换 */}
               {showHistoryAndRoles === ActiveKey.ROLES && renderRoleList()}
@@ -264,12 +263,11 @@ export const useHistory = () => {
         <div style={{ display: isRoleModalOpen ? "block" : "none" }}>
           <RoleModal
             key="role-modal"
-            roleName={roleNameInput}
-            rolePrompt={rolePromptInput}
-            onNameChange={setRoleNameInput}
-            onPromptChange={setRolePromptInput}
-            onSave={handleSaveRole}
+            app={app}
+            initRoleName={initRoleName}
+            initRolePrompt={initRolePrompt}
             onCancel={handleCancelRole}
+            onSuccess={handleSuccessRole}
           />
         </div>
       </>

@@ -11,7 +11,7 @@ export const ActiveKey = {
   NONE: "none", // 不展示任何弹窗
 } as const;
 
-type ActiveKey = (typeof ActiveKey)[keyof typeof ActiveKey];
+export type ActiveKey = (typeof ActiveKey)[keyof typeof ActiveKey];
 
 export interface WithActionsProps {
   activeKey: ActiveKey;
