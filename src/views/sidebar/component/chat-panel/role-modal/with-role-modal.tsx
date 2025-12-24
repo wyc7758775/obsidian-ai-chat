@@ -1,34 +1,39 @@
 import React from "react";
 import { App } from "obsidian";
-import styles from "./css/role-modal.module.css";
+import styles from "../css/role-modal.module.css";
 import { useRoleModalLayout } from "./use-role-modal-layout";
 import { useRoleModal } from "./use-role-modal";
+import type { RoleItem } from "../../../../../core/storage/role-storage";
 
 export interface RoleModalProps {
   app: App;
   initRoleName: string;
-  rolePrompt: string;
-  onNameChange: (name: string) => void;
-  onPromptChange: (prompt: string) => void;
-  onSave: () => void;
+  initRolePrompt: string;
   onCancel: () => void;
+  onSuccess: (newRole: RoleItem) => void;
 }
 
 export const RoleModal: React.FC<RoleModalProps> = ({
   app,
   initRoleName,
-  rolePrompt,
-  onNameChange,
-  onPromptChange,
+  initRolePrompt,
   onCancel,
+  onSuccess,
 }) => {
-  const { onSave, roleName, handleBackdropClick, handleKeyDown } = useRoleModal(
-    {
-      onCancel,
-      initRoleName,
-      app,
-    },
-  );
+  const {
+    onSave,
+    roleName,
+    rolePrompt,
+    handleBackdropClick,
+    handleKeyDown,
+    onNameChange,
+    onPromptChange,
+  } = useRoleModal({
+    app,
+    onCancel,
+    initRoleName,
+    initRolePrompt,
+  });
 
   const { isEditMode } = useRoleModalLayout({ roleName });
 
@@ -80,7 +85,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
           </button>
           <button
             className={`${styles.modalButton} ${styles.saveButton}`}
-            onClick={onSave}
+            onClick={() => onSave(onSuccess)}
           >
             保存
           </button>

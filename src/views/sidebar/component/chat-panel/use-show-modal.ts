@@ -9,8 +9,10 @@ export const useShowModal = () => {
   const modalRef = useRef<HTMLDivElement>(null);
 
   const handleExpand = (e: React.MouseEvent<HTMLElement>) => {
-    const nextKey = (e.currentTarget as HTMLElement)?.dataset?.key;
-    setShowHistoryAndRoles((prev) => (prev === nextKey ? null : nextKey));
+    const nextKey = (e.currentTarget as HTMLElement)?.dataset?.key as ActiveKey;
+    setShowHistoryAndRoles((prev: ActiveKey) =>
+      prev === nextKey ? ActiveKey.NONE : nextKey,
+    );
   };
 
   useEffect(() => {
@@ -20,9 +22,9 @@ export const useShowModal = () => {
         !modalRef.current.contains(event.target as Node)
       ) {
         const el = event.target as Element | null;
-        const keyAttr = el?.getAttribute?.("data-key");
+        const keyAttr = el?.getAttribute?.("data-key") as ActiveKey;
         if (keyAttr && keyAttr === showHistoryAndRoles) return;
-        setShowHistoryAndRoles(null);
+        setShowHistoryAndRoles(ActiveKey.NONE);
       }
     };
 
