@@ -8,7 +8,7 @@ import { WaterfallWrapper } from "./use-waterfall-layout";
 import { useHistoryCard } from "./history-card";
 import { useShowModal } from "./use-show-modal";
 import { useRoles } from "./roles";
-import { RoleModal } from "./role-modal";
+import { RoleModal } from "./role-modal/with-role-modal";
 import type { RoleItem } from "../../../../core/storage/role-storage";
 import { WithActions, ActiveKey } from "./with-actions";
 

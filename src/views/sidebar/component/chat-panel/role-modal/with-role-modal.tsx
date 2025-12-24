@@ -1,8 +1,12 @@
 import React from "react";
+import { App } from "obsidian";
 import styles from "./css/role-modal.module.css";
+import { useRoleModalLayout } from "./use-role-modal-layout";
+import { useRoleModal } from "./use-role-modal";
 
 export interface RoleModalProps {
-  roleName: string;
+  app: App;
+  initRoleName: string;
   rolePrompt: string;
   onNameChange: (name: string) => void;
   onPromptChange: (prompt: string) => void;
@@ -11,25 +15,22 @@ export interface RoleModalProps {
 }
 
 export const RoleModal: React.FC<RoleModalProps> = ({
-  roleName,
+  app,
+  initRoleName,
   rolePrompt,
   onNameChange,
   onPromptChange,
-  onSave,
   onCancel,
 }) => {
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onCancel();
-    }
-  };
+  const { onSave, roleName, handleBackdropClick, handleKeyDown } = useRoleModal(
+    {
+      onCancel,
+      initRoleName,
+      app,
+    },
+  );
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      onCancel();
-    }
-  };
-  const isEditMode = roleName !== "";
+  const { isEditMode } = useRoleModalLayout({ roleName });
 
   return (
     <div
