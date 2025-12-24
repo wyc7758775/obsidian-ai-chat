@@ -13,8 +13,11 @@ export const useRoles = (
   const { fetchRoles, upsertRole, deleteRoleByName } = useContext(app);
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+
   const [roleNameInput, setRoleNameInput] = useState("");
+
   const [rolePromptInput, setRolePromptInput] = useState("");
+  // TODO: 已经没有必要存在了
   const [editingRoleOriginalName, setEditingRoleOriginalName] = useState<
     string | null
   >(null);
