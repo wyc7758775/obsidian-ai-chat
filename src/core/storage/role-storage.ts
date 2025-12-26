@@ -14,7 +14,6 @@ export class RoleStorageService {
   private app: App;
   private rolesFile = "chat-roles.json"; // 默认文件名，最终路径由插件文件夹名决定
   private cache: RoleItem[] = [];
-  private isLoaded = false;
 
   private pluginFolderName: string;
 
@@ -83,9 +82,8 @@ export class RoleStorageService {
     }
   }
 
-  /** 加载角色列表到缓存 */
+  /** 加载角色列表 */
   private async loadFromFile(): Promise<void> {
-    if (this.isLoaded) return;
     await this.ensureRolesFile();
     const adapter = this.app.vault.adapter;
     try {
@@ -95,8 +93,6 @@ export class RoleStorageService {
     } catch (e) {
       console.error("[RoleStorage] Failed to load roles:", e);
       this.cache = [];
-    } finally {
-      this.isLoaded = true;
     }
   }
 
