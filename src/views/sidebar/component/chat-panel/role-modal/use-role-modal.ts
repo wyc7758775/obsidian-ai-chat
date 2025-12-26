@@ -23,9 +23,12 @@ export const useRoleModal = ({
     setRolePrompt(prompt);
   };
 
+  type Mode = "edit" | "add";
+  const [mode, setMode] = useState<Mode>("add");
   useEffect(() => {
     if (initRoleName !== undefined && initRoleName !== roleName) {
       setRoleName(initRoleName);
+      setMode("edit");
     }
     if (initRolePrompt !== undefined && initRolePrompt !== rolePrompt) {
       setRolePrompt(initRolePrompt);
@@ -56,8 +59,8 @@ export const useRoleModal = ({
 
     const newRole = { name, systemPrompt: prompt } as RoleItem;
     try {
-      if (initRoleName && initRoleName !== name) {
-        await deleteRoleByName(initRoleName);
+      if (mode === "edit" && initRoleName !== name) {
+        await deleteRoleByName(initRoleName!);
       }
       await upsertRole(newRole);
       onSuccess(newRole);
