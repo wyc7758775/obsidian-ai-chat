@@ -1,39 +1,41 @@
 import React from "react";
-import styles from "./css/role-modal.module.css";
+import { App } from "obsidian";
+import styles from "../css/role-modal.module.css";
+import { useRoleModalLayout } from "./use-role-modal-layout";
+import { useRoleModal } from "./use-role-modal";
+import type { RoleItem } from "../../../../../core/storage/role-storage";
 
 export interface RoleModalProps {
-  roleName: string;
-  rolePrompt: string;
-  onNameChange: (name: string) => void;
-  onPromptChange: (prompt: string) => void;
-  onSave: () => void;
+  app: App;
+  initRoleName: string;
+  initRolePrompt: string;
   onCancel: () => void;
+  onSuccess: (newRole: RoleItem) => void;
 }
 
-/**
- * 角色新增/编辑弹窗组件：用于创建角色名称与系统提示语。
- * 使用现有的弹窗样式，保持与历史编辑一致的视觉风格。
- */
 export const RoleModal: React.FC<RoleModalProps> = ({
-  roleName,
-  rolePrompt,
-  onNameChange,
-  onPromptChange,
-  onSave,
+  app,
+  initRoleName,
+  initRolePrompt,
   onCancel,
+  onSuccess,
 }) => {
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onCancel();
-    }
-  };
+  const {
+    onSave,
+    roleName,
+    rolePrompt,
+    handleBackdropClick,
+    handleKeyDown,
+    onNameChange,
+    onPromptChange,
+  } = useRoleModal({
+    app,
+    onCancel,
+    initRoleName,
+    initRolePrompt,
+  });
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      onCancel();
-    }
-  };
-  const isEditMode = roleName !== "";
+  const { isEditMode } = useRoleModalLayout({ roleName });
 
   return (
     <div
@@ -83,7 +85,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
           </button>
           <button
             className={`${styles.modalButton} ${styles.saveButton}`}
-            onClick={onSave}
+            onClick={() => onSave(onSuccess)}
           >
             保存
           </button>

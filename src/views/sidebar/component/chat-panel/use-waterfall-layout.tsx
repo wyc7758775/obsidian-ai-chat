@@ -5,33 +5,31 @@ import {
   useEffect,
   useCallback,
 } from "react";
+import styles from "./css/styles.module.css";
 
 export type UseWaterfallLayoutOptions = {
   /** 是否处于激活状态（仅历史视图展开时计算布局） */
   active: boolean;
   /** 卡片数量，用于在列表变化时触发布局重新计算 */
   itemsCount: number;
+  /** 可选的卡片引用数组，如果不提供则内部创建 */
+  cardRefs?: React.MutableRefObject<(HTMLDivElement | null)[]>;
 };
 
 /**
  * useWaterfallLayout
  * 封装历史记录卡片的瀑布流布局逻辑。
- *
- * 参数校验与边界处理：
- * - active 为 false 或容器未挂载时，不进行布局计算，避免不必要的操作。
- * - itemsCount 小于等于 0 时，容器高度重置为 0，避免残留高度影响滚动。
- * - 在窗口大小或容器尺寸变化时使用 ResizeObserver 自动重新计算布局。
- *
- * 返回值：
- * - containerRef：历史列表容器引用。
- * - cardRefs：每个历史卡片的引用数组（按索引顺序）。
- * - containerHeight：计算后的容器高度。
  */
 export const useWaterfallLayout = (options: UseWaterfallLayoutOptions) => {
-  const { active, itemsCount } = options || { active: false, itemsCount: 0 };
+  const {
+    active,
+    itemsCount,
+    cardRefs: externalCardRefs,
+  } = options || { active: false, itemsCount: 0 };
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const internalCardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const cardRefs = externalCardRefs || internalCardRefs;
   const [containerHeight, setContainerHeight] = useState(0);
 
   /**
@@ -52,7 +50,7 @@ export const useWaterfallLayout = (options: UseWaterfallLayoutOptions) => {
     const gap = 12;
     const columns = Math.max(
       1,
-      Math.floor((containerWidth + gap) / (cardWidth + gap))
+      Math.floor((containerWidth + gap) / (cardWidth + gap)),
     );
     const actualCardWidth = (containerWidth - gap * (columns - 1)) / columns;
 
@@ -61,7 +59,7 @@ export const useWaterfallLayout = (options: UseWaterfallLayoutOptions) => {
     cardRefs.current.forEach((cardEl) => {
       if (!cardEl) return;
       const shortestColumnIndex = columnHeights.indexOf(
-        Math.min(...columnHeights)
+        Math.min(...columnHeights),
       );
       const left = shortestColumnIndex * (actualCardWidth + gap) + 20; // 左边距 20px
       const top = columnHeights[shortestColumnIndex] + 24; // 容器上内边距 24px
@@ -93,4 +91,32 @@ export const useWaterfallLayout = (options: UseWaterfallLayoutOptions) => {
   }, [active, calculateWaterfallLayout]);
 
   return { containerRef, cardRefs, containerHeight };
+};
+
+export const WaterfallWrapper = ({
+  itemsCount,
+  children,
+  cardRefs,
+}: {
+  itemsCount: number;
+  children: React.ReactNode;
+  cardRefs?: React.MutableRefObject<(HTMLDivElement | null)[]>;
+}) => {
+  const { containerRef, containerHeight } = useWaterfallLayout({
+    active: true,
+    itemsCount,
+    cardRefs,
+  });
+  return (
+    <div
+      ref={containerRef}
+      className={styles.historyExpandList}
+      style={{
+        height: containerHeight > 0 ? `${containerHeight + 30}px` : "30vh",
+        maxHeight: "50vh", // 最大高度限制，防止过高
+      }}
+    >
+      {children}
+    </div>
+  );
 };

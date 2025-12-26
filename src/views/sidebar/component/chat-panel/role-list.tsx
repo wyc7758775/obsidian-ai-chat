@@ -12,9 +12,9 @@ export type RoleListProps = {
   roles: RoleItem[];
   selectedRole: RoleItem | null;
   addRole: () => void;
-  editRole: (role: RoleItem) => Promise<void>;
-  deleteRole: (role: RoleItem) => Promise<void>;
-  selectRole: (role: RoleItem) => Promise<void>;
+  editRole: (role: RoleItem) => void;
+  deleteRole: (role: RoleItem) => void;
+  selectRole: (role: RoleItem) => void;
 };
 
 export const RoleList = ({

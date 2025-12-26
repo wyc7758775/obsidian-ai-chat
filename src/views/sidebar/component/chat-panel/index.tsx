@@ -1,38 +1,40 @@
 import { App, Notice } from "obsidian";
 import { useState, useEffect, useRef } from "react";
-import type { MouseEvent as ReactMouseEvent } from "react";
-import {
-  AddChatIcon,
-  CloseIcon,
-  HistoryExpandIcon,
-  CatEmptyIcon,
-  RoleExpandIcon,
-} from "../../../../ui/icon";
 import styles from "./css/styles.module.css";
 import { HistoryItem } from "../../type";
 import { useContext } from "../../hooks/use-context";
 import { debounce } from "../../../../utils";
-import { RoleModal, useRoles } from "./roles";
-import { useWaterfallLayout } from "./use-waterfall-layout";
+import { WaterfallWrapper } from "./use-waterfall-layout";
+import { useHistoryCard } from "./history-card";
+import { useShowModal } from "./use-show-modal";
+import { useRoles } from "./roles";
+import { RoleModal } from "./role-modal/with-role-modal";
+import type { RoleItem } from "../../../../core/storage/role-storage";
+import { WithActions, ActiveKey } from "./with-actions";
 
 export type ChatMessageProps = {
   app: App;
+  selectedRole: RoleItem | null;
+  setSelectedRole: (role: RoleItem | null) => void;
 };
 
-/**
- * 面板类型（联合类型）
- * - 说明：使用字面量联合类型更直接，避免到处使用魔法字符串。
- * - 边界：仅允许 'history'、'roles' 或 null；null 表示不展示任何面板。
- */
-type ShowPanel = "history" | "roles" | null;
-
+// TODO：i18n
 export const useHistory = () => {
-  const [historyItems, setHistoryItems] = useState<HistoryItem>(
-    {} as HistoryItem
-  );
+  const [historyItems, setHistoryItems] = useState<HistoryItem>();
   const [currentId, setCurrentId] = useState<string>("");
   // 用于强制刷新历史记录列表的触发器
   const [updater, setUpdater] = useState(0);
+  const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
+  // 确保 selectedRole 已初始化
+  const initializedSelectedRole =
+    selectedRole === undefined ? null : selectedRole;
+
+  const {
+    modalRef,
+    handleExpand,
+    setShowHistoryAndRoles,
+    showHistoryAndRoles,
+  } = useShowModal();
 
   /**
    * 强制刷新历史记录列表
@@ -41,7 +43,7 @@ export const useHistory = () => {
     setUpdater((u) => u + 1);
   };
 
-  const historyRender: React.FC<ChatMessageProps> = ({ app }) => {
+  const ChatPanel: React.FC<{ app: App }> = ({ app }) => {
     const {
       addEmptyItem,
       fetchHistoryList,
@@ -51,69 +53,17 @@ export const useHistory = () => {
       upsertHistoryItem,
     } = useContext(app);
     const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
-    const [showHistoryAndRoles, setShowHistoryAndRoles] =
-      useState<ShowPanel>(null);
-
-    const handleExpand = (e?: ReactMouseEvent<HTMLDivElement>) => {
-      const nextKey =
-        (e?.currentTarget as HTMLElement)?.dataset?.key ?? "roles";
-      setShowHistoryAndRoles((prev) =>
-        prev === nextKey ? null : (nextKey as ShowPanel)
-      );
-    };
-
-    const handleHistoryExpand = (e?: ReactMouseEvent<HTMLDivElement>) => {
-      const nextKey =
-        (e?.currentTarget as HTMLElement)?.dataset?.key ?? "history";
-      setShowHistoryAndRoles((prev) =>
-        prev === nextKey ? null : (nextKey as ShowPanel)
-      );
-    };
-
-    const historyAndRolesRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          historyAndRolesRef.current &&
-          !historyAndRolesRef.current.contains(event.target as Node)
-        ) {
-          const el = event.target as Element | null;
-          const keyAttr = el?.getAttribute?.("data-key");
-          if (keyAttr && keyAttr === showHistoryAndRoles) return;
-          setShowHistoryAndRoles(null);
-        }
-      };
-
-      if (showHistoryAndRoles) {
-        document.addEventListener("mousedown", handleClickOutside);
-      } else {
-        document.removeEventListener("mousedown", handleClickOutside);
-      }
-
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }, [showHistoryAndRoles]);
 
     const {
+      initRoleName,
+      initRolePrompt,
       renderRoleList,
-      selectedRole,
-      setSelectedRole,
       isRoleModalOpen,
-      roleNameInput,
-      setRoleNameInput,
-      rolePromptInput,
-      setRolePromptInput,
-      handleSaveRole,
       handleCancelRole,
-    } = useRoles(app);
+      handleSuccessRole,
+    } = useRoles(app, initializedSelectedRole, setSelectedRole);
 
-    // 瀑布流布局相关（封装为 Hook）
-    const { containerRef, cardRefs, containerHeight } = useWaterfallLayout({
-      active: showHistoryAndRoles === "history",
-      itemsCount: historyList.length,
-    });
-
+    const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
     /**
      * 新增对话逻辑：
      * - 若当前对话的消息为空，则不允许创建新的对话，并弹出提示。
@@ -122,7 +72,7 @@ export const useHistory = () => {
     const handleAddCore = async () => {
       // 根据当前选中 ID 获取当前对话项
       const emptyItem = historyList.find(
-        (it) => Array.isArray(it.messages) && it.messages.length === 0
+        (it) => Array.isArray(it.messages) && it.messages.length === 0,
       );
       if (emptyItem) {
         if (emptyItem.id === currentId) {
@@ -167,6 +117,7 @@ export const useHistory = () => {
     const handleUpdateHistoryItem = (item: HistoryItem) => {
       setCurrentId(item.id);
       setHistoryItems(item);
+      // 控制弹窗显隐
       if (item.roleName && item.systemMessage) {
         setSelectedRole({
           name: item.roleName,
@@ -175,57 +126,47 @@ export const useHistory = () => {
       } else {
         setSelectedRole(null);
       }
-      setShowHistoryAndRoles(null);
+      setShowHistoryAndRoles(ActiveKey.NONE);
     };
 
     useEffect(() => {
       (async () => {
-        try {
-          // 加载历史记录列表
-          const items = await fetchHistoryList();
-          setHistoryList(items);
-          /**
-           * 首次加载逻辑（函数级注释）：
-           * - 若列表为空，自动创建一个“空会话”作为种子，避免 currentId 为空导致无法保存。
-           * - 若 currentId 不存在或不在列表中，则切换到第一条记录。
-           * 边界处理：
-           * - items 为空：创建新记录并设置 currentId；
-           * - items 非空但找不到 currentId：切换到第一条；
-           */
-          if (!items || items.length === 0) {
-            // 创建种子会话，保证后续保存逻辑能写入文件
-            const seed = await addEmptyItem();
-            const seedItem = (await getHistoryItemById(seed.id)) ?? {
-              id: seed.id,
-              messages: [],
-            };
-            setHistoryList([seedItem]);
-            setCurrentId(seed.id);
-            handleUpdateHistoryItem(seedItem);
-          } else if (
-            !currentId ||
-            !items.some((item) => item.id === currentId)
-          ) {
-            const firstItem = items[0];
-            if (firstItem) {
-              handleUpdateHistoryItem(firstItem);
-            } else {
-              setCurrentId("");
-            }
-          } else {
-            const currentItem = items.find((it) => it.id === currentId);
-            if (currentItem) {
-              handleUpdateHistoryItem(currentItem);
-            }
+        // 加载历史记录列表
+        const items = await fetchHistoryList();
+        setHistoryList(items);
+        /**
+         * 首次加载逻辑（函数级注释）：
+         * - 若列表为空，自动创建一个"空会话"作为种子，避免 currentId 为空导致无法保存。
+         * - 若 currentId 不存在或不在列表中，则切换到第一条记录。
+         * 边界处理：
+         * - items 为空：创建新记录并设置 currentId；
+         * - items 非空但找不到 currentId：切换到第一条；
+         */
+        if (!items || items.length === 0) {
+          // 创建种子会话，保证后续保存逻辑能写入文件
+          const seed = await addEmptyItem();
+          const seedItem = (await getHistoryItemById(seed.id)) ?? {
+            id: seed.id,
+            messages: [],
+          };
+          setHistoryList([seedItem]);
+          setCurrentId(seed.id);
+          handleUpdateHistoryItem(seedItem);
+          return;
+        }
+        if (!currentId || !items.some((item) => item.id === currentId)) {
+          items[0] ? handleUpdateHistoryItem(items[0]) : setCurrentId("");
+        } else {
+          const currentItem = items.find((it) => it.id === currentId);
+          if (currentItem) {
+            handleUpdateHistoryItem(currentItem);
           }
-        } catch (e) {
-          // 忽略错误
         }
       })();
     }, [fetchHistoryList, updater]);
 
     useEffect(() => {
-      if (!selectedRole || !historyItems.id) return;
+      if (!selectedRole || !historyItems?.id) return;
       const updatedHistoryItem = {
         ...historyItems,
         roleName: selectedRole.name,
@@ -262,7 +203,7 @@ export const useHistory = () => {
         setCurrentId(items[0]?.id || "");
       }
     };
-    const handleDelete = async (id: string) => {
+    const handleDelete = async ({ id }: { id: string }) => {
       // 如果删除前只有一条记录，先创建一条新记录
       if (historyList.length === 1) {
         return deleteHistoryLastRecord(id);
@@ -271,154 +212,74 @@ export const useHistory = () => {
       }
     };
 
-    // 历史记录 item 卡片样式
-    const historyItemCardRender = (item: HistoryItem, index: number) => {
-      const isActive = item.id === currentId;
-
-      const handleDeleteClick = () => {
-        handleDelete(item.id);
-      };
-
-      /**
-       * 提取首条用户问题与首条 AI 回答预览文本，用于历史卡片展示。
-       * 若不存在对应消息，返回空字符串，避免渲染异常。
-       */
-      const getFirstUserAndAssistant = (messages?: HistoryItem["messages"]) => {
-        const list = messages || [];
-        const firstUser =
-          list.find((m: any) => m?.type === "user")?.content || "";
-        const firstAssistant =
-          list.find((m: any) => m?.type === "assistant")?.content || "";
-        return { question: firstUser, answer: firstAssistant };
-      };
-
-      const isEmpty = !item.messages || item.messages.length === 0;
-
-      const { question, answer } = getFirstUserAndAssistant(item.messages);
-
-      return (
-        <div
-          ref={(el) => (cardRefs.current[index] = el)}
-          className={`${styles.historyItemCard} ${
-            isActive ? styles.historyItemCardActive : ""
-          }`}
-          key={index}
-          onClick={() => handleUpdateHistoryItem(item)}
-        >
-          {isEmpty ? (
-            <div className={styles.historyItemCardEmpty}>
-              <div className={styles.emptyIcon}>
-                <CatEmptyIcon />
-              </div>
-              <div className={styles.gameText}>No messages!</div>
-              <div
-                className={styles.historyItemCardActions}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <CloseIcon onClick={handleDeleteClick} />
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className={styles.historyItemCardTitle}>
-                <span className={styles.roleBadge}>
-                  {item.roleName || "未设置角色"}
-                </span>
-              </div>
-              <div className={styles.historyItemPreview}>
-                <div className={styles.historyItemQuestion} title={question}>
-                  {question || "（暂无用户问题）"}
-                </div>
-                <div className={styles.historyItemAnswer} title={answer}>
-                  {answer || "（暂无 AI 回答）"}
-                </div>
-              </div>
-              <div
-                className={styles.historyItemCardActions}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <CloseIcon onClick={handleDeleteClick} />
-              </div>
-            </>
-          )}
-        </div>
-      );
-    };
+    const { HistoryCard } = useHistoryCard({
+      onClickHistoryItem: handleUpdateHistoryItem,
+      onClickDelete: handleDelete,
+    });
 
     return (
       <>
         <div style={{ position: "relative", zIndex: 10 }}>
-          <div className={styles.historyWrap}>
-            <div className={styles.historyActions}>
-              <RoleExpandIcon
-                data-key="roles"
-                active={showHistoryAndRoles === "roles"}
-                onClick={handleExpand}
-              />
-              <HistoryExpandIcon
-                data-key="history"
-                active={showHistoryAndRoles === "history"}
-                onClick={handleHistoryExpand}
-              />
-              <AddChatIcon onClick={handleAdd} />
-            </div>
-            <div className={styles.currentRole}>
-              <span>Person: </span>
-              <span>{selectedRole ? selectedRole.name : "默认角色"}</span>
-            </div>
-          </div>
-          {showHistoryAndRoles && (
+          <WithActions
+            activeKey={showHistoryAndRoles}
+            currentRoleName={selectedRole?.name}
+            onAdd={handleAdd}
+            onExpand={handleExpand}
+          />
+          {showHistoryAndRoles !== ActiveKey.NONE && (
             <div
-              ref={historyAndRolesRef}
-              className={`${styles.historyAndRolesContainer}
-              ${
-                showHistoryAndRoles === "history"
-                  ? styles.historyListPosition
-                  : styles.rolesPosition
-              }
-                `}
+              ref={modalRef}
+              className={`
+                ${styles.historyAndRolesContainer}
+                ${
+                  showHistoryAndRoles === ActiveKey.HISTORY
+                    ? styles.historyListPosition
+                    : styles.rolesPosition
+                }
+              `}
             >
               {/*  角色切换 */}
-              {showHistoryAndRoles === "roles" && renderRoleList()}
+              {showHistoryAndRoles === ActiveKey.ROLES && renderRoleList()}
               {/* 历史记录卡片 */}
-              {showHistoryAndRoles === "history" && (
-                <div
-                  ref={containerRef}
-                  className={styles.historyExpandList}
-                  style={{
-                    height:
-                      containerHeight > 0
-                        ? `${containerHeight + 30}px`
-                        : "30vh",
-                    maxHeight: "50vh", // 恢复最大高度限制，防止过高
-                  }}
+              {showHistoryAndRoles === ActiveKey.HISTORY && (
+                <WaterfallWrapper
+                  itemsCount={historyList.length}
+                  cardRefs={cardRefs}
                 >
-                  {historyList.map((item: HistoryItem, index: number) =>
-                    historyItemCardRender(item, index)
-                  )}
-                </div>
+                  {historyList.map((item: HistoryItem, index: number) => (
+                    <HistoryCard
+                      ref={(el) => (cardRefs.current[index] = el)}
+                      key={item.id + index}
+                      index={index}
+                      item={item}
+                      isActive={item.id === currentId}
+                    />
+                  ))}
+                </WaterfallWrapper>
               )}
             </div>
           )}
         </div>
-        {isRoleModalOpen && (
+        <div style={{ display: isRoleModalOpen ? "block" : "none" }}>
           <RoleModal
-            roleName={roleNameInput}
-            rolePrompt={rolePromptInput}
-            onNameChange={setRoleNameInput}
-            onPromptChange={setRolePromptInput}
-            onSave={handleSaveRole}
+            key="role-modal"
+            app={app}
+            initRoleName={initRoleName}
+            initRolePrompt={initRolePrompt}
             onCancel={handleCancelRole}
+            onSuccess={handleSuccessRole}
           />
-        )}
+        </div>
       </>
     );
   };
+
   return {
-    historyRender,
+    ChatPanel,
     historyItems,
     currentId,
     forceHistoryUpdate,
-    selectedRole: (historyRender as any).selectedRole, // This is a hack, but it works for now
+    selectedRole: initializedSelectedRole,
+    setSelectedRole,
   };
 };

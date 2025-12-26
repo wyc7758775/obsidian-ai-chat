@@ -18,7 +18,7 @@ import {
 } from "./component/message-list/message-list";
 import { NoteSelector } from "./component/note-selector";
 import { SelectedFiles } from "./component/selected-files";
-import { ChatInput } from "./chat/chat-input";
+import { ChatInput } from "./chat";
 import {
   PositionedPopover,
   usePositionedPopover,
@@ -54,12 +54,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   // 使用 useMemo 确保 service 实例的稳定性
   const noteContextService = useMemo(() => new NoteContextService(app), [app]);
 
-  const {
-    historyRender: HistoryRender,
-    currentId,
-    selectedRole,
-    forceHistoryUpdate,
-  } = useHistory();
+  const { ChatPanel, currentId, selectedRole, forceHistoryUpdate } =
+    useHistory();
+
   const { upsertHistoryItem, getHistoryItemById, fileStorageService } =
     useContext(app);
 
@@ -328,29 +325,18 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     setIsLoading(false);
   };
 
-  // TODO: 重新生成指定 AI 消息有非常大的 BUG：只重新生成最后一条是没有问题，但是如果重新生成倒数第二条，会导致倒数第一条也被删除
-  const handleRegenerateMessage = async (messageIndex: number) => {
-    const targetMessage = currentMessages[messageIndex];
-
-    // 只能重新生成AI消息
-    if (targetMessage.type !== "assistant") return;
-
-    // 找到对应的用户消息（通常是前一条消息）
-    let userMessageIndex = messageIndex - 1;
-    while (
-      userMessageIndex >= 0 &&
-      currentMessages[userMessageIndex].type !== "user"
-    ) {
-      userMessageIndex--;
+  // 存在历史问题，AI 没有返回数据，所以遍历当前 message 中直到获取到当前重复刷新的 user 的提示词
+  const userMessageIndex = (messageIndex: number): number => {
+    let index: number = messageIndex - 1;
+    while (index >= 0 && currentMessages[index].type !== "user") {
+      index--;
     }
-
-    if (userMessageIndex < 0) return; // 没有找到对应的用户消息
-
-    const userMessage = currentMessages[userMessageIndex];
-
+    return index;
+  };
+  const removeMessagesAfterIndex = (messageIndex: number) => {
     // 删除从AI消息开始到最后的所有消息
     const newMessages = currentMessages.slice(0, messageIndex);
-    if (!currentId) return;
+
     setSessions((prev) => {
       const prevSession = prev[currentId] ?? {
         messages: [],
@@ -361,9 +347,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         [currentId]: { ...prevSession, messages: newMessages },
       };
     });
-    setMessagesChanged(true);
-
-    // 创建新的AI消息
+  };
+  const createMessage = (): string => {
     const aiMessageId = Date.now().toString();
     const aiMessage: Message = {
       id: aiMessageId,
@@ -383,16 +368,26 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         },
       };
     });
-
-    // 准备笔记提示（支持文件夹：读取该文件夹下的所有笔记）
+    return aiMessageId;
+  };
+  /**
+   * 收集选中的笔记内容作为AI提示上下文
+   * 支持文件夹选择：读取文件夹内所有文件内容
+   * @returns 去重后的笔记内容数组
+   */
+  const collectNotePrompts = async (): Promise<string[]> => {
     const notePrompts: string[] = [];
     const addedPaths = new Set<string>();
+
     for (let i = 0; i < currentSelectedNotes.length; i++) {
       const note = currentSelectedNotes[i];
+
+      // 处理文件夹选择
       if (note.iconType === "folder" && note.file && "path" in note.file) {
         const folderPath = (note.file as any).path;
         const folderMap = await noteContextService.getNotesByFolder();
         const files = folderMap.get(folderPath) || [];
+
         for (const f of files) {
           if (addedPaths.has(f.path)) continue;
           const ctx = await noteContextService.getNoteContent(f);
@@ -402,6 +397,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         }
         continue;
       }
+
+      // 处理单个笔记选择
       const ctx = await noteContextService.getNoteContent(note as any);
       const content = typeof ctx === "string" ? ctx : (ctx?.content ?? "");
       const p =
@@ -412,26 +409,24 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
       if (p) addedPaths.add(p);
     }
 
-    // 获取当前历史记录的系统消息
-    const getCurrentSystemMessage = async () => {
-      if (!currentId) return undefined;
-      try {
-        const currentItem = await getHistoryItemById(currentId);
-        return currentItem?.systemMessage;
-      } catch (e) {
-        console.error("Failed to get system message:", e);
-        return undefined;
-      }
-    };
+    return notePrompts;
+  };
 
-    /**
-     * 构建重新生成的系统提示：优先使用当前选择的角色。
-     */
-    const systemMessage =
-      selectedRole?.systemPrompt ?? (await getCurrentSystemMessage());
+  const handleRegenerateMessage = async (messageIndex: number) => {
+    if (!currentId) return;
 
-    // 重新发送AI请求
-    setIsLoading(true);
+    const targetMessage = currentMessages[messageIndex];
+    // 只能重新生成AI消息
+    if (targetMessage.type !== "assistant") return;
+    if (userMessageIndex(messageIndex) < 0) return; // 没有找到对应的用户消息
+
+    removeMessagesAfterIndex(messageIndex);
+    setMessagesChanged(true);
+    const aiMessageId = createMessage();
+
+    // 准备笔记提示（支持文件夹：读取该文件夹下的所有笔记）
+    const notePrompts = await collectNotePrompts();
+    const userMessage = currentMessages[userMessageIndex(messageIndex)];
     const messages = constructMessage(
       settings,
       userMessage.content,
@@ -440,12 +435,13 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         role: msg.type === "user" ? "user" : "assistant",
         content: msg.content,
       })),
-      systemMessage,
+      selectedRole?.systemPrompt ?? "",
     );
+
+    setIsLoading(true);
     streamChatCompletion({
       settings,
       messages,
-      systemMessage,
       callBacks: {
         onChunk: (chunk: string) => {
           setSessions((prev) => {
@@ -602,7 +598,9 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
     if (!currentId) return;
     messageListRefs.current[currentId]?.scrollToBottom?.();
   };
-  const { ScrollToBottomRender } = useScrollToBottom(handleScrollToBottomClick);
+  const { ScrollToBottom } = useScrollToBottom({
+    onClick: handleScrollToBottomClick,
+  });
 
   /**
    * 控制“回到底部”按钮显隐的抖动消除（双窗口迟滞法）
@@ -686,7 +684,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         {isInitializing && <Loading />}
         {/* 信息历史 */}
         {/* TODO: 组件名已经不够贴切了 */}
-        {HistoryRender({ app })}
+        {ChatPanel({ app })}
         {/* 消息区域：仅中间聊天区域切换，顶部面板与底部输入固定 */}
         <ChatMessage
           ref={(inst) =>
@@ -718,7 +716,7 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         </PositionedPopover>
         {/* 输入区域 */}
         <div className={styles.inputArea}>
-          <ScrollToBottomRender
+          <ScrollToBottom
             disabled={state.matches("streaming")}
             visibly={showScrollBtn}
           />

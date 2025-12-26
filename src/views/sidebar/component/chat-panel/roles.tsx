@@ -1,142 +1,103 @@
-import { App, Notice } from "obsidian";
-import { useState, useEffect } from "react";
+import { App } from "obsidian";
+import { useState, useEffect, useCallback } from "react";
 import { useContext } from "../../hooks/use-context";
-export { RoleModal } from "./role-modal";
 
 import type { RoleItem } from "../../../../core/storage/role-storage";
-import styles from "./css/styles.module.css";
-import {
-  PersonIcon,
-  EditIcon,
-  AddSmallIcon,
-  CloseIcon,
-} from "../../../../ui/icon";
-// TODO: 做到这里
-// import { RoleList } from "./role-list";
+import { RoleList } from "./role-list";
 
-export const useRoles = (app: App) => {
-  const { fetchRoles, upsertRole, deleteRoleByName } = useContext(app);
+export const useRoles = (
+  app: App,
+  externalSelectedRole: RoleItem | null,
+  externalSetSelectedRole: (role: RoleItem | null) => void,
+) => {
+  const { fetchRoles, deleteRoleByName } = useContext(app);
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
-  const [roleNameInput, setRoleNameInput] = useState("");
-  const [rolePromptInput, setRolePromptInput] = useState("");
-  const [editingRoleOriginalName, setEditingRoleOriginalName] = useState<
-    string | null
-  >(null);
 
   useEffect(() => {
     const loadRoles = async () => {
       const roleList = await fetchRoles();
       setRoles(roleList);
-      if (!selectedRole) {
-        setSelectedRole(roleList[0] ?? null);
+      // 安全地检查 selectedRole，避免在初始化前访问
+      if (externalSelectedRole === null || externalSelectedRole === undefined) {
+        externalSetSelectedRole(roleList[0] ?? null);
       }
     };
     loadRoles();
   }, [fetchRoles]);
 
-  const handleSaveRole = async () => {
-    const name = roleNameInput.trim();
-    const prompt = rolePromptInput.trim();
-    if (!name || !prompt) {
-      new Notice("请填写角色名称与系统提示语");
-      return;
-    }
-    const newRole = { name, systemPrompt: prompt } as RoleItem;
-    try {
-      if (editingRoleOriginalName && editingRoleOriginalName !== name) {
-        await deleteRoleByName(editingRoleOriginalName);
+  const handleSuccessRole = useCallback(async (newRole: RoleItem) => {
+    setRoles((prevRoles) => {
+      // 如果是编辑模式，替换现有角色
+      if (initRoleName && initRoleName !== newRole.name) {
+        return prevRoles.map((role) =>
+          role.name === initRoleName ? newRole : role,
+        );
       }
-      await upsertRole(newRole);
+      // 如果是新增模式，添加新角色
+      const existingIndex = prevRoles.findIndex((r) => r.name === newRole.name);
+      if (existingIndex >= 0) {
+        // 如果已存在，替换它
+        const updated = [...prevRoles];
+        updated[existingIndex] = newRole;
+        return updated;
+      }
+      // 否则添加新角色
+      return [...prevRoles, newRole];
+    });
+    // TODO: 更新角色列表不及时，有问题
+    // const roleList = await fetchRoles();
+    // setRoles(roleList);
+    externalSetSelectedRole(newRole);
+    setIsRoleModalOpen(false);
+  }, []);
+
+  const handleCancelRole = useCallback(() => {
+    setIsRoleModalOpen(false);
+  }, []);
+
+  const [initRoleName, setInitRoleName] = useState<string>("");
+  const [initRolePrompt, setInitRolePrompt] = useState<string>("");
+  const renderRoleList = () => {
+    const addRole = () => {
+      return setIsRoleModalOpen(true);
+    };
+    const editRole = (role: RoleItem) => {
+      setInitRoleName(role.name);
+      setInitRolePrompt(role.systemPrompt);
+
+      return setIsRoleModalOpen(true);
+    };
+    const deleteRole = async (role: RoleItem) => {
+      await deleteRoleByName(role.name);
       const roleList = await fetchRoles();
       setRoles(roleList);
-      setSelectedRole(newRole);
-      setIsRoleModalOpen(false);
-      setEditingRoleOriginalName(null);
-      new Notice("角色已保存");
-    } catch (e) {
-      console.error("保存角色失败:", e);
-      new Notice("保存角色失败");
-    }
-  };
-
-  const handleCancelRole = () => {
-    setIsRoleModalOpen(false);
-    setEditingRoleOriginalName(null);
-  };
-
-  const renderRoleList = () => {
-    const roleItem = (role: RoleItem, index: number) => {
-      const isActive = role.name === selectedRole?.name;
-
-      return (
-        <div
-          className={`${styles.historyFoldItem} ${
-            isActive ? styles.historyFoldItemActive : ""
-          }`}
-          key={index}
-          onClick={() => setSelectedRole(role)}
-        >
-          <PersonIcon />
-          <div className={styles.historyFoldText}>{role.name}</div>
-          <div className={styles.historyFoldActions}>
-            <EditIcon
-              onClick={(e?: React.MouseEvent) => {
-                e?.stopPropagation();
-                setRoleNameInput(role.name);
-                setRolePromptInput(role.systemPrompt);
-                setEditingRoleOriginalName(role.name);
-                setIsRoleModalOpen(true);
-              }}
-            />
-            <CloseIcon
-              onClick={async (e?: React.MouseEvent) => {
-                e?.stopPropagation();
-                await deleteRoleByName(role.name);
-                const roleList = await fetchRoles();
-                setRoles(roleList);
-                if (selectedRole?.name === role.name) {
-                  setSelectedRole(roleList[0] ?? null);
-                }
-              }}
-            />
-          </div>
-        </div>
-      );
+      // 安全地检查 selectedRole
+      if (externalSelectedRole && externalSelectedRole.name === role.name) {
+        externalSetSelectedRole(roleList[0] ?? null);
+      }
+    };
+    const selectRole = (role: RoleItem) => {
+      externalSetSelectedRole(role);
     };
 
     return (
-      <div className={styles.historyFoldList}>
-        {roles.map((role: RoleItem, index: number) => roleItem(role, index))}
-        <div
-          className={styles.historyFoldItem}
-          onClick={() => {
-            setRoleNameInput("");
-            setRolePromptInput("");
-            setEditingRoleOriginalName(null);
-            setIsRoleModalOpen(true);
-          }}
-        >
-          <AddSmallIcon />
-          <div className={styles.historyFoldText}>新增角色</div>
-        </div>
-      </div>
+      <RoleList
+        roles={roles}
+        selectedRole={externalSelectedRole}
+        addRole={addRole}
+        editRole={editRole}
+        deleteRole={deleteRole}
+        selectRole={selectRole}
+      />
     );
   };
 
   return {
-    roles,
-    selectedRole,
-    setSelectedRole,
+    initRoleName,
+    initRolePrompt,
+    handleSuccessRole,
     isRoleModalOpen,
-    setIsRoleModalOpen,
-    editingRoleOriginalName,
-    roleNameInput,
-    setRoleNameInput,
-    rolePromptInput,
-    setRolePromptInput,
-    handleSaveRole,
     handleCancelRole,
     renderRoleList,
   };
