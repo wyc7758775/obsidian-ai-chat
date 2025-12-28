@@ -21,7 +21,7 @@ export type ChatMessageProps = {
 // TODO：i18n
 export const useHistory = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem>();
-  const [currentId, setCurrentId] = useState<string>("");
+  const [messageId, setMessageId] = useState<string>("");
   // 用于强制刷新历史记录列表的触发器
   const [updater, setUpdater] = useState(0);
   const [selectedRole, setSelectedRole] = useState<RoleItem | null>(null);
@@ -57,30 +57,25 @@ export const useHistory = () => {
     const {
       initRoleName,
       initRolePrompt,
-      renderRoleList,
+      RoleListComponent,
       isRoleModalOpen,
       handleCancelRole,
       handleSuccessRole,
     } = useRoles(app, initializedSelectedRole, setSelectedRole);
 
     const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-    /**
-     * 新增对话逻辑：
-     * - 若当前对话的消息为空，则不允许创建新的对话，并弹出提示。
-     * - 否则创建新的对话并切换到该对话。
-     */
     const handleAddCore = async () => {
       // 根据当前选中 ID 获取当前对话项
       const emptyItem = historyList.find(
         (it) => Array.isArray(it.messages) && it.messages.length === 0,
       );
       if (emptyItem) {
-        if (emptyItem.id === currentId) {
+        if (emptyItem.id === messageId) {
           new Notice("当前对话为空，请先输入内容再创建新的对话~");
           return;
         }
         // 如果当前存在空对话，则直接切换到该空对话
-        setCurrentId(emptyItem.id);
+        setMessageId(emptyItem.id);
         const emptyHistoryItem = (await getHistoryItemById(emptyItem.id)) ?? {
           id: emptyItem.id,
           messages: [],
@@ -99,7 +94,7 @@ export const useHistory = () => {
           roleName: defaultRole?.name,
         };
         setHistoryList((prev) => [newHistoryItem, ...prev]);
-        setCurrentId(item.id);
+        setMessageId(item.id);
         setHistoryItems(newHistoryItem);
         setSelectedRole(defaultRole);
       } catch (e) {
@@ -110,12 +105,8 @@ export const useHistory = () => {
     // 为新增对话按钮添加防抖
     const handleAdd = debounce(handleAddCore, 500);
 
-    /**
-     * 切换历史项并更新当前会话
-     * 成功切换后关闭历史弹窗，避免遮挡聊天区域
-     */
     const handleUpdateHistoryItem = (item: HistoryItem) => {
-      setCurrentId(item.id);
+      setMessageId(item.id);
       setHistoryItems(item);
       // 控制弹窗显隐
       if (item.roleName && item.systemMessage) {
@@ -150,14 +141,14 @@ export const useHistory = () => {
             messages: [],
           };
           setHistoryList([seedItem]);
-          setCurrentId(seed.id);
+          setMessageId(seed.id);
           handleUpdateHistoryItem(seedItem);
           return;
         }
-        if (!currentId || !items.some((item) => item.id === currentId)) {
-          items[0] ? handleUpdateHistoryItem(items[0]) : setCurrentId("");
+        if (!messageId || !items.some((item) => item.id === messageId)) {
+          items[0] ? handleUpdateHistoryItem(items[0]) : setMessageId("");
         } else {
-          const currentItem = items.find((it) => it.id === currentId);
+          const currentItem = items.find((it) => it.id === messageId);
           if (currentItem) {
             handleUpdateHistoryItem(currentItem);
           }
@@ -184,7 +175,7 @@ export const useHistory = () => {
           messages: [],
         };
         setHistoryList([historyItem]);
-        setCurrentId(newItem.id);
+        setMessageId(newItem.id);
         // 创建新记录后再删除原记录
         await deleteHistoryItem(id);
       } catch (e) {
@@ -198,9 +189,9 @@ export const useHistory = () => {
       const items = await fetchHistoryList();
       setHistoryList(items);
 
-      if (id === currentId) {
+      if (id === messageId) {
         // 如果删除的是当前项，切换到第一条
-        setCurrentId(items[0]?.id || "");
+        setMessageId(items[0]?.id || "");
       }
     };
     const handleDelete = async ({ id }: { id: string }) => {
@@ -239,7 +230,7 @@ export const useHistory = () => {
               `}
             >
               {/*  角色切换 */}
-              {showHistoryAndRoles === ActiveKey.ROLES && renderRoleList()}
+              {showHistoryAndRoles === ActiveKey.ROLES && <RoleListComponent />}
               {/* 历史记录卡片 */}
               {showHistoryAndRoles === ActiveKey.HISTORY && (
                 <WaterfallWrapper
@@ -252,7 +243,7 @@ export const useHistory = () => {
                       key={item.id + index}
                       index={index}
                       item={item}
-                      isActive={item.id === currentId}
+                      isActive={item.id === messageId}
                     />
                   ))}
                 </WaterfallWrapper>
@@ -277,7 +268,7 @@ export const useHistory = () => {
   return {
     ChatPanel,
     historyItems,
-    currentId,
+    currentId: messageId,
     forceHistoryUpdate,
     selectedRole: initializedSelectedRole,
     setSelectedRole,

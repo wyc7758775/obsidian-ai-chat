@@ -1,5 +1,5 @@
 import { App } from "obsidian";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useContext } from "../../hooks/use-context";
 
 import type { RoleItem } from "../../../../core/storage/role-storage";
@@ -43,7 +43,7 @@ export const useRoles = (
 
   const [initRoleName, setInitRoleName] = useState<string>("");
   const [initRolePrompt, setInitRolePrompt] = useState<string>("");
-  const renderRoleList = () => {
+  const RoleListComponent = useMemo(() => {
     const addRole = () => {
       return setIsRoleModalOpen(true);
     };
@@ -66,7 +66,7 @@ export const useRoles = (
       externalSetSelectedRole(role);
     };
 
-    return (
+    return () => (
       <RoleList
         roles={roles}
         selectedRole={externalSelectedRole}
@@ -76,7 +76,7 @@ export const useRoles = (
         selectRole={selectRole}
       />
     );
-  };
+  }, [roles, externalSelectedRole]);
 
   return {
     initRoleName,
@@ -84,6 +84,6 @@ export const useRoles = (
     handleSuccessRole,
     isRoleModalOpen,
     handleCancelRole,
-    renderRoleList,
+    RoleListComponent,
   };
 };
