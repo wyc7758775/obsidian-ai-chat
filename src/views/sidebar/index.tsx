@@ -33,6 +33,7 @@ import { Message, ChatComponentProps, NoteReference } from "./type";
 import { chatMachine } from "./machines/chatMachine";
 import { ChatStateProvider } from "./machines/chatStateContext";
 
+// TODO: 重构这个逻辑吧
 export const ChatComponent: React.FC<ChatComponentProps> = ({
   onSendMessage,
   settings,
