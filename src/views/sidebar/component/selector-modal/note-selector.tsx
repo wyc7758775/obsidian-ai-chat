@@ -2,10 +2,10 @@ import React, { useCallback } from "react";
 import {
   NoteContextService,
   NoteContext,
-} from "../../../core/fs-context/note-context";
-import { BookIcon, FolderIcon } from "../../../ui/icon";
-import styles from "../css/note-selector.module.css";
-import { EllipsisTooltip } from "../../../ui/ellipsis-tooltip";
+} from "../../../../core/fs-context/note-context";
+import { BookIcon, FolderIcon } from "../../../../ui/icon";
+import styles from "./note-selector.module.css";
+import { EllipsisTooltip } from "../../../../ui/ellipsis-tooltip";
 
 export interface FileSelectorProps {
   // 数据
