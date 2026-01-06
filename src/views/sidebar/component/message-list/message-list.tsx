@@ -47,7 +47,7 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
       onInsertSuggestion,
       suggestions,
     },
-    ref,
+    ref
   ) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const containersRef = useRef<Record<string, Message[]>>({});
@@ -76,8 +76,8 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
         resolve(
           confirm(
             "确定要将此条 AI 回复创建为新笔记吗？ 笔记名为：" +
-              messages[index - 1]?.content,
-          ),
+              messages[index - 1]?.content
+          )
         );
       });
       if (!confirmed) return;
@@ -141,7 +141,7 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
         scrollToBottom,
         isNearBottom,
       }),
-      [isNearBottom, scrollToBottom],
+      [isNearBottom, scrollToBottom]
     );
 
     const messageList = (messages: Message[]) => {
@@ -234,20 +234,20 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
     const messageEmpty = (message: Message[]) => {
       if (message.length !== 0) return null;
 
-      return messageEmptyRender(suggestions, onInsertSuggestion);
+      return messageEmptyRender();
     };
 
     const allIds = Object.keys(containersRef.current).length
       ? Object.keys(containersRef.current)
       : currentId
-        ? [currentId]
-        : [];
+      ? [currentId]
+      : [];
 
     return (
       <>
         {allIds.map((sid) => {
           const isActive = sid === currentId;
-          const msgs = isActive ? messages : (containersRef.current[sid] ?? []);
+          const msgs = isActive ? messages : containersRef.current[sid] ?? [];
           const everShown = shownIdsRef.current.has(sid);
           return (
             <div
@@ -267,5 +267,5 @@ export const ChatMessage = forwardRef<ChatMessageHandle, ChatMessageProps>(
         })}
       </>
     );
-  },
+  }
 );
