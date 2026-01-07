@@ -684,7 +684,6 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
         {/* 全局初始化 Loading */}
         {isInitializing && <Loading />}
         {/* 信息历史 */}
-        {/* TODO: 组件名已经不够贴切了 */}
         {ChatPanel({ app })}
         {/* 消息区域：仅中间聊天区域切换，顶部面板与底部输入固定 */}
         <ChatMessage
